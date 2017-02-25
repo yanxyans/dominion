@@ -45,12 +45,12 @@ export default class MenuComponent extends React.Component {
   render() {
     const actions = [
       <FlatButton
-        label="Cancel"
+        label='Cancel'
         primary={true}
         onTouchTap={this.handleClose}
       />,
       <FlatButton
-        label="Set"
+        label='Set'
         primary={true}
         keyboardFocused={true}
         onTouchTap={this.handleSetName}
