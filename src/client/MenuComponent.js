@@ -3,6 +3,7 @@ import {List, ListItem} from 'material-ui/List';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
+import MobileTearSheet from './MobileTearSheet';
 
 export default class MenuComponent extends React.Component {
   constructor(props) {
@@ -58,17 +59,19 @@ export default class MenuComponent extends React.Component {
     ]
 
     return (
-      <List>
-        <ListItem primaryText={this.props.name} onTouchTap={this.handleOpen} />
-        <Dialog
-          title="Set Display Name"
-          actions={actions}
-          modal={false}
-          open={this.state.displayDialog}
-          onRequestClose={this.handleClose}>
-          <TextField id='newName' value={this.state.newName} onChange={this.handleKeyName} />
-        </Dialog>
-      </List>
+			<MobileTearSheet>
+				<List>
+					<ListItem primaryText={'name = ' + this.props.name} onTouchTap={this.handleOpen} />
+					<Dialog
+						title='set display name'
+						actions={actions}
+						modal={false}
+						open={this.state.displayDialog}
+						onRequestClose={this.handleClose}>
+						<TextField id='newName' value={this.state.newName} onChange={this.handleKeyName} />
+					</Dialog>
+				</List>
+			</MobileTearSheet>
     )
   }
 }
