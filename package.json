@@ -2,9 +2,9 @@
   "name": "dominion",
   "version": "1.0.0",
   "description": "the board game",
-  "main": "index.js",
+  "main": "src/server/index.js",
   "scripts": {
-    "start": "nodemon index.js --ignore public/ --ignore src/client"
+    "start": "nodemon src/server/index.js --ignore public/ --ignore src/client"
   },
   "repository": {
     "type": "git",
@@ -18,8 +18,10 @@
   "homepage": "https://github.com/yanxyans/dominion#readme",
   "dependencies": {
     "express": "^4.14.1",
+    "material-ui": "^0.17.0",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
+    "react-tap-event-plugin": "^2.0.1",
     "socket.io": "^1.7.3"
   },
   "devDependencies": {
