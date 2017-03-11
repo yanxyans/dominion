@@ -7,7 +7,7 @@ import TextField from 'material-ui/TextField';
 export default class NameComponent extends React.Component {
 	state = {
 		open: false,
-		newName: ''
+		name: ''
 	};
 
   handleOpen = () => {
@@ -15,19 +15,16 @@ export default class NameComponent extends React.Component {
   };
 
   handleClose = () => {
-    this.setState({
-			open: false,
-			newName: ''
-		});
+    this.setState({open: false, name: ''});
   };
 	
 	handleSet = () => {
-		this.props.setName(this.state.newName);
+		this.props.setName(this.state.name);
 		this.handleClose();
 	};
 	
 	handleKey = (e) => {
-		this.setState({newName: e.target.value});
+		this.setState({name: e.target.value});
 	};
 
   render() {
@@ -49,12 +46,12 @@ export default class NameComponent extends React.Component {
       <div>
 				<ListItem primaryText={'name = ' + this.props.name} onTouchTap={this.handleOpen} />
         <Dialog
-          title='set display name'
+          title='enter display name'
           actions={actions}
           modal={false}
           open={this.state.open}
           onRequestClose={this.handleClose}>
-					<TextField id='newName' value={this.state.newName} onChange={this.handleKey} />
+					<TextField id='name' value={this.state.name} onChange={this.handleKey} />
         </Dialog>
       </div>
     );

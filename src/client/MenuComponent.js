@@ -15,7 +15,7 @@ export default class MenuComponent extends React.Component {
 					<JoinComponent joinRoom={this.props.joinRoom} />
 				</List>
 				<Divider />
-				<SelectableList defaultValue={0}>
+				<SelectableList sel={this.props.sel_room}>
 					{Object.keys(this.props.rooms).map(function(key) {
 						return <ListItem key={key} value={key}>room {key}</ListItem>;
 					})}

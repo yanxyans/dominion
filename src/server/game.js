@@ -20,56 +20,35 @@ Game.prototype.newRoom = function(room, set) {
 Game.prototype.initRoom = function(room, set) {
 	this.rooms[room] = {
 		set: set,
-		spectators: {},
-		spectators_cnt: 0,
-		players: {},
-		players_cnt: 0
+		users: {},
+		userc: 0
 	};
 };
 
-Game.prototype.addUser = function(room, user, type) {
+Game.prototype.addUser = function(room, user) {
 	var rooms = this.rooms;
-	if (rooms[room]) {
-		var r = rooms[room];
-		if (r.spectators[user.id] ||
-				r.players[user.id]) {
-			return {
-				head: 'err',
-				body: 'user is already in room'
-			};
-		} else if (type === 'players' &&
-							 r.player_cnt === 4) {
-			return {
-				head: 'fail',
-				body: 'player slots are full'
-			};
-		}
-		
-		r[type][user.id] = user;
-		r[type + '_cnt']++;
+	var id = user.getID();
+	if (!rooms[room]) {
 		return {
-			head: 'ok',
-			body: user.name + ' has been added to ' + type
+			head: 'err',
+			body: 'room does not exist'
+		};
+	} else if (id in rooms[room].users) {
+		return {
+			head: 'err',
+			body: 'user is already in room'
 		};
 	}
+	
+	// 1 for spectator, 0 for player
+	var user_type = ++rooms[room].userc > 4 ? 1 : 0;
+	rooms[room].users[id] = user_type;
+	user.addRoom(room, user_type);
+	user.selRoom(room);
 	return {
-		head: 'err',
-		body: 'room does not exist'
+		head: 'ok',
+		body: 'user has joined room'
 	};
-}
-
-Game.prototype.getSpectators = function(room) {
-	var rooms = this.rooms;
-	if (rooms[room]) {
-		return rooms[room].spectators;
-	}
-};
-
-Game.prototype.getPlayers = function(room) {
-	var rooms = this.rooms;
-	if (rooms[room]) {
-		return rooms[room].players;
-	}
 };
 
 module.exports = Game;

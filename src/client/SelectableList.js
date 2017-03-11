@@ -7,7 +7,7 @@ function wrapState(ComposedComponent) {
   return class SelectableList extends React.Component {
     static propTypes = {
       children: React.PropTypes.node.isRequired,
-      defaultValue: React.PropTypes.number.isRequired,
+      defaultValue: React.PropTypes.string,
     };
 
     componentWillMount() {
@@ -15,6 +15,10 @@ function wrapState(ComposedComponent) {
         selectedIndex: this.props.defaultValue,
       });
     }
+		
+		componentWillReceiveProps(props) {
+			this.setState({selectedIndex: props.sel});
+		}
 
     handleRequestChange = (event, index) => {
       this.setState({
