@@ -21,7 +21,7 @@ Game.prototype.initRoom = function(room, set) {
 	this.rooms[room] = {
 		set: set,
 		users: {},
-		userc: 0
+		spots: 4
 	};
 };
 
@@ -41,8 +41,11 @@ Game.prototype.addUser = function(room, user) {
 	}
 	
 	// 1 for spectator, 0 for player
-	var user_type = ++rooms[room].userc > 4 ? 1 : 0;
+	var user_type = rooms[room].spots > 0 ? 0 : 1;
 	rooms[room].users[id] = user_type;
+	if (!user_type) {
+		rooms[room].spots--;
+	}
 	user.addRoom(room, user_type);
 	user.selRoom(room);
 	return {
