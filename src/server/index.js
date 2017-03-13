@@ -6,13 +6,13 @@ var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 var port = process.env.PORT || 3000;
 
-var jsdom = require("jsdom").jsdom;
+var jsdom = require('jsdom').jsdom;
 jsdom.env("", function(err, window) {
 	if (err) {
 		console.error(err);
 		return;
 	}
-	global.$ = require("jquery")(window);
+	global.$ = require('jquery')(window);
 });
 
 var Game = require(path.resolve(__dirname, 'game'));

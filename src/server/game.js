@@ -4,11 +4,13 @@ function Game() {
 
 Game.prototype.getView = function(room) {
 	var game = this.rooms[room];
-	return {
-		start: game.set.start,
-		kingdom: game.set.kingdom,
-		users: game.users
-	};
+	if (game) {
+		return {
+			start: game.set.start,
+			kingdom: game.set.kingdom,
+			users: game.users
+		};
+	}
 };
 
 Game.prototype.newRoom = function(room, set) {

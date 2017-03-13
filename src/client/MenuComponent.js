@@ -23,4 +23,4 @@ export default class MenuComponent extends React.Component {
 			</MobileTearSheet>
     )
   }
-}
+};

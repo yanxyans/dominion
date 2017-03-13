@@ -56,4 +56,4 @@ export default class JoinComponent extends React.Component {
       </div>
     );
   }
-}
+};

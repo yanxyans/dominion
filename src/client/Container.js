@@ -65,7 +65,7 @@ class Container extends React.Component {
 			</MuiThemeProvider>
 		)
   }
-}
+};
  
 ReactDOM.render(<Container />, document.getElementById('root'));
 

@@ -56,4 +56,4 @@ export default class NameComponent extends React.Component {
       </div>
     );
   }
-}
+};
