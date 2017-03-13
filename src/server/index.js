@@ -17,7 +17,7 @@ jsdom.env("", function(err, window) {
 
 var Game = require(path.resolve(__dirname, 'game'));
 var User = require(path.resolve(__dirname, 'user'));
-var game = new Game(io);
+var game = new Game();
 var room = 'dominion0';
 var set = {
 	start: {
@@ -54,12 +54,17 @@ io.on('connection', function(socket) {
 	socket.emit('_init', user.getName());
 	
 	socket.on('_set_name', function(name) {
-		user.setName(name);
-		socket.emit('_update_name', user.getName());
+		var res = user.setName(name);
+		if (res.head === 'ok') {
+			socket.emit('_update_name', user.getName());
+		}
 	});
 	
 	socket.on('_join_room', function(room) {
-		game.addUser(room, user);
-		socket.emit('_update_rooms', user.getRooms());
+		var res = game.addUser(room, user);
+		if (res.head === 'ok') {
+			socket.emit('_update_view', user.getView());
+			io.sockets.in(room).emit('_update_game', game.getView(room));
+		}
 	});
 });

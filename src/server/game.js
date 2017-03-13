@@ -2,6 +2,15 @@ function Game() {
 	this.rooms = {};
 }
 
+Game.prototype.getView = function(room) {
+	var game = this.rooms[room];
+	return {
+		start: game.set.start,
+		kingdom: game.set.kingdom,
+		users: game.users
+	};
+};
+
 Game.prototype.newRoom = function(room, set) {
 	if (this.rooms[room]) {
 		return {
@@ -28,6 +37,7 @@ Game.prototype.initRoom = function(room, set) {
 Game.prototype.addUser = function(room, user) {
 	var rooms = this.rooms;
 	var id = user.getID();
+	var name = user.getName();
 	if (!rooms[room]) {
 		return {
 			head: 'err',
@@ -42,7 +52,7 @@ Game.prototype.addUser = function(room, user) {
 	
 	// 1 for spectator, 0 for player
 	var user_type = rooms[room].spots > 0 ? 0 : 1;
-	rooms[room].users[id] = user_type;
+	rooms[room].users[id] = {name: name, type: user_type};
 	if (!user_type) {
 		rooms[room].spots--;
 	}

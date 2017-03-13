@@ -17,10 +17,11 @@ User.prototype.getName = function() {
 	return this.name;
 };
 
-User.prototype.getRooms = function() {
+User.prototype.getView = function() {
 	return {
 		rooms: this.rooms,
-		sel: this.sel_room
+		sel_room: this.sel_room,
+		player: this.rooms[this.sel_room]
 	};
 };
 
@@ -28,7 +29,15 @@ User.prototype.setName = function(name) {
 	var cleanName = cleanInput(name);
 	if (cleanName) {
 		this.name = cleanName;
+		return {
+			head: 'ok',
+			body: 'name was set'
+		};
 	}
+	return {
+		head: 'err',
+		body: 'could not validate name'
+	};
 };
 
 User.prototype.addRoom = function(room, type) {
