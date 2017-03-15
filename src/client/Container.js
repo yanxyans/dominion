@@ -45,6 +45,10 @@ class Container extends React.Component {
 		this.socket.emit('_join_room', room);
 	};
 	
+	_selRoom = (room) => {
+		this.socket.emit('_sel_room', room);
+	};
+	
 	componentDidMount = () => {
 		this.socket = io();
 		this.socket.on('_init', this._init);
@@ -60,7 +64,7 @@ class Container extends React.Component {
 					<GameComponent start={this.state.start} kingdom={this.state.kingdom} users={this.state.users} />	
 					<MenuComponent name={this.state.name} setName={this._setName}
 												 rooms={this.state.rooms} sel_room={this.state.sel_room}
-												 joinRoom={this._joinRoom} />
+												 joinRoom={this._joinRoom} selRoom={this._selRoom} />
 				</div>
 			</MuiThemeProvider>
 		)

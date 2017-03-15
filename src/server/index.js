@@ -72,7 +72,16 @@ io.on('connection', function(socket) {
 		}
 	});
 	
+	socket.on('_sel_room', function(room) {
+		var res = user.selRoom(room);
+		if (res.head === 'ok') {
+			socket.emit('_update_view', user.getView());
+			updateGame(room);
+		}
+	});
+	
 	socket.on('disconnect', function() {
+		user.setSel(null);
 		user.leaveRooms(game, updateGame);
 	});
 });

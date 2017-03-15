@@ -40,16 +40,29 @@ User.prototype.setName = function(name) {
 	};
 };
 
+User.prototype.setSel = function(sel_room) {
+	this.sel_room = sel_room;
+};
+
 User.prototype.addRoom = function(room, type) {
 	this.rooms[room] = type;
 };
 
 User.prototype.selRoom = function(room) {
-	if (room in this.rooms) {
-		this.socket.leave(this.sel_room);
-		this.sel_room = room;
-		this.socket.join(room);
+	if (!(room in this.rooms)) {
+		return {
+			head: 'err',
+			body: 'room does not exist'
+		};
 	}
+	
+	this.socket.leave(this.sel_room);
+	this.setSel(room);
+	this.socket.join(room);
+	return {
+		head: 'ok',
+		body: 'room has been selected'
+	};
 };
 
 User.prototype.leaveRooms = function(game, callback) {
