@@ -52,4 +52,16 @@ User.prototype.selRoom = function(room) {
 	}
 };
 
+User.prototype.leaveRooms = function(game, callback) {
+	Object.keys(this.rooms).forEach(function(room) {
+		this.leaveRoom(game, room);
+		callback(room);
+	}, this);
+};
+
+User.prototype.leaveRoom = function(game, room) {
+	game.removeUser(room, this.getID());
+	delete this.rooms[room];
+};
+
 module.exports = User;

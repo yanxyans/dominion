@@ -51,6 +51,9 @@ server.listen(port, function () {
 
 io.on('connection', function(socket) {
 	var user = new User(socket);
+	var updateGame = function(room) {
+		io.sockets.in(room).emit('_update_game', game.getView(room));
+	};
 	socket.emit('_init', user.getName());
 	
 	socket.on('_set_name', function(name) {
@@ -63,8 +66,13 @@ io.on('connection', function(socket) {
 	socket.on('_join_room', function(room) {
 		var res = game.addUser(room, user);
 		if (res.head === 'ok') {
+			user.selRoom(room);
 			socket.emit('_update_view', user.getView());
-			io.sockets.in(room).emit('_update_game', game.getView(room));
+			updateGame(room);
 		}
+	});
+	
+	socket.on('disconnect', function() {
+		user.leaveRooms(game, updateGame);
 	});
 });

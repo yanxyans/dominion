@@ -59,11 +59,30 @@ Game.prototype.addUser = function(room, user) {
 		rooms[room].spots--;
 	}
 	user.addRoom(room, user_type);
-	user.selRoom(room);
 	return {
 		head: 'ok',
 		body: 'user has joined room'
 	};
 };
+
+Game.prototype.removeUser = function(room, id) {
+	var rooms = this.rooms;
+	if (!rooms[room]) {
+		return {
+			head: 'err',
+			body: 'room does not exist'
+		};
+	}
+	
+	var user = rooms[room].users[id];
+	delete rooms[room].users[id];
+	if (!user.type) {
+		rooms[room].spots++;
+	}
+	return {
+		head: 'ok',
+		body: 'user removed from room'
+	};
+}
 
 module.exports = Game;
