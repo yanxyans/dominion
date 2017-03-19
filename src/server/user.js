@@ -21,8 +21,12 @@ User.prototype.getView = function() {
 	return {
 		rooms: this.rooms,
 		sel_room: this.sel_room,
-		player: this.rooms[this.sel_room]
+		player: !this.rooms[this.sel_room]
 	};
+};
+
+User.prototype.getSel = function() {
+	return this.sel_room;
 };
 
 User.prototype.setName = function(name) {

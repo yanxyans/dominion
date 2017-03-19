@@ -66,9 +66,16 @@ io.on('connection', function(socket) {
 	socket.on('_join_room', function(room) {
 		var res = game.addUser(room, user);
 		if (res.head === 'ok') {
-			user.selRoom(room);
-			socket.emit('_update_view', user.getView());
-			updateGame(room);
+			var sel = user.selRoom(room);
+			if (sel.head === 'ok') {
+				socket.emit('_update_view', user.getView());
+
+				var action = game.getAction(user);
+				var action_name = action.name.split(' ').pop();
+				socket.emit('_update_action', action_name, action);
+
+				updateGame(room);
+			}
 		}
 	});
 	
@@ -76,7 +83,10 @@ io.on('connection', function(socket) {
 		var res = user.selRoom(room);
 		if (res.head === 'ok') {
 			socket.emit('_update_view', user.getView());
-			updateGame(room);
+
+			var action = game.getAction(user);
+			var action_name = action.name.split(' ').pop();
+			socket.emit('_update_action', action_name, action);
 		}
 	});
 	
