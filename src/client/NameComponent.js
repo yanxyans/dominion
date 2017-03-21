@@ -31,11 +31,11 @@ export default class NameComponent extends React.Component {
     const actions = [
       <FlatButton
         label='Cancel'
-        primary={true}
+        primary={false}
         onTouchTap={this.handleClose}
       />,
       <FlatButton
-        label='Set'
+        label='Change'
         primary={true}
         keyboardFocused={true}
         onTouchTap={this.handleSet}

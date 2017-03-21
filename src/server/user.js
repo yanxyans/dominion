@@ -2,11 +2,7 @@ function User(socket) {
 	this.socket = socket;
 	this.name = socket.id.substring(0, 7);
 	this.rooms = {};
-	this.sel_room = null;
-}
-
-function cleanInput(input) {
-	return $('<div/>').text(input).text();
+	this.in_room = null;
 }
 
 User.prototype.getID = function() {
@@ -20,65 +16,62 @@ User.prototype.getName = function() {
 User.prototype.getView = function() {
 	return {
 		rooms: this.rooms,
-		sel_room: this.sel_room,
-		player: !this.rooms[this.sel_room]
+		in_room: this.in_room,
+		is_player: this.rooms[this.in_room]
 	};
 };
 
-User.prototype.getSel = function() {
-	return this.sel_room;
+User.prototype.getRoom = function() {
+	return this.in_room;
 };
 
 User.prototype.setName = function(name) {
-	var cleanName = cleanInput(name);
+	var cleanName = $('<div/>').text(name).text();
 	if (cleanName) {
 		this.name = cleanName;
-		return {
+		this.socket.emit('_update_name', {
 			head: 'ok',
 			body: 'name was set'
-		};
+		}, cleanName);
+	} else {
+		this.socket.emit('_update_name', {
+			head: 'err',
+			body: 'could not validate name'
+		});
 	}
-	return {
-		head: 'err',
-		body: 'could not validate name'
-	};
-};
-
-User.prototype.setSel = function(sel_room) {
-	this.sel_room = sel_room;
 };
 
 User.prototype.addRoom = function(room, type) {
-	this.rooms[room] = type;
+	var rooms = this.rooms;
+	if (rooms[room]) {
+		this.socket.emit('_update_view', {
+			head: 'err',
+			body: 'room already exists'
+		});
+	} else {
+		this.rooms[room] = type;
+	}
 };
 
-User.prototype.selRoom = function(room) {
+User.prototype.pickRoom = function(callback, room) {
 	if (!(room in this.rooms)) {
-		return {
+		this.socket.emit('_update_view', {
 			head: 'err',
 			body: 'room does not exist'
-		};
+		});
+	} else {	
+		this.socket.leave(this.in_room);
+		this.socket.join(room);
+		this.in_room = room;
+		
+		if (callback) {
+			callback(this);
+		}
+		this.socket.emit('_update_view', {
+			head: 'ok',
+			body: 'room is picked'
+		}, this.getView());
 	}
-	
-	this.socket.leave(this.sel_room);
-	this.setSel(room);
-	this.socket.join(room);
-	return {
-		head: 'ok',
-		body: 'room has been selected'
-	};
-};
-
-User.prototype.leaveRooms = function(game, callback) {
-	Object.keys(this.rooms).forEach(function(room) {
-		this.leaveRoom(game, room);
-		callback(room);
-	}, this);
-};
-
-User.prototype.leaveRoom = function(game, room) {
-	game.removeUser(room, this.getID());
-	delete this.rooms[room];
 };
 
 module.exports = User;

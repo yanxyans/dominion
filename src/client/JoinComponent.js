@@ -31,7 +31,7 @@ export default class JoinComponent extends React.Component {
     const actions = [
       <FlatButton
         label='Cancel'
-        primary={true}
+        primary={false}
         onTouchTap={this.handleClose}
       />,
       <FlatButton

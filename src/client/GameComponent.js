@@ -48,11 +48,10 @@ export default class Container extends React.Component {
 			<MobileTearSheet>
 				<Table>
 					<TableBody>
-						{Object.keys(this.props.users).map(function(key) {
-							var val = this.props.users[key];
-							return <TableRow key={key}>
-										   <TableRowColumn>{val.name}</TableRowColumn>
-											 <TableRowColumn>{val.type}</TableRowColumn>
+						{this.props.users.map(function(obj) {
+							return <TableRow key={obj.name}> // change to user count
+										   <TableRowColumn>{obj.name}</TableRowColumn>
+											 <TableRowColumn>{obj.type ? "player" : "spec"}</TableRowColumn>
 										 </TableRow>;
 						}, this)}
 					</TableBody>

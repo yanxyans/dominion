@@ -9,14 +9,14 @@ function wrapState(ComposedComponent) {
       children: React.PropTypes.node.isRequired
     };
 
-    handleRequestChange = (event, index) => {
-			this.props.selRoom(index);
+    handleRequestChange = (event, room) => {
+			this.props.pickRoom(room);
     };
 
     render() {
       return (
         <ComposedComponent
-          value={this.props.sel}
+          value={this.props.in_room}
           onChange={this.handleRequestChange}
         >
           {this.props.children}

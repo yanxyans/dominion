@@ -23,16 +23,22 @@ class Container extends React.Component {
 		this.setState({name: name});
 	};
 	
-	_updateName = (name) => {
-		this.setState({name: name});
+	_updateName = (msg, name) => {
+		if (msg.head === 'ok') {
+			this.setState({name: name});
+		}
+		console.log(msg.body);
 	};
 	
-	_updateView = (view) => {
-		this.setState({
-			rooms: view.rooms,
-			sel_room: view.sel_room,
-			is_player: view.player
-		});
+	_updateView = (msg, view) => {
+		if (msg.head === 'ok') {
+			this.setState({
+				rooms: view.rooms,
+				in_room: view.in_room,
+				is_player: view.is_player
+			});
+		}
+		console.log(msg.body);
 	};
 	
 	_updateGame = (game) => {
@@ -43,7 +49,10 @@ class Container extends React.Component {
 	};
 	
 	_updateAction = (action_name, action) => {
-		this.setState({action_name: action_name, action: action});
+		this.setState({
+			action_name: action_name,
+			action: action
+		});
 	};
 	
 	_setName = (name) => {
@@ -54,8 +63,8 @@ class Container extends React.Component {
 		this.socket.emit('_join_room', room);
 	};
 	
-	_selRoom = (room) => {
-		this.socket.emit('_sel_room', room);
+	_pickRoom = (room) => {
+		this.socket.emit('_pick_room', room);
 	};
 	
 	componentDidMount = () => {
@@ -76,9 +85,12 @@ class Container extends React.Component {
 												 action_name={this.state.action_name}
 												 action={this.state.action}
 												 is_player={this.state.is_player} />	
-					<MenuComponent name={this.state.name} setName={this._setName}
-												 rooms={this.state.rooms} sel_room={this.state.sel_room}
-												 joinRoom={this._joinRoom} selRoom={this._selRoom} />
+					<MenuComponent name={this.state.name}
+												 setName={this._setName}
+												 rooms={this.state.rooms}
+												 in_room={this.state.in_room}
+												 joinRoom={this._joinRoom}
+												 pickRoom={this._pickRoom} />
 				</div>
 			</MuiThemeProvider>
 		)

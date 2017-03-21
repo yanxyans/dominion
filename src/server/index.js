@@ -17,7 +17,7 @@ jsdom.env("", function(err, window) {
 
 var Game = require(path.resolve(__dirname, 'game'));
 var User = require(path.resolve(__dirname, 'user'));
-var game = new Game();
+var game = new Game(io);
 var room = 'dominion0';
 var set = {
 	start: {
@@ -35,6 +35,7 @@ var set = {
 	}
 };
 game.newRoom(room, set);
+game.newRoom(room+'2', set);
 
 var webpack = require('webpack');
 var webpackConfig = require('../../webpack.config');
@@ -51,47 +52,14 @@ server.listen(port, function () {
 
 io.on('connection', function(socket) {
 	var user = new User(socket);
-	var updateGame = function(room) {
-		io.sockets.in(room).emit('_update_game', game.getView(room));
-	};
 	socket.emit('_init', user.getName());
-	
-	socket.on('_set_name', function(name) {
-		var res = user.setName(name);
-		if (res.head === 'ok') {
-			socket.emit('_update_name', user.getName());
-		}
-	});
-	
-	socket.on('_join_room', function(room) {
-		var res = game.addUser(room, user);
-		if (res.head === 'ok') {
-			var sel = user.selRoom(room);
-			if (sel.head === 'ok') {
-				socket.emit('_update_view', user.getView());
-
-				var action = game.getAction(user);
-				var action_name = action.name.split(' ').pop();
-				socket.emit('_update_action', action_name, action);
-
-				updateGame(room);
-			}
-		}
-	});
-	
-	socket.on('_sel_room', function(room) {
-		var res = user.selRoom(room);
-		if (res.head === 'ok') {
-			socket.emit('_update_view', user.getView());
-
-			var action = game.getAction(user);
-			var action_name = action.name.split(' ').pop();
-			socket.emit('_update_action', action_name, action);
-		}
-	});
-	
-	socket.on('disconnect', function() {
-		user.setSel(null);
-		user.leaveRooms(game, updateGame);
-	});
+	socket.on('_set_name', user.setName.bind(user));
+	socket.on('_join_room', game.addUser.bind(game, user));
+	socket.on('_pick_room', user.pickRoom.bind(user, function(user) {
+		user.socket.emit('_update_action', ...game.getAction(user));
+		
+		var room = user.getRoom();
+		io.sockets.in(room).emit('_update_game', game.getGame(room));
+	}));
+	socket.on('disconnect', game.removeUserAll.bind(game, user));
 });

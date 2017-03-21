@@ -15,9 +15,9 @@ export default class MenuComponent extends React.Component {
 					<JoinComponent joinRoom={this.props.joinRoom} />
 				</List>
 				<Divider />
-				<SelectableList sel={this.props.sel_room} selRoom={this.props.selRoom}>
-					{Object.keys(this.props.rooms).map(function(key) {
-						return <ListItem key={key} value={key}>room {key}</ListItem>;
+				<SelectableList in_room={this.props.in_room} pickRoom={this.props.pickRoom}>
+					{Object.keys(this.props.rooms).map(function(room) {
+						return <ListItem key={room} value={room}>{room}</ListItem>;
 					})}
 				</SelectableList>
 			</MobileTearSheet>
