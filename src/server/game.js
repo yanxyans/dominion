@@ -96,9 +96,10 @@ Game.prototype.addUser = function(user, room) {
 			head: 'err',
 			body: 'user already in room'
 		});
-	} else {	
+	} else {
+		var game = rooms[room];
 		// 0 for spectator, 1 for player
-		var user_type = rooms[room].spots > 0 ? 1 : 0;
+		var user_type = !game.phase && game.spots > 0 ? 1 : 0;
 		rooms[room].users[id] = {
 			name: name,
 			type: user_type
