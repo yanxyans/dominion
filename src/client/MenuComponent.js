@@ -11,11 +11,11 @@ export default class MenuComponent extends React.Component {
     return (
 			<MobileTearSheet>
 				<List>
-					<NameComponent name={this.props.name} setName={this.props.setName} />
-					<JoinComponent joinRoom={this.props.joinRoom} />
+					<NameComponent name={this.props.name} _setName={this.props._setName} />
+					<JoinComponent _joinGame={this.props._joinGame} />
 				</List>
 				<Divider />
-				<SelectableList in_room={this.props.in_room} pickRoom={this.props.pickRoom}>
+				<SelectableList inRoom={this.props.inRoom} _enterGame={this.props._enterGame}>
 					{Object.keys(this.props.rooms).map(function(room) {
 						return <ListItem key={room} value={room}>{room}</ListItem>;
 					})}

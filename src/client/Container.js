@@ -11,47 +11,52 @@ class Container extends React.Component {
 	state = {
 		name: '',
 		rooms: {},
-		sel_room: null,
-		kingdom: null,
-		users: null,
-		action_name: null,
+		inRoom: null,
+		users: {},
+		player: null,
+		actionName: null,
 		action: null,
-		is_player: false
+		piles: {},
+		players: []
 	};
 	
 	_init = (name) => {
 		this.setState({name: name});
 	};
 	
-	_updateName = (msg, name) => {
+	_name = (msg, name) => {
 		if (msg.head === 'ok') {
 			this.setState({name: name});
 		}
 		console.log(msg.body);
 	};
 	
-	_updateView = (msg, view) => {
+	_room = (msg, room) => {
 		if (msg.head === 'ok') {
 			this.setState({
-				rooms: view.rooms,
-				in_room: view.in_room,
-				is_player: view.is_player
+				rooms: room.rooms,
+				inRoom: room.inRoom
 			});
 		}
 		console.log(msg.body);
 	};
 	
-	_updateGame = (game) => {
+	_user = (users) => {
+		this.setState({users: users});
+	};
+	
+	_player = (player, actionName, action) => {
 		this.setState({
-			kingdom: game.kingdom,
-			users: game.users
+			player: player,
+			actionName: actionName,
+			action: action
 		});
 	};
 	
-	_updateAction = (action_name, action) => {
+	_board = (board) => {
 		this.setState({
-			action_name: action_name,
-			action: action
+			piles: board.piles,
+			players: board.players
 		});
 	};
 	
@@ -59,38 +64,40 @@ class Container extends React.Component {
 		this.socket.emit('_set_name', name);
 	};
 	
-	_joinRoom = (room) => {
-		this.socket.emit('_join_room', room);
+	_joinGame = (game) => {
+		this.socket.emit('_join_game', game);
 	};
 	
-	_pickRoom = (room) => {
-		this.socket.emit('_pick_room', room);
+	_enterGame = (game) => {
+		this.socket.emit('_enter_game', game);
 	};
 	
 	componentDidMount = () => {
 		this.socket = io();
 		this.socket.on('_init', this._init);
-		this.socket.on('_update_name', this._updateName);
-		this.socket.on('_update_view', this._updateView);
-		this.socket.on('_update_game', this._updateGame);
-		this.socket.on('_update_action', this._updateAction);
+		this.socket.on('_user_name', this._name);
+		this.socket.on('_user_room', this._room);
+		this.socket.on('_game_user', this._user);
+		this.socket.on('_game_player', this._player);
+		this.socket.on('_game_board', this._board);
 	}
 	
   render() {
     return (
 			<MuiThemeProvider>
 				<div id='container'>
-					<GameComponent kingdom={this.state.kingdom}
-												 users={this.state.users}
-												 action_name={this.state.action_name}
+					<GameComponent users={this.state.users}
+												 player={this.state.player}
+												 actionName={this.state.actionName}
 												 action={this.state.action}
-												 is_player={this.state.is_player} />	
+												 piles={this.state.piles}
+												 players={this.state.players} />
 					<MenuComponent name={this.state.name}
-												 setName={this._setName}
+												 _setName={this._setName}
 												 rooms={this.state.rooms}
-												 in_room={this.state.in_room}
-												 joinRoom={this._joinRoom}
-												 pickRoom={this._pickRoom} />
+												 inRoom={this.state.inRoom}
+												 _joinGame={this._joinGame}
+												 _enterGame={this._enterGame} />
 				</div>
 			</MuiThemeProvider>
 		)

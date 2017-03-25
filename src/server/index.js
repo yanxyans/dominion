@@ -35,7 +35,6 @@ var set = {
 	}
 };
 game.newRoom(room, set);
-game.newRoom(room+'2', set);
 
 var webpack = require('webpack');
 var webpackConfig = require('../../webpack.config');
@@ -52,14 +51,9 @@ server.listen(port, function () {
 
 io.on('connection', function(socket) {
 	var user = new User(socket);
-	socket.emit('_init', user.getName());
+	socket.emit('_init', user.name);
 	socket.on('_set_name', user.setName.bind(user));
-	socket.on('_join_room', game.addUser.bind(game, user));
-	socket.on('_pick_room', user.pickRoom.bind(user, function(user) {
-		user.socket.emit('_update_action', ...game.getAction(user));
-		
-		var room = user.getRoom();
-		io.sockets.in(room).emit('_update_game', game.getGame(room));
-	}));
-	socket.on('disconnect', game.removeUserAll.bind(game, user));
+	socket.on('_join_game', game.addUser.bind(game, user));
+	socket.on('_enter_game', user.enterGame.bind(user, game.onSuccess.bind(game)));
+	socket.on('disconnect', game.disconnectUser.bind(game, user));
 });

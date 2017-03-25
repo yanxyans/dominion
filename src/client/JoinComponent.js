@@ -19,7 +19,7 @@ export default class JoinComponent extends React.Component {
   };
 	
 	handleJoin = () => {
-		this.props.joinRoom(this.state.room);
+		this.props._joinGame(this.state.room);
 		this.handleClose();
 	};
 	

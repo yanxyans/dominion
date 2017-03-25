@@ -19,7 +19,7 @@ export default class NameComponent extends React.Component {
   };
 	
 	handleSet = () => {
-		this.props.setName(this.state.name);
+		this.props._setName(this.state.name);
 		this.handleClose();
 	};
 	

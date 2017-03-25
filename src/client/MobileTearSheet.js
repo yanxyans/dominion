@@ -24,20 +24,20 @@ class MobileTearSheet extends Component {
       root: {
         marginBottom: 24,
         marginRight: 24,
-        maxWidth: 360,
+        maxWidth: 350,
         width: '100%',
       },
       container: {
         border: 'solid 1px #d9d9d9',
         borderBottom: 'none',
         height: this.props.height,
-        overflow: 'hidden',
+        overflow: 'auto',
       },
       bottomTear: {
         display: 'block',
         position: 'relative',
         marginTop: -10,
-        maxWidth: 360,
+        maxWidth: 350,
       },
     };
 

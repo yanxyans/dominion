@@ -1,77 +1,88 @@
 function User(socket) {
 	this.socket = socket;
+	this.id = socket.id;
 	this.name = socket.id.substring(0, 7);
-	this.rooms = {};
-	this.in_room = null;
+	this.games = {};
+	this.inGame = null;
 }
 
-User.prototype.getID = function() {
-	return this.socket.id;
-};
-
-User.prototype.getName = function() {
-	return this.name;
-};
-
-User.prototype.getView = function() {
-	return {
-		rooms: this.rooms,
-		in_room: this.in_room,
-		is_player: this.rooms[this.in_room]
-	};
-};
-
-User.prototype.getRoom = function() {
-	return this.in_room;
-};
+// user life cycle management
 
 User.prototype.setName = function(name) {
 	var cleanName = $('<div/>').text(name).text();
 	if (cleanName) {
 		this.name = cleanName;
-		this.socket.emit('_update_name', {
+		this.emit('_user_name', {
 			head: 'ok',
-			body: 'name was set'
+			body: 'name is set'
 		}, cleanName);
 	} else {
-		this.socket.emit('_update_name', {
+		this.emit('_user_name', {
 			head: 'err',
-			body: 'could not validate name'
+			body: 'invalid name'
 		});
 	}
 };
 
-User.prototype.addRoom = function(room, type) {
-	var rooms = this.rooms;
-	if (rooms[room]) {
-		this.socket.emit('_update_view', {
-			head: 'err',
-			body: 'room already exists'
-		});
-	} else {
-		this.rooms[room] = type;
+User.prototype.addGame = function(game, spot) {
+	// view will be updated in enterGame
+	this.games[game] = spot;
+};
+
+User.prototype.removeGame = function(game) {
+	if (this.games[game]) {
+		delete this.games[game];
+		if (this.inGame === game) {
+			this.switchGame(this.inGame, null);
+		}
+		this.emit('_user_room', {
+			head: 'ok',
+			body: 'left room'
+		}, this.getRoom());
 	}
 };
 
-User.prototype.pickRoom = function(callback, room) {
-	if (!(room in this.rooms)) {
-		this.socket.emit('_update_view', {
+User.prototype.switchGame = function(fromGame, toGame) {
+	this.socket.leave(fromGame);
+	this.socket.join(toGame);
+	this.inGame = toGame;
+};
+
+User.prototype.enterGame = function(onSuccess, game) {
+	if (!(game in this.games)) {
+		this.emit('_user_room', {
 			head: 'err',
 			body: 'room does not exist'
 		});
-	} else {	
-		this.socket.leave(this.in_room);
-		this.socket.join(room);
-		this.in_room = room;
+	} else {
+		var oldGame = this.inGame;
+		if (oldGame === game) {
+			// do nothing
+		} else {
+			this.switchGame(oldGame, game);
+			this.emit('_user_room', {
+				head: 'ok',
+				body: 'entered room'
+			}, this.getRoom());
 		
-		if (callback) {
-			callback(this);
+			if (onSuccess) {
+				onSuccess(this);
+			}
 		}
-		this.socket.emit('_update_view', {
-			head: 'ok',
-			body: 'room is picked'
-		}, this.getView());
 	}
+};
+
+// user view management
+
+User.prototype.emit = function(eventName, ...args) {
+	this.socket.emit(eventName, ...args);
+};
+
+User.prototype.getRoom = function() {
+	return {
+		rooms: this.games,
+		inRoom: this.inGame
+	};
 };
 
 module.exports = User;
