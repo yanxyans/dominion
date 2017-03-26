@@ -59,15 +59,15 @@ Game.prototype.addUser = function(user, room) {
 			body: 'user in room'
 		});
 	} else {
-		var playerSpot = game.spots.pop();
-		// 1 for player, 0 for spectator
-		var userType = game.turn === -1 && playerSpot !== undefined ? 1 : 0;
+		var playerSpot = !game.phase && game.spots.length > 0 ? game.spots.pop() : -1;
+		// 0 for spectator, 1 for player
+		var userType = playerSpot === -1 ? 0 : 1;
 		game.users[user.id] = {
 			name: user.name,
 			type: userType
 		};
 		
-		user.addGame(room, playerSpot !== undefined ? playerSpot : -1);
+		user.addGame(room, playerSpot);
 		user.enterGame(null, room);
 		this.emitRoomUser(room);
 		
@@ -95,9 +95,12 @@ Game.prototype.addUser = function(user, room) {
 			this.emitRoomBoard(room);
 		} else {
 			// get board state
-			user.emit('_update_board', {
+			user.emit('_game_player', null, null, null);
+			user.emit('_game_board', {
 				piles: game.set.kingdom,
-				players: game.players.map(this.getPlayer)
+				players: game.players.filter(function(player) {
+					return player !== null;
+				}).map(this.getPlayer)
 			});
 		}
 	}
@@ -214,8 +217,10 @@ Game.prototype.emitRoomUser = function(room) {
 };
 
 Game.prototype.emitPlayer = function(player, room) {
+	var socketRoom = this.io.sockets.adapter.rooms[room];
 	if (player &&
-			player.id in this.io.sockets.adapter.rooms[room].sockets) {
+			socketRoom &&
+			player.id in socketRoom.sockets) {
 		player.socket.emit(
 			'_game_player', {
 				name: player.name,
@@ -290,7 +295,7 @@ Game.prototype.onSuccess = function(user) {
 			}).map(this.getPlayer)
 		});
 		
-		if (isPlayer !== undefined) {
+		if (isPlayer !== -1) {
 			this.emitPlayer(game.players[isPlayer], inGame);
 		} else {
 			user.emit('_game_player', null, null, null);
