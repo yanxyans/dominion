@@ -34,6 +34,12 @@ User.prototype.removeGame = function(game) {
 		delete this.games[game];
 		if (this.inGame === game) {
 			this.switchGame(this.inGame, null);
+			this.emit('_game_user', {});
+			this.emit('_game_board', {
+				piles: {},
+				players: []
+			});
+			this.emit('_game_player', null, null, null);
 		}
 		this.emit('_user_room', {
 			head: 'ok',
@@ -44,7 +50,9 @@ User.prototype.removeGame = function(game) {
 
 User.prototype.switchGame = function(fromGame, toGame) {
 	this.socket.leave(fromGame);
-	this.socket.join(toGame);
+	if (toGame !== null) {
+		this.socket.join(toGame);
+	}
 	this.inGame = toGame;
 };
 
