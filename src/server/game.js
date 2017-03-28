@@ -27,23 +27,36 @@ Game.prototype.newRoom = function(room, set) {
 		};
 	}
 	
-	this.initRoom(room, set);
+	this.rooms[room] = {
+		originSet: set,
+		users: {},
+		players: [null, null, null, null],
+		spots: [3,2, 1, 0]
+	};
+	this.initRoom(room);
 	return {
 		head: 'ok',
 		body: 'room was created'
 	};
 };
 
-Game.prototype.initRoom = function(room, set) {
-	this.rooms[room] = {
-		set: set,
-		users: {},
-		players: [null, null, null, null],
-		phase: 0,
-		turn: -1,
-		trash: [],
-		spots: [3, 2, 1, 0]
-	};
+Game.prototype.initRoom = function(room) {
+	var game = this.rooms[room];
+	if (game) {
+		game.set = {
+			start: {},
+			kingdom: {}
+		};
+		Object.keys(game.originSet.start).forEach(function(key) {
+			game.set.start[key] = game.originSet.start[key];
+		});
+		Object.keys(game.originSet.kingdom).forEach(function(key) {
+			game.set.kingdom[key] = game.originSet.kingdom[key];
+		});
+		game.phase = 0;
+		game.turn = -1;
+		game.trash = [];
+	}
 };
 
 Game.prototype.addUser = function(user, room) {
