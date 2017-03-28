@@ -1,4 +1,17 @@
-#container, #game, #players {
+#container, #game, #players, #gameBoard {
 	display: flex;
-	flex-flow: row wrap;
+}
+
+#container {
+	flex-flow: row nowrap;
+	justify-content: space-between;
+}
+
+#game {
+	flex-flow: column nowrap;
+	flex: 1 0 auto;
+}
+
+::-webkit-scrollbar { 
+  display: none; 
 }
