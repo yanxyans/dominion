@@ -70,6 +70,6 @@ io.on('connection', function(socket) {
 	socket.emit('_init', user.name);
 	socket.on('_set_name', user.setName.bind(user));
 	socket.on('_join_game', game.addUser.bind(game, user));
-	socket.on('_enter_game', user.enterGame.bind(user, game.onSuccess.bind(game)));
+	socket.on('_enter_game', game.enterUser.bind(game, user));
 	socket.on('disconnect', game.disconnectUser.bind(game, user));
 });

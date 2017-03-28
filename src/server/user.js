@@ -34,12 +34,6 @@ User.prototype.removeGame = function(game) {
 		delete this.games[game];
 		if (this.inGame === game) {
 			this.switchGame(this.inGame, null);
-			this.emit('_game_user', {});
-			this.emit('_game_board', {
-				piles: {},
-				players: []
-			});
-			this.emit('_game_player', null, null, null);
 		}
 		this.emit('_user_room', {
 			head: 'ok',
@@ -49,33 +43,47 @@ User.prototype.removeGame = function(game) {
 };
 
 User.prototype.switchGame = function(fromGame, toGame) {
-	this.socket.leave(fromGame);
+	if (fromGame !== null) {
+		this.socket.leave(fromGame);
+	}
 	if (toGame !== null) {
 		this.socket.join(toGame);
+	}
+	
+	if (toGame === null) {
+		this.emit('_game_user', {});
+		this.emit('_game_board', {
+			piles: {},
+			players: []
+		});
+		this.emit('_game_player', null, null, null);
+	} else if (fromGame &&
+						 this.games[fromGame] !== -1 &&
+						 this.games[toGame] === -1) {
+		this.emit('_game_player', null, null, null);
 	}
 	this.inGame = toGame;
 };
 
-User.prototype.enterGame = function(onSuccess, game) {
+User.prototype.enterGame = function(game) {
 	if (!(game in this.games)) {
 		this.emit('_user_room', {
 			head: 'err',
 			body: 'room does not exist'
 		});
+		return false;
 	} else {
 		var oldGame = this.inGame;
 		if (oldGame === game) {
 			// do nothing
+			return false;
 		} else {
 			this.switchGame(oldGame, game);
 			this.emit('_user_room', {
 				head: 'ok',
 				body: 'entered room'
 			}, this.getRoom());
-		
-			if (onSuccess) {
-				onSuccess(this);
-			}
+			return true;
 		}
 	}
 };

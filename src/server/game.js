@@ -81,7 +81,7 @@ Game.prototype.addUser = function(user, room) {
 		};
 		
 		user.addGame(room, playerSpot);
-		user.enterGame(null, room);
+		user.enterGame(room);
 		this.emitRoomUser(room);
 		
 		if (userType) {
@@ -108,7 +108,6 @@ Game.prototype.addUser = function(user, room) {
 			this.emitRoomBoard(room);
 		} else {
 			// get board state
-			user.emit('_game_player', null, null, null);
 			user.emit('_game_board', {
 				piles: game.set.kingdom,
 				players: game.players.filter(function(player) {
@@ -159,6 +158,27 @@ Game.prototype.disconnectUser = function(user) {
 	}, this);
 };
 
+Game.prototype.enterUser = function(user, room) {
+	var game = this.rooms[room];
+	if (game) {
+		var res = user.enterGame(room);
+		if (res) {
+			user.emit('_game_user', game.users);
+			user.emit('_game_board', {
+				piles: game.set.kingdom,
+				players: game.players.filter(function(player) {
+					return player && player.id !== user.id;
+				}).map(this.getPlayer)
+			});
+			
+			var isPlayer = user.games[room];
+			if (isPlayer !== -1) {
+				this.emitPlayer(game.players[isPlayer], room);
+			}
+		}
+	}
+};
+
 // game life cycle management
 
 Game.prototype.start = function(player, room) {
@@ -173,18 +193,18 @@ Game.prototype.start = function(player, room) {
 		
 		// init player resources
 		var set = game.set;
-		var players = game.players;
+		var players = game.players.filter(function(player) {
+			return player !== null;
+		});
 		var startCards = Object.keys(set.start);
 		for (var i = 0; i < players.length; i++) {
 			var gamePlayer = players[i];
-			if (gamePlayer) {
-				startCards.forEach(function(startCard) {
-					var startCardAmt = set.start[startCard];
-					this.gain(set.kingdom, gamePlayer.discard, startCard, startCardAmt);
-				}, this);
-				this.draw(gamePlayer, 5);
-				this.emitPlayer(gamePlayer, room);
-			}
+			startCards.forEach(function(startCard) {
+				var startCardAmt = set.start[startCard];
+				this.gain(set.kingdom, gamePlayer.discard, startCard, startCardAmt);
+			}, this);
+			this.draw(gamePlayer, 5);
+			this.emitPlayer(gamePlayer, room);
 		}
 		this.emitRoomBoard(room);
 	}
@@ -262,21 +282,19 @@ Game.prototype.getPlayer = function(player) {
 
 Game.prototype.emitRoomBoard = function(room) {
 	var game = this.rooms[room];
-	if (game) {
-		var socketRoom = this.io.sockets.adapter.rooms[room];
-		if (socketRoom) {
-			var connectedUsers = socketRoom.sockets;
+	var socketRoom = this.io.sockets.adapter.rooms[room];
+	if (game && socketRoom) {
+		var connectedUsers = socketRoom.sockets;
 
-			Object.keys(connectedUsers).forEach(function(user) {
-				// do not emit self to player
-				this.io.to(user).emit('_game_board', {
-					piles: game.set.kingdom,
-					players: game.players.filter(function(player) {
-						return player && player.id !== user;
-					}).map(this.getPlayer)
-				});
-			}, this);
-		}
+		Object.keys(connectedUsers).forEach(function(user) {
+			// do not emit self to player
+			this.io.to(user).emit('_game_board', {
+				piles: game.set.kingdom,
+				players: game.players.filter(function(player) {
+					return player && player.id !== user;
+				}).map(this.getPlayer)
+			});
+		}, this);
 	}
 };
 
@@ -293,27 +311,6 @@ Game.prototype.getAction = function(player, room) {
 		}
 	}
 	return [null, null];
-};
-
-Game.prototype.onSuccess = function(user) {
-	var inGame = user.inGame;
-	var game = this.rooms[inGame];
-	var isPlayer = user.games[inGame];
-	if (game) {
-		user.emit('_game_user', game.users);
-		user.emit('_game_board', {
-			piles: game.set.kingdom,
-			players: game.players.filter(function(player) {
-				return player && player.id != user.id
-			}).map(this.getPlayer)
-		});
-		
-		if (isPlayer !== -1) {
-			this.emitPlayer(game.players[isPlayer], inGame);
-		} else {
-			user.emit('_game_player', null, null, null);
-		}
-	}
 };
 
 module.exports = Game;
