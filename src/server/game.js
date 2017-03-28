@@ -189,13 +189,16 @@ Game.prototype.start = function(player, room) {
 		// game already in progress
 	} else {
 		game.phase = 1;
-		game.turn = 0;
 		
 		// init player resources
 		var set = game.set;
 		var players = game.players.filter(function(player) {
 			return player !== null;
 		});
+		players[0].resource.action = 1;
+		players[0].resource.buy = 1;
+		game.turn = players[0].spot;
+		
 		var startCards = Object.keys(set.start);
 		for (var i = 0; i < players.length; i++) {
 			var gamePlayer = players[i];
@@ -211,9 +214,37 @@ Game.prototype.start = function(player, room) {
 };
 
 Game.prototype.end = function(player, room) {
-	console.log("end");
 	var game = this.rooms[room];
+	if (game && game.phase >= 1 && game.phase <= 3) {
+		player.resource.action = 0;
+		player.resource.buy = 0;
+		player.resource.coin = 0;
+		player.resource.potion = 0;
+		this.cleanUp(player);
+		this.draw(player, 5);
+		
+		game.turn = (game.turn + 1) % 4;
+		while (game.players[game.turn] === null) {
+			game.turn = (game.turn + 1) % 4;
+		}
+		game.players[game.turn].resource.action = 1;
+		game.players[game.turn].resource.buy = 1;
+		
+		this.emitRoomBoard(room);
+		this.emitPlayer(game.players[game.turn], room);
+	}
 	this.emitPlayer(player, room);
+};
+
+Game.prototype.cleanUp = function(player) {
+	var hand_amt = player.hand.length;
+	var inPlay_amt = player.inPlay.length;
+	for (var i = 0; i < hand_amt; i++) {
+		player.discard.push(player.hand.pop());
+	}
+	for (var i = 0; i < inPlay_amt; i++) {
+		player.discard.push(player.inPlay.pop());
+	}
 };
 
 Game.prototype.gain = function(src, dest, card, amt) {

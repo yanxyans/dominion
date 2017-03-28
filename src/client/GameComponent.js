@@ -58,7 +58,7 @@ export default class Container extends React.Component {
 						})}
 					</TableBody>
 				</Table>
-				<Divider />
+				<Divider inset={true} />
 				<Table onRowSelection={this.handlePlay}>
 					<TableBody>
 						{this.props.player.inPlay.map(function(card, index) {
@@ -68,7 +68,7 @@ export default class Container extends React.Component {
 						})}
 					</TableBody>
 				</Table>
-				<Divider />
+				<Divider inset={true} />
 				<Table onRowSelection={this.handleHand}>
 					<TableBody>
 						{this.props.player.hand.map(function(card, index) {
