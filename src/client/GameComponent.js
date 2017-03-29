@@ -24,24 +24,6 @@ export default class Container extends React.Component {
 		this.props.action(args);
 	};
 	
-	handleDiscard = (selected) => {
-		console.log(selected.map(function(item) {
-			return this.props.player.discard[item];
-		}, this));
-	};
-	
-	handlePlay = (selected) => {
-		console.log(selected.map(function(item) {
-			return this.props.player.inPlay[item];
-		}, this));
-	};
-	
-	handleHand = (selected) => {
-		console.log(selected.map(function(item) {
-			return this.props.player.hand[item];
-		}, this));
-	};
-	
   render() {
 		let ActionList = this.props.action ? (
 			<div id='action'>
@@ -58,7 +40,6 @@ export default class Container extends React.Component {
 																 ' b=' + this.props.player.resource.buy +
 																 ' c=' + this.props.player.resource.coin +
 																 ' p=' + this.props.player.resource.potion} />
-				
 					<Divider />
 					<Subheader>Discard</Subheader>
 					<div id='discard' style={styles.wrapper}>
@@ -111,17 +92,12 @@ export default class Container extends React.Component {
 		
 		let PileTable = Object.keys(this.props.piles).length > 0 ? (
 			<MobileTearSheet>
-				<Table>
-					<TableBody>
-						{Object.keys(this.props.piles).map(function(pile, index) {
-							var amt = this.props.piles[pile];
-							return <TableRow key={index}>
-										   <TableRowColumn>{pile}</TableRowColumn>
-										   <TableRowColumn>{amt}</TableRowColumn>
-										 </TableRow>;
-						}, this)}
-					</TableBody>
-				</Table>
+				<List>
+				{Object.keys(this.props.piles).map(function(pile, index) {
+					var amt = this.props.piles[pile];
+					return <ListItem primaryText={pile} secondaryText={amt} key={index} onTouchTap={this.props._buyCard.bind(null, pile)} />;
+				}, this)}
+				</List>
 			</MobileTearSheet>
 		) : null;
 		let UserTable = Object.keys(this.props.users).length > 0 ? (

@@ -17,6 +17,48 @@ function shuffle(a) {
 	}
 }
 
+function getCoin(card) {
+	switch (card) {
+		case 'copper':
+			return 0;
+		case 'silver':
+			return 3;
+		case 'gold':
+			return 6;
+		case 'estate':
+			return 2;
+		case 'duchy':
+			return 5;
+		case 'province':
+			return 8;
+		case 'curse':
+			return 0;
+		default:
+			return 0;
+	}
+}
+
+function getPotion(card) {
+	switch (card) {
+		case 'copper':
+			return 0;
+		case 'silver':
+			return 0;
+		case 'gold':
+			return 0;
+		case 'estate':
+			return 0;
+		case 'duchy':
+			return 0;
+		case 'province':
+			return 0;
+		case 'curse':
+			return 0;
+		default:
+			return 0;
+	}
+}
+
 // game room management
 
 Game.prototype.newRoom = function(room, set) {
@@ -271,6 +313,32 @@ Game.prototype.draw = function(player, amt) {
 	}
 };
 
+Game.prototype.buyCard = function(user, card) {
+	var room = user.inGame;
+	var game = this.rooms[room];
+	if (game && game.phase >= 1 && game.phase <= 3) {
+		var player = game.players[game.turn];
+		var kingdom = game.set.kingdom;
+		if (player.id === user.id && kingdom[card]) {
+			var coin = getCoin(card);
+			var potion = getPotion(card);
+			if ((coin <= player.resource.coin) &&
+					(potion <= player.resource.potion) &&
+					player.resource.buy) {
+				game.phase = 3;
+				
+				player.resource.coin -= coin;
+				player.resource.potion -= potion;
+				player.resource.buy--;
+				
+				this.gain(kingdom, player.discard, card, 1);
+				this.emitPlayer(player, room);
+				this.emitRoomBoard(room);
+			}
+		}
+	}
+};
+
 // game view management
 
 Game.prototype.emitRoomUser = function(room) {
@@ -336,6 +404,10 @@ Game.prototype.getAction = function(player, room) {
 			case 0:
 				return ["Start Game", this.start.bind(this, player, room)];
 			case 1:
+				return ["End Turn", this.end.bind(this, player, room)];
+			case 2:
+				return ["End Turn", this.end.bind(this, player, room)];
+			case 3:
 				return ["End Turn", this.end.bind(this, player, room)];
 			default:
 				// do nothing

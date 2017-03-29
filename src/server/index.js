@@ -72,4 +72,5 @@ io.on('connection', function(socket) {
 	socket.on('_join_game', game.addUser.bind(game, user));
 	socket.on('_enter_game', game.enterUser.bind(game, user));
 	socket.on('disconnect', game.disconnectUser.bind(game, user));
+	socket.on('_buy_card', game.buyCard.bind(game, user));
 });

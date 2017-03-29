@@ -72,6 +72,10 @@ class Container extends React.Component {
 		this.socket.emit('_enter_game', game);
 	};
 	
+	_buyCard = (card) => {
+		this.socket.emit('_buy_card', card);
+	};
+	
 	componentDidMount = () => {
 		this.socket = io();
 		this.socket.on('_init', this._init);
@@ -80,6 +84,8 @@ class Container extends React.Component {
 		this.socket.on('_game_user', this._user);
 		this.socket.on('_game_player', this._player);
 		this.socket.on('_game_board', this._board);
+		
+		this._joinGame('dominion0');
 	}
 	
   render() {
@@ -91,7 +97,8 @@ class Container extends React.Component {
 												 actionName={this.state.actionName}
 												 action={this.state.action}
 												 piles={this.state.piles}
-												 players={this.state.players} />
+												 players={this.state.players}
+												 _buyCard={this._buyCard} />
 					<MenuComponent name={this.state.name}
 												 _setName={this._setName}
 												 rooms={this.state.rooms}
