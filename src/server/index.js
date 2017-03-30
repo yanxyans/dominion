@@ -48,7 +48,7 @@ var set2 = {
 		province: 12,
 		curse: 30
 	}
-}
+};
 game.newRoom(room, set);
 game.newRoom(room2, set2);
 

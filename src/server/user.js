@@ -30,16 +30,14 @@ User.prototype.addGame = function(game, spot) {
 };
 
 User.prototype.removeGame = function(game) {
-	if (this.games[game]) {
-		delete this.games[game];
-		if (this.inGame === game) {
-			this.switchGame(this.inGame, null);
-		}
-		this.emit('_user_room', {
-			head: 'ok',
-			body: 'left room'
-		}, this.getRoom());
+	delete this.games[game];
+	if (this.inGame === game) {
+		this.switchGame(this.inGame, null);
 	}
+	this.emit('_user_room', {
+		head: 'ok',
+		body: 'left room'
+	}, this.getRoom());
 };
 
 User.prototype.switchGame = function(fromGame, toGame) {
@@ -49,7 +47,8 @@ User.prototype.switchGame = function(fromGame, toGame) {
 	if (toGame !== null) {
 		this.socket.join(toGame);
 	}
-	
+
+	this.inGame = toGame;
 	if (toGame === null) {
 		this.emit('_game_user', {});
 		this.emit('_game_board', {
@@ -62,7 +61,6 @@ User.prototype.switchGame = function(fromGame, toGame) {
 						 this.games[toGame] === -1) {
 		this.emit('_game_player', null, null, null);
 	}
-	this.inGame = toGame;
 };
 
 User.prototype.enterGame = function(game) {
