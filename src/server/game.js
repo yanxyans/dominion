@@ -59,6 +59,47 @@ function getPotion(card) {
 	}
 }
 
+function getType(card) {
+	switch (card) {
+		case 'copper':
+			return ['treasure'];
+		case 'silver':
+			return ['treasure'];
+		case 'gold':
+			return ['treasure'];
+		case 'estate':
+			return ['victory'];
+		case 'duchy':
+			return ['victory'];
+		case 'province':
+			return ['victory'];
+		case 'curse':
+			return ['curse'];
+		case 'cellar':
+			return ['action'];
+		case 'market':
+			return ['action'];
+		case 'mine':
+			return ['action'];
+		case 'militia':
+			return ['action', 'attack'];
+		case 'moat':
+			return ['action', 'reaction'];
+		case 'remodel':
+			return ['action'];
+		case 'smithy':
+			return ['action'];
+		case 'village':
+			return ['action'];
+		case 'woodcutter':
+			return ['action'];
+		case 'workshop':
+			return ['action'];
+		default:
+			return null;
+	}
+}
+
 // game room management
 
 Game.prototype.newRoom = function(room, set) {
@@ -313,27 +354,63 @@ Game.prototype.draw = function(player, amt) {
 	}
 };
 
-Game.prototype.buyCard = function(user, card) {
+Game.prototype.clickCard = function(user, type, card) {
+	console.log("clicked card " + card + " of type " + type);
+	switch (type) {
+		case 'discard':
+			this.handleDiscard(user, card);
+			break;
+		case 'in_play':
+			this.handleInPlay(user, card);
+			break;
+		case 'in_hand':
+			this.handleInHand(user, card);
+			break;
+		case 'buy':
+			this.handleBuy(user, card);
+			break;
+		default:
+			// do nothing
+	}
+};
+
+Game.prototype.handleDiscard = function(user, card) {
+	// handle discard click
+};
+
+Game.prototype.handleInPlay = function(user, card) {
+	// handle in_play click
+};
+
+Game.prototype.handleInHand = function(user, card) {
+	// handle in_hand click
+};
+
+Game.prototype.handleBuy = function(user, card) {
 	var room = user.inGame;
 	var game = this.rooms[room];
-	if (game && game.phase >= 1 && game.phase <= 3) {
+	if (game && game.phase) {
 		var player = game.players[game.turn];
 		var kingdom = game.set.kingdom;
 		if (player.id === user.id && kingdom[card]) {
-			var coin = getCoin(card);
-			var potion = getPotion(card);
-			if ((coin <= player.resource.coin) &&
-					(potion <= player.resource.potion) &&
-					player.resource.buy) {
-				game.phase = 3;
-				
-				player.resource.coin -= coin;
-				player.resource.potion -= potion;
-				player.resource.buy--;
-				
-				this.gain(kingdom, player.discard, card, 1);
-				this.emitPlayer(player, room);
-				this.emitRoomBoard(room);
+			if (game.phase >= 1 && game.phase <= 3) {
+				var coin = getCoin(card);
+				var potion = getPotion(card);
+				if ((coin <= player.resource.coin) &&
+						(potion <= player.resource.potion) &&
+						player.resource.buy) {
+					game.phase = 3;
+					
+					player.resource.coin -= coin;
+					player.resource.potion -= potion;
+					player.resource.buy--;
+					
+					this.gain(kingdom, player.discard, card, 1);
+					this.emitPlayer(player, room);
+					this.emitRoomBoard(room);
+				}
+			} else if (game.phase === 6) {
+				// select buy card
 			}
 		}
 	}

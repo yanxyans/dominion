@@ -72,8 +72,8 @@ class Container extends React.Component {
 		this.socket.emit('_enter_game', game);
 	};
 	
-	_buyCard = (card) => {
-		this.socket.emit('_buy_card', card);
+	_clickCard = (clickKey, cardKey) => {
+		this.socket.emit('_click_card', clickKey, cardKey);
 	};
 	
 	componentDidMount = () => {
@@ -98,7 +98,7 @@ class Container extends React.Component {
 												 action={this.state.action}
 												 piles={this.state.piles}
 												 players={this.state.players}
-												 _buyCard={this._buyCard} />
+												 _clickCard={this._clickCard} />
 					<MenuComponent name={this.state.name}
 												 _setName={this._setName}
 												 rooms={this.state.rooms}

@@ -20,8 +20,7 @@ const styles = {
 export default class Container extends React.Component {
 	
 	handleAction = () => {
-		var args = [];
-		this.props.action(args);
+		this.props.action();
 	};
 	
   render() {
@@ -44,22 +43,22 @@ export default class Container extends React.Component {
 					<Subheader>Discard</Subheader>
 					<div id='discard' style={styles.wrapper}>
 					{this.props.player.discard.map(function(card, index) {
-						return <Chip key={index} style={styles.chip}>{card}</Chip>;
-					})}
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'discard', index)}>{card}</Chip>;
+					}, this)}
 					</div>
 					<Divider />
 					<Subheader>Played</Subheader>
 					<div id='in_play' style={styles.wrapper}>
 					{this.props.player.inPlay.map(function(card, index) {
-						return <Chip key={index} style={styles.chip}>{card}</Chip>;
-					})}
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_play', index)}>{card}</Chip>;
+					}, this)}
 					</div>
 					<Divider />
 					<Subheader>Hand</Subheader>
 					<div id='in_hand' style={styles.wrapper}>
 					{this.props.player.hand.map(function(card, index) {
-						return <Chip key={index} style={styles.chip}>{card}</Chip>;
-					})}
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_hand', index)}>{card}</Chip>;
+					}, this)}
 					</div>
 					{ActionList}
 				</List>
@@ -90,29 +89,24 @@ export default class Container extends React.Component {
 			</div>
 		) : null;
 		
-		let PileTable = Object.keys(this.props.piles).length > 0 ? (
+		let PileTable = Object.keys(this.props.piles).length ? (
 			<MobileTearSheet>
 				<List>
 				{Object.keys(this.props.piles).map(function(pile, index) {
 					var amt = this.props.piles[pile];
-					return <ListItem primaryText={pile} secondaryText={amt} key={index} onTouchTap={this.props._buyCard.bind(null, pile)} />;
+					return <ListItem primaryText={pile} secondaryText={amt} key={index} onTouchTap={this.props._clickCard.bind(null, 'buy', pile)} />;
 				}, this)}
 				</List>
 			</MobileTearSheet>
 		) : null;
-		let UserTable = Object.keys(this.props.users).length > 0 ? (
+		let UserTable = Object.keys(this.props.users).length ? (
 			<MobileTearSheet>
-				<Table>
-					<TableBody>
-						{Object.keys(this.props.users).map(function(key, index) {
-							var user = this.props.users[key];
-							return <TableRow key={index}>
-										   <TableRowColumn>{user.name}</TableRowColumn>
-											 <TableRowColumn>{user.type ? "player" : "spec"}</TableRowColumn>
-										 </TableRow>;
-						}, this)}
-					</TableBody>
-				</Table>
+				<List>
+				{Object.keys(this.props.users).map(function(key, index) {
+					var user = this.props.users[key];
+					return <ListItem primaryText={user.name} secondaryText={user.type ? "player" : "spec"} key={index} />;
+				}, this)}
+				</List>
 			</MobileTearSheet>
 		) : null;
 		let GameTable = PileTable || UserTable ? (
