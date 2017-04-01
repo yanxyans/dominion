@@ -80,9 +80,11 @@ export default class Container extends React.Component {
 																						' p=' + player.resource.potion} />
 										 <Divider />
 										 <Subheader>Played</Subheader>
+										 <div id='in_play' style={styles.wrapper}>
 										 {player.inPlay.map(function(card, index) {
-											 return <Chip key={index}>{card}</Chip>;
+											 return <Chip key={index} style={styles.chip}>{card}</Chip>;
 										 })}
+										 </div>
 									 </List>
 								 </MobileTearSheet>;
 				})}

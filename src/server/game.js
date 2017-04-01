@@ -310,6 +310,8 @@ Game.prototype.end = function(player, room) {
 		while (game.players[game.turn] === null) {
 			game.turn = (game.turn + 1) % 4;
 		}
+		game.phase = 1;
+
 		game.players[game.turn].resource.action = 1;
 		game.players[game.turn].resource.buy = 1;
 		
@@ -382,8 +384,92 @@ Game.prototype.handleInPlay = function(user, card) {
 	// handle in_play click
 };
 
+Game.prototype.doAction = function(game, card, cardName) {
+	switch (cardName) {
+		case 'cellar':
+			// do cellar
+			break;
+		default:
+			// do nothing
+	}
+};
+
+Game.prototype.doTreasure = function(room, card, cardName) {
+	var game = this.rooms[room];
+	if (game) {
+		var player = game.players[game.turn];
+		switch (cardName) {
+			case 'copper':
+				game.phase = 2;
+				
+				// move card to play field
+				player.inPlay.push(player.hand.splice(card, 1)[0]);
+				
+				// apply it
+				player.resource.coin++;
+				this.emitPlayer(player, room);
+				this.emitRoomBoard(room);
+				break;
+			case 'silver':
+				game.phase = 2;
+				
+				// move card to play field
+				player.inPlay.push(player.hand.splice(card, 1)[0]);
+				
+				// apply it
+				player.resource.coin += 2;
+				this.emitPlayer(player, room);
+				this.emitRoomBoard(room);
+				break;
+			case 'gold':
+				game.phase = 2;
+				
+				// move card to play field
+				player.inPlay.push(player.hand.splice(card, 1)[0]);
+				
+				// apply it
+				player.resource.coin += 3;
+				this.emitPlayer(player, room);
+				this.emitRoomBoard(room);
+				break;
+			default:
+				// do nothing
+		}
+	}
+};
+
+Game.prototype.playCard = function(room, card, cardName, possible) {
+	var game = this.rooms[room];
+	if (game) {
+		if (possible.includes('action') && possible.includes('treasure')) {
+			// crown card
+		} else if (possible.includes('action')) {
+			this.doAction(room, card, cardName);
+		} else if (possible.includes('treasure')) {
+			this.doTreasure(room, card, cardName);
+		}
+	}
+};
+
 Game.prototype.handleInHand = function(user, card) {
-	// handle in_hand click
+	var room = user.inGame;
+	var game = this.rooms[room];
+	if (game && game.phase) {
+		var player = game.players[game.turn];
+		if (player.id === user.id && card in player.hand) {
+			var cardName = player.hand[card];
+			var type = getType(cardName);
+			if (type) {
+				if (game.phase >= 1 && game.phase <= 2) {
+					var phase = game.phase === 1 ? ['action', 'treasure'] : ['treasure'];
+					var possiblePlays = phase.filter(function(n) {
+						return type.indexOf(n) !== -1;
+					});
+					this.playCard(room, card, cardName, possiblePlays);
+				}
+			}
+		}
+	}
 };
 
 Game.prototype.handleBuy = function(user, card) {
@@ -486,6 +572,8 @@ Game.prototype.getAction = function(player, room) {
 				return ["End Turn", this.end.bind(this, player, room)];
 			case 3:
 				return ["End Turn", this.end.bind(this, player, room)];
+			case 4:
+				return ["Apply Action", this.applyAction];
 			default:
 				// do nothing
 		}
