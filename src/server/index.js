@@ -31,26 +31,20 @@ var set = {
 		estate: 24,
 		duchy: 12,
 		province: 12,
-		curse: 30
-	}
-};
-var room2 = 'dominion1';
-var set2 = {
-	start: {
-		copper: 7,
-		estate: 3
-	},
-	kingdom: {
-		copper: 60,
-		gold: 30,
-		estate: 24,
-		duchy: 12,
-		province: 12,
-		curse: 30
+		curse: 30,
+		cellar: 10,
+		market: 10,
+		militia: 10,
+		mine: 10,
+		moat: 10,
+		remodel: 10,
+		smithy: 10,
+		village: 10,
+		woodcutter: 10,
+		workshop: 10
 	}
 };
 game.newRoom(room, set);
-game.newRoom(room2, set2);
 
 var webpack = require('webpack');
 var webpackConfig = require('../../webpack.config');

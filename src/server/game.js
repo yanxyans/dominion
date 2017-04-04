@@ -33,6 +33,26 @@ function getCoin(card) {
 			return 8;
 		case 'curse':
 			return 0;
+		case 'cellar':
+			return 2;
+		case 'market':
+			return 5;
+		case 'militia':
+			return 4;
+		case 'mine':
+			return 5;
+		case 'moat':
+			return 2;
+		case 'remodel':
+			return 4;
+		case 'smithy':
+			return 4;
+		case 'village':
+			return 3;
+		case 'woodcutter':
+			return 3;
+		case 'workshop':
+			return 4;
 		default:
 			return 0;
 	}
@@ -53,6 +73,26 @@ function getPotion(card) {
 		case 'province':
 			return 0;
 		case 'curse':
+			return 0;
+		case 'cellar':
+			return 0;
+		case 'market':
+			return 0;
+		case 'militia':
+			return 0;
+		case 'mine':
+			return 0;
+		case 'moat':
+			return 0;
+		case 'remodel':
+			return 0;
+		case 'smithy':
+			return 0;
+		case 'village':
+			return 0;
+		case 'woodcutter':
+			return 0;
+		case 'workshop':
 			return 0;
 		default:
 			return 0;
