@@ -424,13 +424,58 @@ Game.prototype.handleInPlay = function(user, card) {
 	// handle in_play click
 };
 
-Game.prototype.doAction = function(game, card, cardName) {
-	switch (cardName) {
-		case 'cellar':
-			// do cellar
-			break;
-		default:
-			// do nothing
+Game.prototype.doAction = function(room, card, cardName) {
+	var game = this.rooms[room];
+	if (game) {
+		var player = game.players[game.turn];
+		switch (cardName) {
+			case 'cellar':
+				console.log("cellar");
+				break;
+			case 'market':
+				if (player.resource.action) {
+					player.resource.action--;
+					
+					// move card to play field
+					player.inPlay.push(player.hand.splice(card, 1)[0]);
+					
+					// apply it
+					this.draw(player, 1);
+					player.resource.action++;
+					player.resource.buy++;
+					player.resource.coin++;
+					
+					this.emitPlayer(player, room);
+					this.emitRoomBoard(room);
+				}
+				break;
+			case 'militia':
+				console.log("militia");
+				break;
+			case 'mine':
+				console.log("mine");
+				break;
+			case 'moat':
+				console.log("moat");
+				break;
+			case 'remodel':
+				console.log("remodel");
+				break;
+			case 'smithy':
+				console.log("smithy");
+				break;
+			case 'village':
+				console.log("village");
+				break;
+			case 'woodcutter':
+				console.log("woodcutter");
+				break;
+			case 'workshop':
+				console.log("workshop");
+				break;
+			default:
+				// do nothing
+		}
 	}
 };
 
@@ -484,6 +529,7 @@ Game.prototype.playCard = function(room, card, cardName, possible) {
 		if (possible.includes('action') && possible.includes('treasure')) {
 			// crown card
 		} else if (possible.includes('action')) {
+			var player = game.players[game.turn];
 			this.doAction(room, card, cardName);
 		} else if (possible.includes('treasure')) {
 			this.doTreasure(room, card, cardName);
