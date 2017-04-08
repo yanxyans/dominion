@@ -462,13 +462,48 @@ Game.prototype.doAction = function(room, card, cardName) {
 				console.log("remodel");
 				break;
 			case 'smithy':
-				console.log("smithy");
+				if (player.resource.action) {
+					player.resource.action--;
+					
+					// move card to play field
+					player.inPlay.push(player.hand.splice(card, 1)[0]);
+					
+					// apply it
+					this.draw(player, 3);
+					
+					this.emitPlayer(player, room);
+					this.emitRoomBoard(room);
+				}
 				break;
 			case 'village':
-				console.log("village");
+				if (player.resource.action) {
+					player.resource.action--;
+					
+					// move card to play field
+					player.inPlay.push(player.hand.splice(card, 1)[0]);
+					
+					// apply it
+					this.draw(player, 1);
+					player.resource.action += 2;
+					
+					this.emitPlayer(player, room);
+					this.emitRoomBoard(room);
+				}
 				break;
 			case 'woodcutter':
-				console.log("woodcutter");
+				if (player.resource.action) {
+					player.resource.action--;
+					
+					// move card to play field
+					player.inPlay.push(player.hand.splice(card, 1)[0]);
+					
+					// apply it
+					player.resource.buy++;
+					player.resource.coin += 2;
+					
+					this.emitPlayer(player, room);
+					this.emitRoomBoard(room);
+				}
 				break;
 			case 'workshop':
 				console.log("workshop");
