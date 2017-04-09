@@ -179,6 +179,9 @@ Game.prototype.initRoom = function(room) {
 		game.phase = 0;
 		game.turn = -1;
 		game.trash = [];
+		game.actions = [];
+		game.selected = [];
+		game.canSelect = [];
 	}
 };
 
@@ -361,6 +364,23 @@ Game.prototype.end = function(player, room) {
 	this.emitPlayer(player, room);
 };
 
+Game.prototype.applyAction = function(player, room) {
+	var game = this.rooms[room];
+	if (game && game.phase === 4) {
+		if (game.actions[0]()) {
+			game.selected = [];
+			game.actions.shift();
+			game.canSelect.shift();
+			
+			if (game.actions.length === 0) {
+				game.phase = 1;
+			}
+			this.emitRoomBoard(room);
+		}
+	}
+	this.emitPlayer(player, room);
+};
+
 Game.prototype.cleanUp = function(player) {
 	var hand_amt = player.hand.length;
 	var inPlay_amt = player.inPlay.length;
@@ -397,7 +417,6 @@ Game.prototype.draw = function(player, amt) {
 };
 
 Game.prototype.clickCard = function(user, type, card) {
-	console.log("clicked card " + card + " of type " + type);
 	switch (type) {
 		case 'discard':
 			this.handleDiscard(user, card);
@@ -430,7 +449,36 @@ Game.prototype.doAction = function(room, card, cardName) {
 		var player = game.players[game.turn];
 		switch (cardName) {
 			case 'cellar':
-				console.log("cellar");
+				if (player.resource.action) {
+					player.resource.action--;
+					
+					// move card to play field
+					player.inPlay.push(player.hand.splice(card, 1)[0]);
+					
+					// apply it
+					player.resource.action++;
+					game.phase = 4;
+					var cellarAction = function(draw) {
+						var player = this.players[this.turn];
+						var selected = this.selected.sort();
+						var toCellar = [];
+						for (var i = selected.length - 1; i > -1; i--) {
+							toCellar.push(player.hand.splice(selected[i], 1)[0]);
+						}
+						var drawAmt = toCellar.length;
+						while (toCellar.length) {
+							player.discard.push(toCellar.pop());
+						}
+						draw(player, drawAmt);
+						return true;
+					}
+					game.actions.push(cellarAction.bind(game, this.draw.bind(this)));
+					// 0 for discard, 1 for in_play, 2 for in_hand, 3 for buy
+					game.canSelect.push([[], [], ["any"], []]);
+					
+					this.emitPlayer(player, room);
+					this.emitRoomBoard(room);
+				}
 				break;
 			case 'market':
 				if (player.resource.action) {
@@ -587,6 +635,15 @@ Game.prototype.handleInHand = function(user, card) {
 						return type.indexOf(n) !== -1;
 					});
 					this.playCard(room, card, cardName, possiblePlays);
+				} else if (game.phase === 4 &&
+									 (game.canSelect[0][2].indexOf("any") !== -1 ||
+									 game.canSelect[0][2].indexOf(type) !== -1)) {
+					var selectedAlready = game.selected.indexOf(card);
+					if (selectedAlready !== -1) {
+						game.selected.splice(selectedAlready, 1);
+					} else {
+						game.selected.push(card);
+					}
 				}
 			}
 		}
@@ -616,7 +673,7 @@ Game.prototype.handleBuy = function(user, card) {
 					this.emitPlayer(player, room);
 					this.emitRoomBoard(room);
 				}
-			} else if (game.phase === 6) {
+			} else if (game.phase === 4) {
 				// select buy card
 			}
 		}
@@ -694,7 +751,7 @@ Game.prototype.getAction = function(player, room) {
 			case 3:
 				return ["End Turn", this.end.bind(this, player, room)];
 			case 4:
-				return ["Apply Action", this.applyAction];
+				return ["Apply Action", this.applyAction.bind(this, player, room)];
 			default:
 				// do nothing
 		}
