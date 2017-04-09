@@ -43,21 +43,21 @@ export default class Container extends React.Component {
 					<Subheader>Discard</Subheader>
 					<div id='discard' style={styles.wrapper}>
 					{this.props.player.discard.map(function(card, index) {
-						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'discard', index)}>{card}</Chip>;
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'discard', index)} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
 					}, this)}
 					</div>
 					<Divider />
 					<Subheader>Played</Subheader>
 					<div id='in_play' style={styles.wrapper}>
 					{this.props.player.inPlay.map(function(card, index) {
-						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_play', index)}>{card}</Chip>;
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_play', index)} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
 					}, this)}
 					</div>
 					<Divider />
 					<Subheader>Hand</Subheader>
 					<div id='in_hand' style={styles.wrapper}>
 					{this.props.player.hand.map(function(card, index) {
-						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_hand', index)}>{card}</Chip>;
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_hand', index)} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
 					}, this)}
 					</div>
 					{ActionList}
@@ -72,7 +72,7 @@ export default class Container extends React.Component {
 								   <List>
 										 <ListItem primaryText={'name = ' + player.name} />
 										 <ListItem primaryText={'deck size = ' + player.deckSize} />
-										 <ListItem primaryText={'discard top = ' + (player.discardTop[0] ? player.discardTop[0] : 'none')} />
+										 <ListItem primaryText={'discard top = ' + player.discardTop} />
 										 <ListItem primaryText={'hand size = ' + player.handSize} />
 										 <ListItem primaryText={'a=' + player.resource.action +
 																						' b=' + player.resource.buy +
@@ -82,7 +82,7 @@ export default class Container extends React.Component {
 										 <Subheader>Played</Subheader>
 										 <div id='in_play' style={styles.wrapper}>
 										 {player.inPlay.map(function(card, index) {
-											 return <Chip key={index} style={styles.chip}>{card}</Chip>;
+											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
 										 })}
 										 </div>
 									 </List>

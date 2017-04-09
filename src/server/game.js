@@ -17,129 +17,6 @@ function shuffle(a) {
 	}
 }
 
-function getCoin(card) {
-	switch (card) {
-		case 'copper':
-			return 0;
-		case 'silver':
-			return 3;
-		case 'gold':
-			return 6;
-		case 'estate':
-			return 2;
-		case 'duchy':
-			return 5;
-		case 'province':
-			return 8;
-		case 'curse':
-			return 0;
-		case 'cellar':
-			return 2;
-		case 'market':
-			return 5;
-		case 'militia':
-			return 4;
-		case 'mine':
-			return 5;
-		case 'moat':
-			return 2;
-		case 'remodel':
-			return 4;
-		case 'smithy':
-			return 4;
-		case 'village':
-			return 3;
-		case 'woodcutter':
-			return 3;
-		case 'workshop':
-			return 4;
-		default:
-			return 0;
-	}
-}
-
-function getPotion(card) {
-	switch (card) {
-		case 'copper':
-			return 0;
-		case 'silver':
-			return 0;
-		case 'gold':
-			return 0;
-		case 'estate':
-			return 0;
-		case 'duchy':
-			return 0;
-		case 'province':
-			return 0;
-		case 'curse':
-			return 0;
-		case 'cellar':
-			return 0;
-		case 'market':
-			return 0;
-		case 'militia':
-			return 0;
-		case 'mine':
-			return 0;
-		case 'moat':
-			return 0;
-		case 'remodel':
-			return 0;
-		case 'smithy':
-			return 0;
-		case 'village':
-			return 0;
-		case 'woodcutter':
-			return 0;
-		case 'workshop':
-			return 0;
-		default:
-			return 0;
-	}
-}
-
-function getType(card) {
-	switch (card) {
-		case 'copper':
-			return ['treasure'];
-		case 'silver':
-			return ['treasure'];
-		case 'gold':
-			return ['treasure'];
-		case 'estate':
-			return ['victory'];
-		case 'duchy':
-			return ['victory'];
-		case 'province':
-			return ['victory'];
-		case 'curse':
-			return ['curse'];
-		case 'cellar':
-			return ['action'];
-		case 'market':
-			return ['action'];
-		case 'mine':
-			return ['action'];
-		case 'militia':
-			return ['action', 'attack'];
-		case 'moat':
-			return ['action', 'reaction'];
-		case 'remodel':
-			return ['action'];
-		case 'smithy':
-			return ['action'];
-		case 'village':
-			return ['action'];
-		case 'woodcutter':
-			return ['action'];
-		case 'workshop':
-			return ['action'];
-		default:
-			return null;
-	}
-}
-
 // game room management
 
 Game.prototype.newRoom = function(room, set) {
@@ -168,20 +45,19 @@ Game.prototype.initRoom = function(room) {
 	if (game) {
 		game.set = {
 			start: {},
-			kingdom: {}
+			kingdom: {},
+			kingdomCards: {}
 		};
 		Object.keys(game.originSet.start).forEach(function(key) {
 			game.set.start[key] = game.originSet.start[key];
 		});
 		Object.keys(game.originSet.kingdom).forEach(function(key) {
 			game.set.kingdom[key] = game.originSet.kingdom[key];
-		});
+			game.set.kingdomCards[key] = this.getCard(key);
+		}, this);
 		game.phase = 0;
 		game.turn = -1;
 		game.trash = [];
-		game.actions = [];
-		game.selected = [];
-		game.canSelect = [];
 	}
 };
 
@@ -225,7 +101,8 @@ Game.prototype.addUser = function(user, room) {
 					buy: 0,
 					coin: 0,
 					potion: 0
-				}
+				},
+				todo: []
 			};
 			
 			game.players[playerSpot] = player;
@@ -332,7 +209,7 @@ Game.prototype.start = function(player, room) {
 				var startCardAmt = set.start[startCard];
 				this.gain(set.kingdom, gamePlayer.discard, startCard, startCardAmt);
 			}, this);
-			this.draw(gamePlayer, 5);
+			draw(gamePlayer, 5);
 			this.emitPlayer(gamePlayer, room);
 		}
 		this.emitRoomBoard(room);
@@ -347,7 +224,7 @@ Game.prototype.end = function(player, room) {
 		player.resource.coin = 0;
 		player.resource.potion = 0;
 		this.cleanUp(player);
-		this.draw(player, 5);
+		draw(player, 5);
 		
 		game.turn = (game.turn + 1) % 4;
 		while (game.players[game.turn] === null) {
@@ -355,11 +232,12 @@ Game.prototype.end = function(player, room) {
 		}
 		game.phase = 1;
 
-		game.players[game.turn].resource.action = 1;
-		game.players[game.turn].resource.buy = 1;
+		var newPlayer = game.players[game.turn];
+		newPlayer.resource.action = 1;
+		newPlayer.resource.buy = 1;
 		
 		this.emitRoomBoard(room);
-		this.emitPlayer(game.players[game.turn], room);
+		this.emitPlayer(newPlayer, room);
 	}
 	this.emitPlayer(player, room);
 };
@@ -367,13 +245,22 @@ Game.prototype.end = function(player, room) {
 Game.prototype.applyAction = function(player, room) {
 	var game = this.rooms[room];
 	if (game && game.phase === 4) {
-		if (game.actions[0]()) {
-			game.selected = [];
-			game.actions.shift();
-			game.canSelect.shift();
-			
-			if (game.actions.length === 0) {
-				game.phase = 1;
+		if (player.todo[0]()) {
+			player.todo.shift();
+			player.discard = player.discard.map(function(card) {
+				card.selected = false;
+				return card;
+			});
+			player.inPlay = player.inPlay.map(function(card) {
+				card.selected = false;
+				return card;
+			});
+			player.hand = player.hand.map(function(card) {
+				card.selected = false;
+				return card;
+			});
+			if (player.todo.length) {
+				game.phase = 4;
 			}
 			this.emitRoomBoard(room);
 		}
@@ -398,21 +285,152 @@ Game.prototype.gain = function(src, dest, card, amt) {
 	src[card] -= gain_amt;
 	
 	for (var i = 0; i < gain_amt; i++) {
-		dest.push(card);
+		dest.push(this.getCard(card));
 	}
 };
 
-Game.prototype.draw = function(player, amt) {
-	var deck_amt = player.deck.length;
-	var draw_amt = Math.min(amt, deck_amt);
-	
-	for (var i = 0; i < draw_amt; i++) {
-		player.hand.push(player.deck.pop());
+function treasureCard(name, coinCost, potCost, coinValue, potValue, types, effect, selected) {
+	this.name = name;
+	this.coinCost = coinCost;
+	this.potCost = potCost;
+	this.types = types;
+	this.effect = function(player, game, cardIndex) {
+		player.inPlay.push(player.hand.splice(cardIndex, 1)[0]);
+		
+		player.resource.coin += coinValue;
+		player.resource.potion += potValue;
+		
+		return effect(player, game);
+	};
+	this.selected = selected;
+}
+
+function victoryCard(name, coinCost, potCost, victoryPoints, types, effect, selected) {
+	this.name = name;
+	this.coinCost = coinCost;
+	this.potCost = potCost;
+	this.victoryPoints = victoryPoints;
+	this.types = types;
+	this.effect = function(player, game) {
+		return effect(player, game);
+	};
+	this.selected = selected;
+}
+
+function actionCard(name, coinCost, potCost, types, effect, selected) {
+	this.name = name;
+	this.coinCost = coinCost;
+	this.potCost = potCost;
+	this.types = types;
+	this.effect = function(player, game, cardIndex) {
+		player.inPlay.push(player.hand.splice(cardIndex, 1)[0]);
+		return effect(player, game);
+	};
+}
+
+Game.prototype.getCard = function(card) {
+	switch (card) {
+		case 'copper':
+			return new treasureCard("copper", 0, 0, 1, 0, ["treasure"], function() { return true; }, false);
+		case 'silver':
+			return new treasureCard("silver", 3, 0, 2, 0, ["treasure"], function() { return true; }, false);
+		case 'gold':
+			return new treasureCard("gold", 6, 0, 3, 0, ["treasure"], function() { return true; }, false);
+		case 'estate':
+			return new victoryCard("estate", 2, 0, 1, ["victory"], function() { return true; }, false);
+		case 'duchy':
+			return new victoryCard("duchy", 5, 0, 3, ["victory"], function() { return true; }, false);
+		case 'province':
+			return new victoryCard("province", 8, 0, 6, ["victory"], function() { return true; }, false);
+		case 'curse':
+			return new victoryCard("curse", 0, 0, -1, ["curse"], function() { return true; }, false);
+		case 'cellar':
+			return new actionCard("cellar", 2, 0, ["action"], function(player, game) {
+				player.resource.action++;
+				game.phase = 4;
+				var cellarAction = function(player, game) {
+					var selected = [];
+					player.hand.forEach(function(el, index) {
+						if (el.selected) {
+							selected.push(index);
+						}
+					});
+					var drawAmt = selected.length;
+					for (var i = selected.length - 1; i > -1; i--) {
+						var selectedCard = player.hand.splice(selected[i], 1)[0];
+						selectedCard.selected = false;
+						player.discard.push(selectedCard);
+					}
+					draw(player, drawAmt);
+					game.phase = 1;
+					return true;
+				}
+				player.todo.push(cellarAction.bind(null, player, game));
+				return true;
+			}, false);
+		case 'market':
+			return new actionCard("market", 5, 0, ["action"], function(player) {
+				draw(player, 1);
+				player.resource.action++;
+				player.resource.buy++;
+				player.resource.coin++;
+				return true;
+			}, false);
+		case 'militia':
+			return new actionCard("militia", 4, 0, ["action", "attack"], function(player) {
+				return true;
+			}, false);
+		case 'mine':
+			return new actionCard("mine", 5, 0, ["action"], function(player) {
+				return true;
+			}, false);
+		case 'moat':
+			return new actionCard("moat", 2, 0, ["action", "reaction"], function(player) {
+				return true;
+			}, false);
+		case 'remodel':
+			return new actionCard("remodel", 4, 0, ["action"], function(player) {
+				return true;
+			}, false);
+		case 'smithy':
+			return new actionCard("smithy", 4, 0, ["action"], function(player) {
+				draw(player, 3);
+				return true;
+			}, false);
+		case 'village':
+			return new actionCard("village", 3, 0, ["action"], function(player) {
+				draw(player, 1);
+				player.resource.action += 2;
+				return true;
+			}, false);
+		case 'woodcutter':
+			return new actionCard("woodcutter", 3, 0, ["action"], function(player) {
+				player.resource.buy++;
+				player.resource.coin += 2;
+				return true;
+			}, false);
+		case 'workshop':
+			return new actionCard("workshop", 4, 0, ["action"], function(player) {
+				return true;
+			}, false);
+		default:
+			return undefined;
 	}
-	if (draw_amt < amt && player.discard) {
-		shuffle(player.discard);
-		[player.deck, player.discard] = [player.discard, player.deck];
-		this.draw(player, amt - draw_amt);
+};
+
+function draw(player, amt) {
+	if (player) {
+		var deck_amt = player.deck.length;
+		var draw_amt = Math.min(amt, deck_amt);
+		
+		for (var i = 0; i < draw_amt; i++) {
+			player.hand.push(player.deck.pop());
+		}
+		if (draw_amt < amt && player.discard) {
+			shuffle(player.discard);
+			[player.deck, player.discard] = [player.discard, player.deck];
+			draw(player, amt - draw_amt);
+		}
 	}
 };
 
@@ -443,207 +461,50 @@ Game.prototype.handleInPlay = function(user, card) {
 	// handle in_play click
 };
 
-Game.prototype.doAction = function(room, card, cardName) {
-	var game = this.rooms[room];
-	if (game) {
-		var player = game.players[game.turn];
-		switch (cardName) {
-			case 'cellar':
-				if (player.resource.action) {
-					player.resource.action--;
-					
-					// move card to play field
-					player.inPlay.push(player.hand.splice(card, 1)[0]);
-					
-					// apply it
-					player.resource.action++;
-					game.phase = 4;
-					var cellarAction = function(draw) {
-						var player = this.players[this.turn];
-						var selected = this.selected.sort();
-						var toCellar = [];
-						for (var i = selected.length - 1; i > -1; i--) {
-							toCellar.push(player.hand.splice(selected[i], 1)[0]);
-						}
-						var drawAmt = toCellar.length;
-						while (toCellar.length) {
-							player.discard.push(toCellar.pop());
-						}
-						draw(player, drawAmt);
-						return true;
-					}
-					game.actions.push(cellarAction.bind(game, this.draw.bind(this)));
-					// 0 for discard, 1 for in_play, 2 for in_hand, 3 for buy
-					game.canSelect.push([[], [], ["any"], []]);
-					
-					this.emitPlayer(player, room);
-					this.emitRoomBoard(room);
-				}
-				break;
-			case 'market':
-				if (player.resource.action) {
-					player.resource.action--;
-					
-					// move card to play field
-					player.inPlay.push(player.hand.splice(card, 1)[0]);
-					
-					// apply it
-					this.draw(player, 1);
-					player.resource.action++;
-					player.resource.buy++;
-					player.resource.coin++;
-					
-					this.emitPlayer(player, room);
-					this.emitRoomBoard(room);
-				}
-				break;
-			case 'militia':
-				console.log("militia");
-				break;
-			case 'mine':
-				console.log("mine");
-				break;
-			case 'moat':
-				console.log("moat");
-				break;
-			case 'remodel':
-				console.log("remodel");
-				break;
-			case 'smithy':
-				if (player.resource.action) {
-					player.resource.action--;
-					
-					// move card to play field
-					player.inPlay.push(player.hand.splice(card, 1)[0]);
-					
-					// apply it
-					this.draw(player, 3);
-					
-					this.emitPlayer(player, room);
-					this.emitRoomBoard(room);
-				}
-				break;
-			case 'village':
-				if (player.resource.action) {
-					player.resource.action--;
-					
-					// move card to play field
-					player.inPlay.push(player.hand.splice(card, 1)[0]);
-					
-					// apply it
-					this.draw(player, 1);
-					player.resource.action += 2;
-					
-					this.emitPlayer(player, room);
-					this.emitRoomBoard(room);
-				}
-				break;
-			case 'woodcutter':
-				if (player.resource.action) {
-					player.resource.action--;
-					
-					// move card to play field
-					player.inPlay.push(player.hand.splice(card, 1)[0]);
-					
-					// apply it
-					player.resource.buy++;
-					player.resource.coin += 2;
-					
-					this.emitPlayer(player, room);
-					this.emitRoomBoard(room);
-				}
-				break;
-			case 'workshop':
-				console.log("workshop");
-				break;
-			default:
-				// do nothing
-		}
+Game.prototype.doAction = function(game, room, card, player, cardIndex) {
+	if (player.resource.action) {
+		player.resource.action--;
+		card.effect(player, game, cardIndex);
+		this.emitPlayer(player, room);
+		this.emitRoomBoard(room);
 	}
 };
 
-Game.prototype.doTreasure = function(room, card, cardName) {
-	var game = this.rooms[room];
-	if (game) {
-		var player = game.players[game.turn];
-		switch (cardName) {
-			case 'copper':
-				game.phase = 2;
-				
-				// move card to play field
-				player.inPlay.push(player.hand.splice(card, 1)[0]);
-				
-				// apply it
-				player.resource.coin++;
-				this.emitPlayer(player, room);
-				this.emitRoomBoard(room);
-				break;
-			case 'silver':
-				game.phase = 2;
-				
-				// move card to play field
-				player.inPlay.push(player.hand.splice(card, 1)[0]);
-				
-				// apply it
-				player.resource.coin += 2;
-				this.emitPlayer(player, room);
-				this.emitRoomBoard(room);
-				break;
-			case 'gold':
-				game.phase = 2;
-				
-				// move card to play field
-				player.inPlay.push(player.hand.splice(card, 1)[0]);
-				
-				// apply it
-				player.resource.coin += 3;
-				this.emitPlayer(player, room);
-				this.emitRoomBoard(room);
-				break;
-			default:
-				// do nothing
-		}
+Game.prototype.doTreasure = function(game, room, card, player, cardIndex) {
+	game.phase = 2;
+	card.effect(player, game, cardIndex);
+	this.emitPlayer(player, room, cardIndex);
+	this.emitRoomBoard(room);
+};
+
+Game.prototype.playCard = function(game, room, card, player, possible, cardIndex) {
+	if (possible.includes('action') && possible.includes('treasure')) {
+		// crown card
+	} else if (possible.includes('action')) {
+		this.doAction(game, room, card, player, cardIndex);
+	} else if (possible.includes('treasure')) {
+		this.doTreasure(game, room, card, player, cardIndex);
 	}
 };
 
-Game.prototype.playCard = function(room, card, cardName, possible) {
-	var game = this.rooms[room];
-	if (game) {
-		if (possible.includes('action') && possible.includes('treasure')) {
-			// crown card
-		} else if (possible.includes('action')) {
-			var player = game.players[game.turn];
-			this.doAction(room, card, cardName);
-		} else if (possible.includes('treasure')) {
-			this.doTreasure(room, card, cardName);
-		}
-	}
-};
-
-Game.prototype.handleInHand = function(user, card) {
+Game.prototype.handleInHand = function(user, cardIndex) {
 	var room = user.inGame;
 	var game = this.rooms[room];
 	if (game && game.phase) {
 		var player = game.players[game.turn];
-		if (player.id === user.id && card in player.hand) {
-			var cardName = player.hand[card];
-			var type = getType(cardName);
-			if (type) {
+		if (player.id === user.id && cardIndex in player.hand) {
+			var card = player.hand[cardIndex];
+			if (card) {
 				if (game.phase >= 1 && game.phase <= 2) {
 					var phase = game.phase === 1 ? ['action', 'treasure'] : ['treasure'];
 					var possiblePlays = phase.filter(function(n) {
-						return type.indexOf(n) !== -1;
+						return card.types.indexOf(n) !== -1;
 					});
-					this.playCard(room, card, cardName, possiblePlays);
-				} else if (game.phase === 4 &&
-									 (game.canSelect[0][2].indexOf("any") !== -1 ||
-									 game.canSelect[0][2].indexOf(type) !== -1)) {
-					var selectedAlready = game.selected.indexOf(card);
-					if (selectedAlready !== -1) {
-						game.selected.splice(selectedAlready, 1);
-					} else {
-						game.selected.push(card);
-					}
+					this.playCard(game, room, card, player, possiblePlays, cardIndex);
+				} else if (game.phase === 4) {
+					card.selected = !card.selected;
+					this.emitPlayer(player, room);
+					this.emitRoomBoard(room);
 				}
 			}
 		}
@@ -658,15 +519,14 @@ Game.prototype.handleBuy = function(user, card) {
 		var kingdom = game.set.kingdom;
 		if (player.id === user.id && kingdom[card]) {
 			if (game.phase >= 1 && game.phase <= 3) {
-				var coin = getCoin(card);
-				var potion = getPotion(card);
-				if ((coin <= player.resource.coin) &&
-						(potion <= player.resource.potion) &&
+				var kingdomCard = game.set.kingdomCards[card];
+				if ((kingdomCard.coinCost <= player.resource.coin) &&
+						(kingdomCard.potCost <= player.resource.potion) &&
 						player.resource.buy) {
 					game.phase = 3;
 					
-					player.resource.coin -= coin;
-					player.resource.potion -= potion;
+					player.resource.coin -= kingdomCard.coinCost;
+					player.resource.potion -= kingdomCard.potCost;
 					player.resource.buy--;
 					
 					this.gain(kingdom, player.discard, card, 1);
@@ -698,9 +558,9 @@ Game.prototype.emitPlayer = function(player, room) {
 			'_game_player', {
 				name: player.name,
 				deckSize: player.deck.length,
-				discard: player.discard,
-				inPlay: player.inPlay,
-				hand: player.hand,
+				discard: player.discard.map(function(card) { return {name: card.name, sel: card.selected}; }),
+				inPlay: player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }),
+				hand: player.hand.map(function(card) { return {name: card.name, sel: card.selected}; }),
 				resource: player.resource
 			},
 			...this.getAction(player, room));
@@ -709,11 +569,12 @@ Game.prototype.emitPlayer = function(player, room) {
 
 Game.prototype.getPlayer = function(player) {
 	if (player) {
+		var discardTop = player.discard.slice(-1)[0];
 		return {
 			name: player.name,
 			deckSize: player.deck.length,
-			discardTop: player.discard.slice(-1),
-			inPlay: player.inPlay,
+			discardTop: discardTop ? discardTop.name : null,
+			inPlay: player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }),
 			handSize: player.hand.length,
 			resource: player.resource
 		};
