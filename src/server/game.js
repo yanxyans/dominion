@@ -343,6 +343,21 @@ function actionCard(name, coinCost, potCost, types, effect, selected) {
 	};
 }
 
+function gainAction(player, game, coinCost, potCost) {
+	var selected = Object.keys(game.set.kingdomCards).filter(function(cardKey) {
+		var card = game.set.kingdomCards[cardKey];
+		return card.selected && card.coinCost <= coinCost && card.potCost <= potCost;
+	});
+	if (selected.length === 1) {
+		var card = selected[0];
+		game.set.kingdomCards[card] = false;
+		gain(game.set.kingdom, player.discard, card, 1);
+		game.phase = 1;
+		return true;
+	}
+	return false;
+}
+
 function getCard(card) {
 	switch (card) {
 		case 'copper':
@@ -404,7 +419,25 @@ function getCard(card) {
 				return true;
 			}, false);
 		case 'remodel':
-			return new actionCard("remodel", 4, 0, ["action"], function(player) {
+			return new actionCard("remodel", 4, 0, ["action"], function(player, game) {
+				game.phase = 4;
+				var remodelAction = function(player, game) {
+					var selected = player.hand.filter(function(card) {
+						return card.selected;
+					});
+					if (selected.length === 0 && player.hand.length === 0) {
+						return true;
+					} else if (selected.length === 1) {
+						var card = selected[0];
+						card.selected = false;
+						game.trash.push(player.hand.splice(player.hand.indexOf(card), 1)[0]);
+						game.phase = 4;
+						player.todo.splice(1, 0, gainAction.bind(null, player, game, card.coinCost + 2, card.potCost));
+						return true;
+					}
+					return false;
+				}
+				player.todo.push(remodelAction.bind(null, player, game));
 				return true;
 			}, false);
 		case 'smithy':
@@ -427,20 +460,8 @@ function getCard(card) {
 		case 'workshop':
 			return new actionCard("workshop", 4, 0, ["action"], function(player, game) {
 				game.phase = 4;
-				var workshopAction = function(player, game) {
-					var selected = Object.keys(game.set.kingdomCards).filter(function(cardKey) {
-						var card = game.set.kingdomCards[cardKey];
-						return card.selected && card.coinCost <= 4 && card.potCost === 0;
-					});
-					if (selected.length === 1) {
-						game.set.kingdomCards[selected[0]] = false;
-						gain(game.set.kingdom, player.discard, selected[0], 1);
-						game.phase = 1;
-						return true;
-					}
-					return false;
-				}
-				player.todo.push(workshopAction.bind(null, player, game));
+				player.todo.push(gainAction.bind(null, player, game, 4, 0));
+				return true;
 			}, false);
 		default:
 			return undefined;
