@@ -53,7 +53,7 @@ Game.prototype.initRoom = function(room) {
 		});
 		Object.keys(game.originSet.kingdom).forEach(function(key) {
 			game.set.kingdom[key] = game.originSet.kingdom[key];
-			game.set.kingdomCards[key] = this.getCard(key);
+			game.set.kingdomCards[key] = getCard(key);
 		}, this);
 		game.phase = 0;
 		game.turn = -1;
@@ -112,7 +112,13 @@ Game.prototype.addUser = function(user, room) {
 		} else {
 			// get board state
 			user.emit('_game_board', {
-				piles: game.set.kingdom,
+				piles: Object.keys(game.set.kingdom).map(function(cardKey) {
+					return {
+						name: cardKey,
+						amt: this.kingdom[cardKey],
+						sel: this.kingdomCards[cardKey].selected
+					};
+				}, game.set),
 				players: game.players.filter(function(player) {
 					return player !== null;
 				}).map(this.getPlayer)
@@ -168,7 +174,13 @@ Game.prototype.enterUser = function(user, room) {
 		if (res) {
 			user.emit('_game_user', game.users);
 			user.emit('_game_board', {
-				piles: game.set.kingdom,
+				piles: Object.keys(game.set.kingdom).map(function(cardKey) {
+					return {
+						name: cardKey,
+						amt: this.kingdom[cardKey],
+						sel: this.kingdomCards[cardKey].selected
+					};
+				}, game.set),
 				players: game.players.filter(function(player) {
 					return player && player.id !== user.id;
 				}).map(this.getPlayer)
@@ -207,7 +219,7 @@ Game.prototype.start = function(player, room) {
 			var gamePlayer = players[i];
 			startCards.forEach(function(startCard) {
 				var startCardAmt = set.start[startCard];
-				this.gain(set.kingdom, gamePlayer.discard, startCard, startCardAmt);
+				gain(set.kingdom, gamePlayer.discard, startCard, startCardAmt);
 			}, this);
 			draw(gamePlayer, 5);
 			this.emitPlayer(gamePlayer, room);
@@ -259,6 +271,9 @@ Game.prototype.applyAction = function(player, room) {
 				card.selected = false;
 				return card;
 			});
+			Object.keys(game.set.kingdomCards).forEach(function(cardKey) {
+				game.set.kingdomCards[cardKey].selected = false;
+			});
 			if (player.todo.length) {
 				game.phase = 4;
 			}
@@ -279,13 +294,13 @@ Game.prototype.cleanUp = function(player) {
 	}
 };
 
-Game.prototype.gain = function(src, dest, card, amt) {
+function gain(src, dest, card, amt) {
 	var pile_amt = src[card];
 	var gain_amt = Math.min(amt, pile_amt);
 	src[card] -= gain_amt;
 	
 	for (var i = 0; i < gain_amt; i++) {
-		dest.push(this.getCard(card));
+		dest.push(getCard(card));
 	}
 };
 
@@ -328,7 +343,7 @@ function actionCard(name, coinCost, potCost, types, effect, selected) {
 	};
 }
 
-Game.prototype.getCard = function(card) {
+function getCard(card) {
 	switch (card) {
 		case 'copper':
 			return new treasureCard("copper", 0, 0, 1, 0, ["treasure"], function() { return true; }, false);
@@ -410,8 +425,22 @@ Game.prototype.getCard = function(card) {
 				return true;
 			}, false);
 		case 'workshop':
-			return new actionCard("workshop", 4, 0, ["action"], function(player) {
-				return true;
+			return new actionCard("workshop", 4, 0, ["action"], function(player, game) {
+				game.phase = 4;
+				var workshopAction = function(player, game) {
+					var selected = Object.keys(game.set.kingdomCards).filter(function(cardKey) {
+						var card = game.set.kingdomCards[cardKey];
+						return card.selected && card.coinCost <= 4 && card.potCost === 0;
+					});
+					if (selected.length === 1) {
+						game.set.kingdomCards[selected[0]] = false;
+						gain(game.set.kingdom, player.discard, selected[0], 1);
+						game.phase = 1;
+						return true;
+					}
+					return false;
+				}
+				player.todo.push(workshopAction.bind(null, player, game));
 			}, false);
 		default:
 			return undefined;
@@ -518,8 +547,8 @@ Game.prototype.handleBuy = function(user, card) {
 		var player = game.players[game.turn];
 		var kingdom = game.set.kingdom;
 		if (player.id === user.id && kingdom[card]) {
+			var kingdomCard = game.set.kingdomCards[card];
 			if (game.phase >= 1 && game.phase <= 3) {
-				var kingdomCard = game.set.kingdomCards[card];
 				if ((kingdomCard.coinCost <= player.resource.coin) &&
 						(kingdomCard.potCost <= player.resource.potion) &&
 						player.resource.buy) {
@@ -529,12 +558,14 @@ Game.prototype.handleBuy = function(user, card) {
 					player.resource.potion -= kingdomCard.potCost;
 					player.resource.buy--;
 					
-					this.gain(kingdom, player.discard, card, 1);
+					gain(kingdom, player.discard, card, 1);
 					this.emitPlayer(player, room);
 					this.emitRoomBoard(room);
 				}
 			} else if (game.phase === 4) {
-				// select buy card
+				kingdomCard.selected = !kingdomCard.selected;
+				this.emitPlayer(player, room);
+				this.emitRoomBoard(room);
 			}
 		}
 	}
@@ -590,7 +621,13 @@ Game.prototype.emitRoomBoard = function(room) {
 		Object.keys(connectedUsers).forEach(function(user) {
 			// do not emit self to player
 			this.io.to(user).emit('_game_board', {
-				piles: game.set.kingdom,
+				piles: Object.keys(game.set.kingdom).map(function(cardKey) {
+					return {
+						name: cardKey,
+						amt: this.kingdom[cardKey],
+						sel: this.kingdomCards[cardKey].selected
+					};
+				}, game.set),
 				players: game.players.filter(function(player) {
 					return player && player.id !== user;
 				}).map(this.getPlayer)

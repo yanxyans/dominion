@@ -91,14 +91,14 @@ export default class Container extends React.Component {
 			</div>
 		) : null;
 		
-		let PileTable = Object.keys(this.props.piles).length ? (
+		let PileTable = this.props.piles ? (
 			<MobileTearSheet>
 				<div id='piles' style={styles.wrapper}>
-				{Object.keys(this.props.piles).map(function(pile, index) {
-					var amt = this.props.piles[pile];
+				{this.props.piles.map(function(pile, index) {
 					return <Chip key={index}
 											 style={styles.chip}
-											 onTouchTap={this.props._clickCard.bind(null, 'buy', pile)}>{pile} {amt}</Chip>;
+											 onTouchTap={this.props._clickCard.bind(null, 'buy', pile.name)}
+											 backgroundColor={pile.sel ? "#9DC3C1" : null}>{pile.name} {pile.amt}</Chip>;
 				}, this)}
 				</div>
 			</MobileTearSheet>

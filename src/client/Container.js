@@ -16,7 +16,7 @@ class Container extends React.Component {
 		player: null,
 		actionName: null,
 		action: null,
-		piles: {},
+		piles: [],
 		players: []
 	};
 	
