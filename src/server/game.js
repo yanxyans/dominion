@@ -275,9 +275,6 @@ Game.prototype.applyAction = function(player, room) {
 			Object.keys(game.set.kingdomCards).forEach(function(cardKey) {
 				game.set.kingdomCards[cardKey].selected = false;
 			});
-			if (player.todo.length) {
-				game.phase = 4;
-			}
 			this.emitRoomBoard(room);
 		}
 	}
@@ -344,7 +341,7 @@ function actionCard(name, coinCost, potCost, types, effect, selected) {
 	};
 }
 
-function gainAction(player, game, coinCost, potCost, types, gainDst) {
+function gainAction(player, game, coinCost, potCost, types, gainDst, nextPhase) {
 	var selected = Object.keys(game.set.kingdomCards).filter(function(cardKey) {
 		var card = game.set.kingdomCards[cardKey];
 		return card.selected && card.coinCost <= coinCost && card.potCost <= potCost && types.every(function(val) {
@@ -355,7 +352,9 @@ function gainAction(player, game, coinCost, potCost, types, gainDst) {
 		var card = selected[0];
 		game.set.kingdomCards[card] = false;
 		gain(game.set.kingdom, player[gainDst], card, 1);
-		game.phase = 1;
+		if (player.todo.length === 1) {
+			game.phase = 1;
+		}
 		return true;
 	}
 	return false;
@@ -395,9 +394,11 @@ function getCard(card) {
 						player.discard.push(selectedCard);
 					}
 					draw(player, drawAmt);
-					game.phase = 1;
+					if (player.todo.length === 1) {
+						game.phase = 1;
+					}
 					return true;
-				}
+				};
 				player.todo.push(cellarAction.bind(null, player, game));
 				return true;
 			}, false);
@@ -410,7 +411,53 @@ function getCard(card) {
 				return true;
 			}, false);
 		case 'militia':
-			return new actionCard("militia", 4, 0, ["action", "attack"], function(player) {
+			return new actionCard("militia", 4, 0, ["action", "attack"], function(player, game) {
+				player.resource.coin += 2;
+				
+				var players = game.players.filter(function(pl) {
+					return pl;
+				});
+				players.forEach(function(pl, index) {
+					if (pl.id === player.id) {
+						// do nothing
+					} else {
+						var militiaAttack = function(player, game) {
+							var handSize = player.hand.length;
+							if (handSize <= 3) {
+								game.turn = players[(index + 1) % players.length].spot;
+								game.phase = game.players[game.turn].todo.length ? 4 : 1;
+								return true;
+							}
+							
+							var selected = player.hand.filter(function(card) {
+								return card.selected;
+							});
+							var selectedLength = selected.length;
+							var remLength = handSize - selectedLength;
+							
+							if (remLength >= 3) {
+								for (var i = 0; i < selectedLength; i++) {
+									selected[i].selected = false;
+									player.discard.push(player.hand.splice(player.hand.indexOf(selected[i]), 1)[0]);
+								}
+							}
+							if (remLength === 3) {
+								game.turn = players[(index + 1) % players.length].spot;
+								game.phase = game.players[game.turn].todo.length ? 4 : 1;
+								return true;
+							}
+							return false;
+						};
+						pl.todo.push(militiaAttack.bind(null, pl, game));
+					}
+				});
+				
+				game.phase = 4;
+				game.turn = (game.turn + 1) % 4;
+				while (game.players[game.turn] === null) {
+					game.turn = (game.turn + 1) % 4;
+				}
+				
 				return true;
 			}, false);
 		case 'mine':
@@ -421,6 +468,9 @@ function getCard(card) {
 						return card.selected && card.types.includes('treasure');
 					});
 					if (selected.length === 0) {
+						if (player.todo.length === 1) {
+							game.phase = 1;
+						}
 						return true;
 					} else if (selected.length === 1) {
 						var card = selected[0];
@@ -431,7 +481,7 @@ function getCard(card) {
 						return true;
 					}
 					return false;
-				}
+				};
 				player.todo.push(mineAction.bind(null, player, game));
 				return true;
 			}, false);
@@ -447,6 +497,9 @@ function getCard(card) {
 						return card.selected;
 					});
 					if (selected.length === 0 && player.hand.length === 0) {
+						if (player.todo.length === 1) {
+							game.phase = 1;
+						}
 						return true;
 					} else if (selected.length === 1) {
 						var card = selected[0];
@@ -457,7 +510,7 @@ function getCard(card) {
 						return true;
 					}
 					return false;
-				}
+				};
 				player.todo.push(remodelAction.bind(null, player, game));
 				return true;
 			}, false);
@@ -637,6 +690,10 @@ Game.prototype.emitPlayer = function(player, room) {
 				resource: player.resource
 			},
 			...this.getAction(player, room));
+	}
+	var game = this.rooms[room];
+	if (game && game.phase && game.players[game.turn].id !== player.id) {
+		this.emitPlayer(game.players[game.turn], room);
 	}
 };
 
