@@ -476,7 +476,6 @@ function getCard(card) {
 						var card = selected[0];
 						card.selected = false;
 						game.trash.push(player.hand.splice(player.hand.indexOf(card), 1)[0]);
-						game.phase = 4;
 						player.todo.splice(1, 0, gainAction.bind(null, player, game, card.coinCost + 3, card.potCost, ['treasure'], 'hand'));
 						return true;
 					}
@@ -505,7 +504,6 @@ function getCard(card) {
 						var card = selected[0];
 						card.selected = false;
 						game.trash.push(player.hand.splice(player.hand.indexOf(card), 1)[0]);
-						game.phase = 4;
 						player.todo.splice(1, 0, gainAction.bind(null, player, game, card.coinCost + 2, card.potCost, [], 'discard'));
 						return true;
 					}
