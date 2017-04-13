@@ -212,6 +212,7 @@ Game.prototype.start = function(player, room) {
 		});
 		players[0].resource.action = 1;
 		players[0].resource.buy = 1;
+		players[0].resource.coin = 5;
 		game.turn = players[0].spot;
 		
 		var startCards = Object.keys(set.start);
@@ -343,15 +344,17 @@ function actionCard(name, coinCost, potCost, types, effect, selected) {
 	};
 }
 
-function gainAction(player, game, coinCost, potCost) {
+function gainAction(player, game, coinCost, potCost, types, gainDst) {
 	var selected = Object.keys(game.set.kingdomCards).filter(function(cardKey) {
 		var card = game.set.kingdomCards[cardKey];
-		return card.selected && card.coinCost <= coinCost && card.potCost <= potCost;
+		return card.selected && card.coinCost <= coinCost && card.potCost <= potCost && types.every(function(val) {
+			return this.indexOf(val) > -1;
+		}, card.types);
 	});
 	if (selected.length === 1) {
 		var card = selected[0];
 		game.set.kingdomCards[card] = false;
-		gain(game.set.kingdom, player.discard, card, 1);
+		gain(game.set.kingdom, player[gainDst], card, 1);
 		game.phase = 1;
 		return true;
 	}
@@ -411,7 +414,25 @@ function getCard(card) {
 				return true;
 			}, false);
 		case 'mine':
-			return new actionCard("mine", 5, 0, ["action"], function(player) {
+			return new actionCard("mine", 5, 0, ["action"], function(player, game) {
+				game.phase = 4;
+				var mineAction = function(player, game) {
+					var selected = player.hand.filter(function(card) {
+						return card.selected && card.types.includes('treasure');
+					});
+					if (selected.length === 0) {
+						return true;
+					} else if (selected.length === 1) {
+						var card = selected[0];
+						card.selected = false;
+						game.trash.push(player.hand.splice(player.hand.indexOf(card), 1)[0]);
+						game.phase = 4;
+						player.todo.splice(1, 0, gainAction.bind(null, player, game, card.coinCost + 3, card.potCost, ['treasure'], 'hand'));
+						return true;
+					}
+					return false;
+				}
+				player.todo.push(mineAction.bind(null, player, game));
 				return true;
 			}, false);
 		case 'moat':
@@ -432,7 +453,7 @@ function getCard(card) {
 						card.selected = false;
 						game.trash.push(player.hand.splice(player.hand.indexOf(card), 1)[0]);
 						game.phase = 4;
-						player.todo.splice(1, 0, gainAction.bind(null, player, game, card.coinCost + 2, card.potCost));
+						player.todo.splice(1, 0, gainAction.bind(null, player, game, card.coinCost + 2, card.potCost, [], 'discard'));
 						return true;
 					}
 					return false;
@@ -460,7 +481,7 @@ function getCard(card) {
 		case 'workshop':
 			return new actionCard("workshop", 4, 0, ["action"], function(player, game) {
 				game.phase = 4;
-				player.todo.push(gainAction.bind(null, player, game, 4, 0));
+				player.todo.push(gainAction.bind(null, player, game, 4, 0, [], 'discard'));
 				return true;
 			}, false);
 		default:
