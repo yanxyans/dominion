@@ -102,7 +102,9 @@ Game.prototype.addUser = function(user, room) {
 					coin: 0,
 					potion: 0
 				},
-				todo: []
+				todo: [],
+				attacked: [],
+				reaction: []
 			};
 			
 			game.players[playerSpot] = player;
@@ -237,6 +239,7 @@ Game.prototype.end = function(player, room) {
 		player.resource.coin = 0;
 		player.resource.potion = 0;
 		this.cleanUp(player);
+		player.reaction = [];
 		draw(player, 5);
 		
 		game.turn = (game.turn + 1) % 4;
@@ -260,22 +263,80 @@ Game.prototype.applyAction = function(player, room) {
 	if (game && game.phase === 4) {
 		if (player.todo[0]()) {
 			player.todo.shift();
-			player.discard = player.discard.map(function(card) {
-				card.selected = false;
-				return card;
-			});
-			player.inPlay = player.inPlay.map(function(card) {
-				card.selected = false;
-				return card;
-			});
-			player.hand = player.hand.map(function(card) {
-				card.selected = false;
-				return card;
-			});
-			Object.keys(game.set.kingdomCards).forEach(function(cardKey) {
-				game.set.kingdomCards[cardKey].selected = false;
-			});
+			this.cleanGame(player, game);
 			this.emitRoomBoard(room);
+		}
+	}
+	this.emitPlayer(player, room);
+};
+
+Game.prototype.applyAttack = function(player, room) {
+	var game = this.rooms[room];
+	if (game && game.phase === 6) {
+		if (player.attacked[0]()) {
+			player.attacked.shift();
+			this.cleanGame(player, game);
+			this.emitRoomBoard(room);
+		}
+	}
+	this.emitPlayer(player, room);
+};
+
+Game.prototype.cleanGame = function(player, game) {
+	player.discard = player.discard.map(function(card) {
+		card.selected = false;
+		return card;
+	});
+	player.inPlay = player.inPlay.map(function(card) {
+		card.selected = false;
+		return card;
+	});
+	player.hand = player.hand.map(function(card) {
+		card.selected = false;
+		return card;
+	});
+	Object.keys(game.set.kingdomCards).forEach(function(cardKey) {
+		game.set.kingdomCards[cardKey].selected = false;
+	});
+};
+
+Game.prototype.applyReaction = function(player, room) {
+	var game = this.rooms[room];
+	if (game && game.phase === 5) {
+		var selected = player.reaction.filter(function(reactionCard) {
+			return reactionCard.selected;
+		});
+		if (selected.length === 0) {
+			if (player.attacked.length === 0) {
+				game.turn = (game.turn + 1) % 4;
+				while (game.players[game.turn] === null) {
+					game.turn = (game.turn + 1) % 4;
+				}
+				game.phase = game.players[game.turn].attacked.length ? (game.players[game.turn].reaction.length ? 5 : 6) : 1;
+			} else {
+				game.phase = 6;
+			}
+			this.cleanGame(player, game);
+			this.emitRoomBoard(room);
+		} else if (selected.length === 1) {
+			if (selected[0].effect(player, game, player.hand.indexOf(selected[0]), 'reaction')) {
+				if (player.reaction.length > 0) {
+					// more reactions if necessary
+				} else {
+					if (player.attacked.length === 0) {
+						game.turn = (game.turn + 1) % 4;
+						while (game.players[game.turn] === null) {
+							game.turn = (game.turn + 1) % 4;
+						}
+						game.phase = game.players[game.turn].attacked.length ? (game.players[game.turn].reaction.length ? 5 : 6) : 1;
+					} else {
+						game.phase = 6;
+					}
+				}
+				this.cleanGame(player, game);
+				this.emitRoomBoard(room);
+			}
+			selected[0].selected = false;
 		}
 	}
 	this.emitPlayer(player, room);
@@ -335,9 +396,11 @@ function actionCard(name, coinCost, potCost, types, effect, selected) {
 	this.coinCost = coinCost;
 	this.potCost = potCost;
 	this.types = types;
-	this.effect = function(player, game, cardIndex) {
-		player.inPlay.push(player.hand.splice(cardIndex, 1)[0]);
-		return effect(player, game);
+	this.effect = function(player, game, cardIndex, effectType) {
+		if (effectType === 'action') {
+			player.inPlay.push(player.hand.splice(cardIndex, 1)[0]);
+		}
+		return effect(player, game, effectType);
 	};
 }
 
@@ -425,7 +488,7 @@ function getCard(card) {
 							var handSize = player.hand.length;
 							if (handSize <= 3) {
 								game.turn = players[(index + 1) % players.length].spot;
-								game.phase = game.players[game.turn].todo.length ? 4 : 1;
+								game.phase = game.players[game.turn].attacked.length ? (game.players[game.turn].reaction.length ? 5 : 6) : 1;
 								return true;
 							}
 							
@@ -443,20 +506,20 @@ function getCard(card) {
 							}
 							if (remLength === 3) {
 								game.turn = players[(index + 1) % players.length].spot;
-								game.phase = game.players[game.turn].todo.length ? 4 : 1;
+								game.phase = game.players[game.turn].attacked.length ? (game.players[game.turn].reaction.length ? 5 : 6) : 1;
 								return true;
 							}
 							return false;
 						};
-						pl.todo.push(militiaAttack.bind(null, pl, game));
+						pl.attacked.push(militiaAttack.bind(null, pl, game));
 					}
 				});
 				
-				game.phase = 4;
 				game.turn = (game.turn + 1) % 4;
 				while (game.players[game.turn] === null) {
 					game.turn = (game.turn + 1) % 4;
 				}
+				game.phase = game.players[game.turn].reaction.length ? 5 : 6;
 				
 				return true;
 			}, false);
@@ -485,7 +548,12 @@ function getCard(card) {
 				return true;
 			}, false);
 		case 'moat':
-			return new actionCard("moat", 2, 0, ["action", "reaction"], function(player) {
+			return new actionCard("moat", 2, 0, ["action", "reaction"], function(player, game, effectType) {
+				if (effectType === 'action') {
+					draw(player, 2);
+				} else if (effectType === 'reaction') {
+					player.attacked.shift();
+				}
 				return true;
 			}, false);
 		case 'remodel':
@@ -546,9 +614,13 @@ function draw(player, amt) {
 		var draw_amt = Math.min(amt, deck_amt);
 		
 		for (var i = 0; i < draw_amt; i++) {
-			player.hand.push(player.deck.pop());
+			var handCard = player.deck.pop();
+			if (handCard.types.includes('reaction')) {
+				player.reaction.push(handCard);
+			}
+			player.hand.push(handCard);
 		}
-		if (draw_amt < amt && player.discard) {
+		if (draw_amt < amt && player.discard.length) {
 			shuffle(player.discard);
 			[player.deck, player.discard] = [player.discard, player.deck];
 			draw(player, amt - draw_amt);
@@ -586,7 +658,7 @@ Game.prototype.handleInPlay = function(user, card) {
 Game.prototype.doAction = function(game, room, card, player, cardIndex) {
 	if (player.resource.action) {
 		player.resource.action--;
-		card.effect(player, game, cardIndex);
+		card.effect(player, game, cardIndex, 'action');
 		this.emitPlayer(player, room);
 		this.emitRoomBoard(room);
 	}
@@ -623,7 +695,9 @@ Game.prototype.handleInHand = function(user, cardIndex) {
 						return card.types.indexOf(n) !== -1;
 					});
 					this.playCard(game, room, card, player, possiblePlays, cardIndex);
-				} else if (game.phase === 4) {
+				} else if (game.phase === 4 ||
+									 game.phase === 5 ||
+									 game.phase === 6) {
 					card.selected = !card.selected;
 					this.emitPlayer(player, room);
 					this.emitRoomBoard(room);
@@ -747,6 +821,10 @@ Game.prototype.getAction = function(player, room) {
 				return ["End Turn", this.end.bind(this, player, room)];
 			case 4:
 				return ["Apply Action", this.applyAction.bind(this, player, room)];
+			case 5:
+				return ["Apply Reaction", this.applyReaction.bind(this, player, room)];
+			case 6:
+				return ["Apply Attack", this.applyAttack.bind(this, player, room)];
 			default:
 				// do nothing
 		}
