@@ -17,7 +17,8 @@ class Container extends React.Component {
 		actionName: null,
 		action: null,
 		piles: [],
-		players: []
+		players: [],
+		trash: []
 	};
 	
 	_init = (name) => {
@@ -56,7 +57,8 @@ class Container extends React.Component {
 	_board = (board) => {
 		this.setState({
 			piles: board.piles,
-			players: board.players
+			players: board.players,
+			trash: board.trash
 		});
 	};
 	
@@ -103,7 +105,8 @@ class Container extends React.Component {
 												 piles={this.state.piles}
 												 players={this.state.players}
 												 _clickCard={this._clickCard}
-												 _rec={this._rec} />
+												 _rec={this._rec}
+												 trash={this.state.trash} />
 					<MenuComponent name={this.state.name}
 												 _setName={this._setName}
 												 rooms={this.state.rooms}

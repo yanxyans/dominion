@@ -104,7 +104,10 @@ Game.prototype.addUser = function(user, room) {
 				}, game.set),
 				players: game.players.filter(function(player) {
 					return player !== null;
-				}).map(this.getPlayer)
+				}).map(this.getPlayer),
+				trash: game.trash.map(function(card) {
+					return card.name;
+				})
 			});
 		}
 	}
@@ -188,7 +191,10 @@ Game.prototype.enterUser = function(user, room) {
 				}, game.set),
 				players: game.players.filter(function(player) {
 					return player && player.id !== user.id;
-				}).map(this.getPlayer)
+				}).map(this.getPlayer),
+				trash: game.trash.map(function(card) {
+					return card.name;
+				})
 			});
 			
 			var isPlayer = user.games[room];
@@ -267,7 +273,6 @@ Game.prototype.start = function(player, room) {
 		
 		players[0].resource.action = 1;
 		players[0].resource.buy = 1;
-		players[0].resource.coin = 8;
 		this.emitRoomBoard(room);
 	}
 };
@@ -857,7 +862,10 @@ Game.prototype.emitRoomBoard = function(room) {
 				}, game.set),
 				players: game.players.filter(function(player) {
 					return player && player.id !== user;
-				}).map(this.getPlayer)
+				}).map(this.getPlayer),
+				trash: game.trash.map(function(card) {
+					return card.name;
+				})
 			});
 		}, this);
 	}

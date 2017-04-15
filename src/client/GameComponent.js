@@ -122,6 +122,7 @@ export default class Container extends React.Component {
 		
 		let PileTable = this.props.piles ? (
 			<MobileTearSheet>
+				<Subheader>Piles</Subheader>
 				<div id='piles' style={styles.wrapper}>
 				{this.props.piles.map(function(pile, index) {
 					return <Chip key={index}
@@ -129,6 +130,14 @@ export default class Container extends React.Component {
 											 onTouchTap={this.props._clickCard.bind(null, 'buy', pile.name)}
 											 backgroundColor={pile.sel ? "#9DC3C1" : null}>{pile.name} {pile.amt}</Chip>;
 				}, this)}
+				</div>
+				<Divider />
+				<Subheader>Trash</Subheader>
+				<div id='trash' style={styles.wrapper}>
+				{this.props.trash.map(function(trash_card, index) {
+					return <Chip key={index}
+											 style={styles.chip}>{trash_card}</Chip>;
+				})}
 				</div>
 			</MobileTearSheet>
 		) : null;
