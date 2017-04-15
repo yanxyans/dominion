@@ -48,13 +48,6 @@ Game.prototype.initRoom = function(room) {
 			kingdom: {},
 			kingdomCards: {}
 		};
-		Object.keys(game.originSet.start).forEach(function(key) {
-			game.set.start[key] = game.originSet.start[key];
-		});
-		Object.keys(game.originSet.kingdom).forEach(function(key) {
-			game.set.kingdom[key] = game.originSet.kingdom[key];
-			game.set.kingdomCards[key] = getCard(key);
-		}, this);
 		game.phase = 0;
 		game.turn = -1;
 		game.trash = [];
@@ -92,19 +85,6 @@ Game.prototype.addUser = function(user, room) {
 				id: user.id,
 				name: user.name,
 				socket: user.socket,
-				deck: [],
-				discard: [],
-				inPlay: [],
-				hand: [],
-				resource: {
-					action: 0,
-					buy: 0,
-					coin: 0,
-					potion: 0
-				},
-				todo: [],
-				attack: null,
-				reaction: [],
 				seated: true
 			};
 			
@@ -230,19 +210,53 @@ Game.prototype.start = function(player, room) {
 	} else {
 		game.phase = 1;
 		
-		// init player resources
-		var set = game.set;
 		var players = game.players.filter(function(player) {
 			return player !== null;
 		});
-		players[0].resource.action = 1;
-		players[0].resource.buy = 1;
-		players[0].resource.coin = 5;
+		
+		// init board
+		Object.keys(game.originSet.start).forEach(function(key) {
+			game.set.start[key] = game.originSet.start[key];
+		});
+		Object.keys(game.originSet.kingdom).forEach(function(key) {
+			game.set.kingdom[key] = game.originSet.kingdom[key];
+			game.set.kingdomCards[key] = getCard(key);
+			
+			if (key === 'curse') {
+				game.set.kingdom[key] = game.set.kingdom[key] - (4 - players.length) * 10;
+			} else if (key === 'estate' && players.length === 2) {
+				game.set.kingdom[key] = game.set.kingdom[key] - 4;
+			} else if (key === 'duchy' && players.length === 2) {
+				game.set.kingdom[key] = game.set.kingdom[key] - 4;
+			} else if (key === 'province' && players.length === 2) {
+				game.set.kingdom[key] = game.set.kingdom[key] - 4;
+			} else if (key === 'colony' && players.length === 2) {
+				game.set.kingdom[key] = game.set.kingdom[key] - 4;
+			}
+		}, this);
+		
+		// init player resources
+		var set = game.set;
+		
 		game.turn = players[0].spot;
 		
 		var startCards = Object.keys(set.start);
 		for (var i = 0; i < players.length; i++) {
 			var gamePlayer = players[i];
+			gamePlayer.deck = [];
+			gamePlayer.discard = [];
+			gamePlayer.hand = [];
+			gamePlayer.inPlay = [];
+			gamePlayer.resource = {
+				action: 0,
+				buy: 0,
+				coin: 0,
+				potion: 0
+			};
+			gamePlayer.todo = [];
+			gamePlayer.attack = null;
+			gamePlayer.reaction = [];
+			
 			startCards.forEach(function(startCard) {
 				var startCardAmt = set.start[startCard];
 				gain(set.kingdom, gamePlayer.discard, startCard, startCardAmt);
@@ -250,6 +264,10 @@ Game.prototype.start = function(player, room) {
 			draw(gamePlayer, 5);
 			this.emitPlayer(gamePlayer, room);
 		}
+		
+		players[0].resource.action = 1;
+		players[0].resource.buy = 1;
+		players[0].resource.coin = 8;
 		this.emitRoomBoard(room);
 	}
 };
@@ -257,26 +275,51 @@ Game.prototype.start = function(player, room) {
 Game.prototype.end = function(player, room) {
 	var game = this.rooms[room];
 	if (game && game.phase >= 1 && game.phase <= 3) {
-		player.resource.action = 0;
-		player.resource.buy = 0;
-		player.resource.coin = 0;
-		player.resource.potion = 0;
-		this.cleanUp(player);
-		player.reaction = [];
-		draw(player, 5);
-		
-		game.turn = (game.turn + 1) % 4;
-		while (game.players[game.turn] === null) {
+		var zeroPiles = Object.keys(game.set.kingdom).filter(function(card) {
+			return game.set.kingdom[card] === 0;
+		});
+		if (zeroPiles.length >= 3 ||
+				zeroPiles.includes('province') ||
+				zeroPiles.includes('colony')) {
+			console.log("game has ended");
+			var playerScores = game.players.filter(function(pl) {
+				return pl;
+			}).map(function(pl) {
+				var score = pl.hand.concat(pl.discard).concat(pl.inPlay).concat(pl.deck).filter(function(ca) {
+					return ca.types.includes('victory') || ca.types.includes('curse');
+				}).reduce(function(res, ca) {
+					ca.effect(pl, game);
+					return res + ca.victoryPoints;
+				}, 0);
+				return {
+					name: pl.name,
+					score: score
+				};
+			});
+			console.log(playerScores);
+			
+			this.initRoom(room);
+		} else {
+			player.resource.action = 0;
+			player.resource.buy = 0;
+			player.resource.coin = 0;
+			player.resource.potion = 0;
+			this.cleanUp(player);
+			player.reaction = [];
+			draw(player, 5);
+			
 			game.turn = (game.turn + 1) % 4;
-		}
-		game.phase = 1;
+			while (game.players[game.turn] === null) {
+				game.turn = (game.turn + 1) % 4;
+			}
+			game.phase = 1;
 
-		var newPlayer = game.players[game.turn];
-		newPlayer.resource.action = 1;
-		newPlayer.resource.buy = 1;
-		
-		this.emitRoomBoard(room);
-		this.emitPlayer(newPlayer, room);
+			var newPlayer = game.players[game.turn];
+			newPlayer.resource.action = 1;
+			newPlayer.resource.buy = 1;
+			
+			this.emitRoomBoard(room);
+		}
 	}
 	this.emitPlayer(player, room);
 };
@@ -768,11 +811,11 @@ Game.prototype.emitPlayer = function(player, room) {
 		player.socket.emit(
 			'_game_player', {
 				name: player.name,
-				deckSize: player.deck.length,
-				discard: player.discard.map(function(card) { return {name: card.name, sel: card.selected}; }),
-				inPlay: player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }),
-				hand: player.hand.map(function(card) { return {name: card.name, sel: card.selected}; }),
-				resource: player.resource
+				deckSize: player.deck ? player.deck.length: null,
+				discard: player.discard ? player.discard.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
+				inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
+				hand: player.hand ? player.hand.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
+				resource: player.resource ? player.resource : {}
 			},
 			...this.getAction(player, room));
 	}
@@ -784,14 +827,14 @@ Game.prototype.emitPlayer = function(player, room) {
 
 Game.prototype.getPlayer = function(player) {
 	if (player) {
-		var discardTop = player.discard.slice(-1)[0];
+		var discardTop = player.discard ? player.discard.slice(-1)[0] : null;
 		return {
 			name: player.name,
-			deckSize: player.deck.length,
+			deckSize: player.deck ? player.deck.length : null,
 			discardTop: discardTop ? discardTop.name : null,
-			inPlay: player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }),
-			handSize: player.hand.length,
-			resource: player.resource,
+			inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
+			handSize: player.hand ? player.hand.length : null,
+			resource: player.resource ? player.resource : {},
 			spot: player.spot
 		};
 	}
