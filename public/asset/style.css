@@ -1,4 +1,4 @@
-#container, #game, #players, #gameBoard {
+#container, #game, #players, #gameBoard, #menu {
 	display: flex;
 }
 
@@ -10,6 +10,12 @@
 #game {
 	flex-flow: column nowrap;
 	flex: 1 0 auto;
+}
+
+#menu {
+	flex-flow: column nowrap;
+	flex: 1 0 auto;
+	align-items: flex-end;
 }
 
 ::-webkit-scrollbar { 
