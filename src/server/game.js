@@ -230,8 +230,8 @@ Game.prototype.start = function(player, room) {
 			
 			if (key === 'curse') {
 				game.set.kingdom[key] = game.set.kingdom[key] - (4 - players.length) * 10;
-			} else if (key === 'estate' && players.length === 2) {
-				game.set.kingdom[key] = game.set.kingdom[key] - 4;
+			} else if (key === 'estate') {
+				game.set.kingdom[key] = game.set.kingdom[key] - (4 - players.length) * 3 - (players.length === 2 ? 4 : 0) - (players.length === 3 ? 3 : 0);
 			} else if (key === 'duchy' && players.length === 2) {
 				game.set.kingdom[key] = game.set.kingdom[key] - 4;
 			} else if (key === 'province' && players.length === 2) {
@@ -286,7 +286,6 @@ Game.prototype.end = function(player, room) {
 		if (zeroPiles.length >= 3 ||
 				zeroPiles.includes('province') ||
 				zeroPiles.includes('colony')) {
-			console.log("game has ended");
 			var playerScores = game.players.filter(function(pl) {
 				return pl;
 			}).map(function(pl) {
@@ -301,7 +300,7 @@ Game.prototype.end = function(player, room) {
 					score: score
 				};
 			});
-			console.log(playerScores);
+			this.io.in(room).emit('_end_score', playerScores);
 			
 			this.initRoom(room);
 		} else {

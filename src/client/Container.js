@@ -5,6 +5,9 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import MenuComponent from './MenuComponent';
 import GameComponent from './GameComponent';
 import Snackbar from 'material-ui/Snackbar';
+import FlatButton from 'material-ui/FlatButton';
+import Dialog from 'material-ui/Dialog';
+import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 
 injectTapEventPlugin();
 
@@ -21,12 +24,20 @@ class Container extends React.Component {
 		players: [],
 		trash: [],
 		msg: "",
-		open: false
+		open: false,
+		finalScore: [],
+		openScore: false
 	};
 	
 	handleRequestClose = () => {
     this.setState({
       open: false,
+    });
+  };
+	
+	handleCloseScore = () => {
+    this.setState({
+      openScore: false,
     });
   };
 	
@@ -95,6 +106,10 @@ class Container extends React.Component {
 		this.setState({msg: msg, open: true});
 	};
 	
+	_end_score = (endScores) => {
+		this.setState({finalScore: endScores, openScore: true});
+	};
+	
 	componentDidMount = () => {
 		this.socket = io();
 		this.socket.on('_init', this._init);
@@ -104,10 +119,20 @@ class Container extends React.Component {
 		this.socket.on('_game_player', this._player);
 		this.socket.on('_game_board', this._board);
 		this.socket.on('_reaction', this._reaction);
+		this.socket.on('_end_score', this._end_score);
 		this._joinGame('dominion0');
 	}
 	
   render() {
+		const actions = [
+      <FlatButton
+        label="Finish"
+        primary={true}
+        keyboardFocused={true}
+        onTouchTap={this.handleCloseScore}
+      />
+    ];
+		
     return (
 			<MuiThemeProvider>
 				<div id='container'>
@@ -130,6 +155,29 @@ class Container extends React.Component {
 										message={this.state.msg}
 										autoHideDuration={4000}
 										onRequestClose={this.handleRequestClose} />
+					<Dialog
+						title="final game score"
+						actions={actions}
+						modal={true}
+						open={this.state.openScore}
+						onRequestClose={this.handleCloseScore}>
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHeaderColumn>name</TableHeaderColumn>
+									<TableHeaderColumn>score</TableHeaderColumn>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{this.state.finalScore.map(function(score, index) {
+									return <TableRow key={index}>
+													 <TableRowColumn>{score.name}</TableRowColumn>
+													 <TableRowColumn>{score.score}</TableRowColumn>
+												 </TableRow>;
+								})}
+							</TableBody>
+						</Table>
+					</Dialog>
 				</div>
 			</MuiThemeProvider>
 		)
