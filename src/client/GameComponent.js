@@ -120,7 +120,7 @@ export default class Container extends React.Component {
 			</div>
 		) : null;
 		
-		let PileTable = this.props.piles ? (
+		let PileTable = Object.keys(this.props.piles).length ? (
 			<MobileTearSheet>
 				<Subheader>Piles</Subheader>
 				<div id='piles' style={styles.wrapper}>
