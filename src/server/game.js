@@ -231,7 +231,7 @@ Game.prototype.start = function(player, room) {
 			if (key === 'curse') {
 				game.set.kingdom[key] = game.set.kingdom[key] - (4 - players.length) * 10;
 			} else if (key === 'estate') {
-				game.set.kingdom[key] = game.set.kingdom[key] - (4 - players.length) * 3 - (players.length === 2 ? 4 : 0) - (players.length === 3 ? 3 : 0);
+				game.set.kingdom[key] = game.set.kingdom[key] - (4 - players.length) * 3 - (players.length === 2 ? 4 : 0);
 			} else if (key === 'duchy' && players.length === 2) {
 				game.set.kingdom[key] = game.set.kingdom[key] - 4;
 			} else if (key === 'province' && players.length === 2) {
