@@ -34,11 +34,13 @@ export default class Container extends React.Component {
 			<MobileTearSheet>
 				<List>
 					<ListItem primaryText={'name = ' + this.props.player.name} />
-					<ListItem primaryText={'deck size = ' + this.props.player.deckSize} />
+					{this.props.player.deckSize ? <ListItem primaryText={'deck size = ' + this.props.player.deckSize} /> : null}
+					{Object.keys(this.props.player.resource).length ? (
 					<ListItem primaryText={'a=' + this.props.player.resource.action +
 																 ' b=' + this.props.player.resource.buy +
 																 ' c=' + this.props.player.resource.coin +
 																 ' p=' + this.props.player.resource.potion} />
+					) : null}
 					<Divider />
 					<Subheader>Discard</Subheader>
 					<div id='discard' style={styles.wrapper}>
@@ -71,13 +73,16 @@ export default class Container extends React.Component {
 					return <MobileTearSheet key={index}>
 								   <List>
 										 <ListItem primaryText={'name = ' + player.name} onTouchTap={this.props._rec.bind(null, player.spot)}/>
-										 <ListItem primaryText={'deck size = ' + player.deckSize} />
-										 <ListItem primaryText={'discard top = ' + player.discardTop} />
-										 <ListItem primaryText={'hand size = ' + player.handSize} />
+										 
+										 {player.deckSize ? <ListItem primaryText={'deck size = ' + player.deckSize} /> : null}
+										 {player.discardTop ? <ListItem primaryText={'discard top = ' + player.discardTop} /> : null}
+										 {player.handSize ? <ListItem primaryText={'hand size = ' + player.handSize} /> : null}
+										 {Object.keys(player.resource).length ? (
 										 <ListItem primaryText={'a=' + player.resource.action +
 																						' b=' + player.resource.buy +
 																						' c=' + player.resource.coin +
 																						' p=' + player.resource.potion} />
+										 ) : null}
 										 <Divider />
 										 <Subheader>Played</Subheader>
 										 <div id='in_play' style={styles.wrapper}>
