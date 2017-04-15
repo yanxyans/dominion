@@ -23,6 +23,19 @@ export default class Container extends React.Component {
 		this.props.action();
 	};
 	
+	toggleLast = (e) => {
+		var header = document.getElementById(e.target.id);
+		var parentID = document.getElementById(e.target.id.replace('_tap', ''));
+		header.style.color = header.style.color === 'rgba(0, 0, 0, 0.541176)' ? '#D8E6E7' : 'rgba(0, 0, 0, 0.541176)';
+
+		//get the first inner DIV which contains all the a elements
+		var childrenArr = parentID.children;
+		for (var i = 0; i < childrenArr.length - 1; i++) {
+			var shown = childrenArr[i].style.display;
+			childrenArr[i].style.display = shown === 'flex' ? 'none' : 'flex';
+		}
+	};
+	
   render() {
 		let ActionList = this.props.action ? (
 			<div id='action'>
@@ -42,24 +55,24 @@ export default class Container extends React.Component {
 																 ' p=' + this.props.player.resource.potion} />
 					) : null}
 					<Divider />
-					<Subheader>Discard</Subheader>
+					<Subheader id={'discard_tap'} onTouchTap={this.toggleLast}>Discard</Subheader>
 					<div id='discard' style={styles.wrapper}>
 					{this.props.player.discard.map(function(card, index) {
-						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'discard', index)} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'discard', index)} backgroundColor={card.sel ? "#9DC3C1" : (index === this.props.player.discard.length - 1 ? "#D8E6E7" : null)}>{card.name}</Chip>;
 					}, this)}
 					</div>
 					<Divider />
-					<Subheader>Played</Subheader>
+					<Subheader id={'in_play_tap'} onTouchTap={this.toggleLast}>Played</Subheader>
 					<div id='in_play' style={styles.wrapper}>
 					{this.props.player.inPlay.map(function(card, index) {
-						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_play', index)} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_play', index)} backgroundColor={card.sel ? "#9DC3C1" : (index === this.props.player.inPlay.length - 1 ? "#D8E6E7" : null)}>{card.name}</Chip>;
 					}, this)}
 					</div>
 					<Divider />
-					<Subheader>Hand</Subheader>
+					<Subheader id={'in_hand_tap'} onTouchTap={this.toggleLast}>Hand</Subheader>
 					<div id='in_hand' style={styles.wrapper}>
 					{this.props.player.hand.map(function(card, index) {
-						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_hand', index)} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_hand', index)} backgroundColor={card.sel ? "#9DC3C1" : (index === this.props.player.hand.length - 1 ? "#D8E6E7" : null)}>{card.name}</Chip>;
 					}, this)}
 					</div>
 					{ActionList}
@@ -81,24 +94,24 @@ export default class Container extends React.Component {
 																						' p=' + player.resource.potion} />
 										 ) : null}
 										 <Divider />
-								 		 <Subheader>Discard</Subheader>
-										 <div id='discard' style={styles.wrapper}>
+								 		 <Subheader id={'discard' + index + '_tap'} onTouchTap={this.toggleLast}>Discard</Subheader>
+										 <div id={'discard' + index} style={styles.wrapper}>
 										 {player.discardTop.map(function(card, index) {
-											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
+											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : (index === player.discardTop.length - 1 ? "#D8E6E7" : null)}>{card.name}</Chip>;
 										 }, this)}
 										 </div>
 										 <Divider />
-										 <Subheader>Played</Subheader>
-										 <div id='in_play' style={styles.wrapper}>
+										 <Subheader id={'in_play' + index + '_tap'} onTouchTap={this.toggleLast}>Played</Subheader>
+										 <div id={'in_play' + index} style={styles.wrapper}>
 										 {player.inPlay.map(function(card, index) {
-											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
+											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : (index === player.inPlay.length - 1 ? "#D8E6E7" : null)}>{card.name}</Chip>;
 										 })}
 										 </div>
 										 <Divider />
-										 <Subheader>Hand</Subheader>
-										 <div id='in_hand' style={styles.wrapper}>
+										 <Subheader id={'in_hand' + index + '_tap'} onTouchTap={this.toggleLast}>Hand</Subheader>
+										 <div id={'in_hand' + index} style={styles.wrapper}>
 										 {player.hand.map(function(card, index) {
-											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
+											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : (index === player.hand.length - 1 ? "#D8E6E7" : null)}>{card.name}</Chip>;
 										 }, this)}
 										</div>
 									 </List>
