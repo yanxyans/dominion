@@ -67,4 +67,5 @@ io.on('connection', function(socket) {
 	socket.on('_enter_game', game.enterUser.bind(game, user));
 	socket.on('disconnect', game.disconnectUser.bind(game, user));
 	socket.on('_click_card', game.clickCard.bind(game, user));
+	socket.on('_reconnect', game.reconnect.bind(game, user));
 });

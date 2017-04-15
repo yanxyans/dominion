@@ -70,7 +70,7 @@ export default class Container extends React.Component {
 				{this.props.players.map(function(player, index) {
 					return <MobileTearSheet key={index}>
 								   <List>
-										 <ListItem primaryText={'name = ' + player.name} />
+										 <ListItem primaryText={'name = ' + player.name} onTouchTap={this.props._rec.bind(null, player.spot)}/>
 										 <ListItem primaryText={'deck size = ' + player.deckSize} />
 										 <ListItem primaryText={'discard top = ' + player.discardTop} />
 										 <ListItem primaryText={'hand size = ' + player.handSize} />
@@ -87,7 +87,7 @@ export default class Container extends React.Component {
 										 </div>
 									 </List>
 								 </MobileTearSheet>;
-				})}
+				}, this)}
 			</div>
 		) : null;
 		

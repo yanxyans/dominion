@@ -104,7 +104,8 @@ Game.prototype.addUser = function(user, room) {
 				},
 				todo: [],
 				attack: null,
-				reaction: []
+				reaction: [],
+				seated: true
 			};
 			
 			game.players[playerSpot] = player;
@@ -155,11 +156,33 @@ Game.prototype.removeUser = function(user, room) {
 				// remove player
 				game.players[playerSpot] = null;
 				game.spots.push(playerSpot);
-				this.emitRoomBoard(room);
 			} else {
 				// attempt reconnect
+				game.players[playerSpot].id = null;
+				game.players[playerSpot].name = 'disc';
+				game.players[playerSpot].socket = null;
+				game.players[playerSpot].seated = false;
 			}
+			this.emitRoomBoard(room);
 		}
+	}
+};
+
+Game.prototype.reconnect = function(user, spot) {
+	var room = user.inGame;
+	var game = this.rooms[room];
+	if (game && game.players[spot] && !game.players[spot].seated) {
+		game.players[spot].id = user.id;
+		game.players[spot].name = user.name;
+		game.players[spot].socket = user.socket;
+		game.players[spot].seated = true;
+		
+		game.users[user.id].type = 1;
+		user.games[room] = spot;
+		
+		this.emitPlayer(game.players[spot], room);
+		this.emitRoomBoard(room);
+		this.emitRoomUser(room);
 	}
 };
 
@@ -768,7 +791,8 @@ Game.prototype.getPlayer = function(player) {
 			discardTop: discardTop ? discardTop.name : null,
 			inPlay: player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }),
 			handSize: player.hand.length,
-			resource: player.resource
+			resource: player.resource,
+			spot: player.spot
 		};
 	}
 };

@@ -76,6 +76,10 @@ class Container extends React.Component {
 		this.socket.emit('_click_card', clickKey, cardKey);
 	};
 	
+	_rec = (spot) => {
+		this.socket.emit('_reconnect', spot);
+	};
+	
 	componentDidMount = () => {
 		this.socket = io();
 		this.socket.on('_init', this._init);
@@ -98,7 +102,8 @@ class Container extends React.Component {
 												 action={this.state.action}
 												 piles={this.state.piles}
 												 players={this.state.players}
-												 _clickCard={this._clickCard} />
+												 _clickCard={this._clickCard}
+												 _rec={this._rec} />
 					<MenuComponent name={this.state.name}
 												 _setName={this._setName}
 												 rooms={this.state.rooms}
