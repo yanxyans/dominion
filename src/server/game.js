@@ -827,13 +827,12 @@ Game.prototype.emitPlayer = function(player, room) {
 
 Game.prototype.getPlayer = function(player) {
 	if (player) {
-		var discardTop = player.discard ? player.discard.slice(-1)[0] : null;
 		return {
 			name: player.name,
 			deckSize: player.deck ? player.deck.length : null,
-			discardTop: discardTop ? discardTop.name : null,
+			discardTop: player.discard ? player.discard.slice(-1).map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
 			inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-			handSize: player.hand ? player.hand.length : null,
+			hand: player.hand ? player.hand.map(function(card) { return {name: 'hidden', sel: card.selected}; }) : [],
 			resource: player.resource ? player.resource : {},
 			spot: player.spot
 		};

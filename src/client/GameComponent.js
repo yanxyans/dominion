@@ -73,10 +73,7 @@ export default class Container extends React.Component {
 					return <MobileTearSheet key={index}>
 								   <List>
 										 <ListItem primaryText={'name = ' + player.name} onTouchTap={this.props._rec.bind(null, player.spot)}/>
-										 
 										 {player.deckSize ? <ListItem primaryText={'deck size = ' + player.deckSize} /> : null}
-										 {player.discardTop ? <ListItem primaryText={'discard top = ' + player.discardTop} /> : null}
-										 {player.handSize ? <ListItem primaryText={'hand size = ' + player.handSize} /> : null}
 										 {Object.keys(player.resource).length ? (
 										 <ListItem primaryText={'a=' + player.resource.action +
 																						' b=' + player.resource.buy +
@@ -84,12 +81,26 @@ export default class Container extends React.Component {
 																						' p=' + player.resource.potion} />
 										 ) : null}
 										 <Divider />
+								 		 <Subheader>Discard</Subheader>
+										 <div id='discard' style={styles.wrapper}>
+										 {player.discardTop.map(function(card, index) {
+											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
+										 }, this)}
+										 </div>
+										 <Divider />
 										 <Subheader>Played</Subheader>
 										 <div id='in_play' style={styles.wrapper}>
 										 {player.inPlay.map(function(card, index) {
 											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
 										 })}
 										 </div>
+										 <Divider />
+										 <Subheader>Hand</Subheader>
+										 <div id='in_hand' style={styles.wrapper}>
+										 {player.hand.map(function(card, index) {
+											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#9DC3C1" : null}>{card.name}</Chip>;
+										 }, this)}
+										</div>
 									 </List>
 								 </MobileTearSheet>;
 				}, this)}
