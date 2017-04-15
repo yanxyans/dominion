@@ -4,7 +4,8 @@
   "description": "the board game",
   "main": "src/server/index.js",
   "scripts": {
-    "start": "nodemon src/server/index.js --ignore public/ --ignore src/client"
+    "start": "node src/server/index.js",
+		"build": "webpack -p"
   },
   "repository": {
     "type": "git",
