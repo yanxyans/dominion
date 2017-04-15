@@ -24,7 +24,7 @@ export default class MenuComponent extends React.Component {
 				</MobileTearSheet>
 				<MobileTearSheet>
 					<List>
-						<ListItem primaryText="poop" />
+						<ListItem primaryText="a e s t h e t i c" />
 					</List>
 				</MobileTearSheet>
 			</div>
