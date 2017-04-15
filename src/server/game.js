@@ -391,6 +391,7 @@ Game.prototype.applyReaction = function(player, room) {
 				}
 				this.cleanGame(player, game);
 				this.emitRoomBoard(room);
+				this.io.in(room).emit('_reaction', player.name + ' reacts with ' + sel.name);
 			}
 		}
 	}

@@ -4,6 +4,7 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import MenuComponent from './MenuComponent';
 import GameComponent from './GameComponent';
+import Snackbar from 'material-ui/Snackbar';
 
 injectTapEventPlugin();
 
@@ -18,8 +19,16 @@ class Container extends React.Component {
 		action: null,
 		piles: [],
 		players: [],
-		trash: []
+		trash: [],
+		msg: "",
+		open: false
 	};
+	
+	handleRequestClose = () => {
+    this.setState({
+      open: false,
+    });
+  };
 	
 	_init = (name) => {
 		this.setState({name: name});
@@ -29,7 +38,7 @@ class Container extends React.Component {
 		if (msg.head === 'ok') {
 			this.setState({name: name});
 		}
-		console.log(msg.body);
+		this.setState({msg: msg.body, open: true});
 	};
 	
 	_room = (msg, room) => {
@@ -39,7 +48,7 @@ class Container extends React.Component {
 				inRoom: room.inRoom
 			});
 		}
-		console.log(msg.body);
+		this.setState({msg: msg.body, open: true});
 	};
 	
 	_user = (users) => {
@@ -82,6 +91,10 @@ class Container extends React.Component {
 		this.socket.emit('_reconnect', spot);
 	};
 	
+	_reaction = (msg) => {
+		this.setState({msg: msg, open: true});
+	};
+	
 	componentDidMount = () => {
 		this.socket = io();
 		this.socket.on('_init', this._init);
@@ -90,7 +103,7 @@ class Container extends React.Component {
 		this.socket.on('_game_user', this._user);
 		this.socket.on('_game_player', this._player);
 		this.socket.on('_game_board', this._board);
-		
+		this.socket.on('_reaction', this._reaction);
 		this._joinGame('dominion0');
 	}
 	
@@ -113,6 +126,10 @@ class Container extends React.Component {
 												 inRoom={this.state.inRoom}
 												 _joinGame={this._joinGame}
 												 _enterGame={this._enterGame} />
+					<Snackbar open={this.state.open}
+										message={this.state.msg}
+										autoHideDuration={4000}
+										onRequestClose={this.handleRequestClose} />
 				</div>
 			</MuiThemeProvider>
 		)
