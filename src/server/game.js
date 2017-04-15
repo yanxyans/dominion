@@ -103,7 +103,7 @@ Game.prototype.addUser = function(user, room) {
 					potion: 0
 				},
 				todo: [],
-				attacked: [],
+				attack: null,
 				reaction: []
 			};
 			
@@ -273,8 +273,9 @@ Game.prototype.applyAction = function(player, room) {
 Game.prototype.applyAttack = function(player, room) {
 	var game = this.rooms[room];
 	if (game && game.phase === 6) {
-		if (player.attacked[0]()) {
-			player.attacked.shift();
+		if (player.attack.effect()) {
+			player.attack.next();
+			player.attack = null;
 			this.cleanGame(player, game);
 			this.emitRoomBoard(room);
 		}
@@ -307,36 +308,19 @@ Game.prototype.applyReaction = function(player, room) {
 			return reactionCard.selected;
 		});
 		if (selected.length === 0) {
-			if (player.attacked.length === 0) {
-				game.turn = (game.turn + 1) % 4;
-				while (game.players[game.turn] === null) {
-					game.turn = (game.turn + 1) % 4;
-				}
-				game.phase = game.players[game.turn].attacked.length ? (game.players[game.turn].reaction.length ? 5 : 6) : 1;
-			} else {
-				game.phase = 6;
-			}
+			game.phase = 6;
 			this.cleanGame(player, game);
 			this.emitRoomBoard(room);
 		} else if (selected.length === 1) {
-			if (selected[0].effect(player, game, player.hand.indexOf(selected[0]), 'reaction')) {
-				if (player.reaction.length > 0) {
-					// more reactions if necessary
-				} else {
-					if (player.attacked.length === 0) {
-						game.turn = (game.turn + 1) % 4;
-						while (game.players[game.turn] === null) {
-							game.turn = (game.turn + 1) % 4;
-						}
-						game.phase = game.players[game.turn].attacked.length ? (game.players[game.turn].reaction.length ? 5 : 6) : 1;
-					} else {
-						game.phase = 6;
-					}
+			var sel = selected[0];
+			sel.selected = false;
+			if (sel.effect(player, game, player.hand.indexOf(selected[0]), 'reaction')) {
+				if (player.reaction.length === 0) {
+					game.phase = 6
 				}
 				this.cleanGame(player, game);
 				this.emitRoomBoard(room);
 			}
-			selected[0].selected = false;
 		}
 	}
 	this.emitPlayer(player, room);
@@ -482,36 +466,38 @@ function getCard(card) {
 				});
 				players.forEach(function(pl, index) {
 					if (pl.id === player.id) {
-						// do nothing
+						// don't attack yourself
 					} else {
-						var militiaAttack = function(player, game) {
-							var handSize = player.hand.length;
-							if (handSize <= 3) {
-								game.turn = players[(index + 1) % players.length].spot;
-								game.phase = game.players[game.turn].attacked.length ? (game.players[game.turn].reaction.length ? 5 : 6) : 1;
-								return true;
-							}
-							
-							var selected = player.hand.filter(function(card) {
-								return card.selected;
-							});
-							var selectedLength = selected.length;
-							var remLength = handSize - selectedLength;
-							
-							if (remLength >= 3) {
-								for (var i = 0; i < selectedLength; i++) {
-									selected[i].selected = false;
-									player.discard.push(player.hand.splice(player.hand.indexOf(selected[i]), 1)[0]);
+						pl.attack = {
+							effect: function() {
+								var handSize = pl.hand.length;
+								if (handSize <= 3) {
+									return true;
 								}
-							}
-							if (remLength === 3) {
+								
+								var selected = pl.hand.filter(function(card) {
+									return card.selected;
+								});
+								var selLength = selected.length;
+								var remLength = handSize - selLength;
+								if (remLength >= 3) {
+									for (var i = 0; i < selLength; i++) {
+										selected[i].selected = false;
+										pl.discard.push(pl.hand.splice(pl.hand.indexOf(selected[i]), 1)[0]);
+									}
+									if (remLength === 3) {
+										return true;
+									}
+								}
+								return false;
+							},
+							next: function() {
 								game.turn = players[(index + 1) % players.length].spot;
-								game.phase = game.players[game.turn].attacked.length ? (game.players[game.turn].reaction.length ? 5 : 6) : 1;
-								return true;
+								
+								var nextPlayer = game.players[game.turn];
+								game.phase = nextPlayer.attack ? (nextPlayer.reaction.length ? 5 : 6) : 1;
 							}
-							return false;
 						};
-						pl.attacked.push(militiaAttack.bind(null, pl, game));
 					}
 				});
 				
@@ -552,7 +538,11 @@ function getCard(card) {
 				if (effectType === 'action') {
 					draw(player, 2);
 				} else if (effectType === 'reaction') {
-					player.attacked.shift();
+					if (player.attack) {
+						player.attack.effect = function() {
+							return true;
+						};
+					}
 				}
 				return true;
 			}, false);
