@@ -47,7 +47,7 @@ export default class Container extends React.Component {
 			<MobileTearSheet>
 				<List>
 					<ListItem primaryText={'name = ' + this.props.player.name} />
-					{this.props.player.deckSize ? <ListItem primaryText={'deck size = ' + this.props.player.deckSize} /> : null}
+					{this.props.player.deckSize != null ? <ListItem primaryText={'deck size = ' + this.props.player.deckSize} /> : null}
 					{Object.keys(this.props.player.resource).length ? (
 					<ListItem primaryText={'a=' + this.props.player.resource.action +
 																 ' b=' + this.props.player.resource.buy +
@@ -86,7 +86,7 @@ export default class Container extends React.Component {
 					return <MobileTearSheet key={index}>
 								   <List>
 										 <ListItem primaryText={'name = ' + player.name} onTouchTap={this.props._rec.bind(null, player.spot)}/>
-										 {player.deckSize ? <ListItem primaryText={'deck size = ' + player.deckSize} /> : null}
+										 {player.deckSize != null ? <ListItem primaryText={'deck size = ' + player.deckSize} /> : null}
 										 {Object.keys(player.resource).length ? (
 										 <ListItem primaryText={'a=' + player.resource.action +
 																						' b=' + player.resource.buy +
@@ -128,7 +128,7 @@ export default class Container extends React.Component {
 					return <Chip key={index}
 											 style={styles.chip}
 											 onTouchTap={this.props._clickCard.bind(null, 'buy', pile.name)}
-											 backgroundColor={pile.sel ? "#9DC3C1" : null}>{pile.name} {pile.amt} {c=pile.coinCost} {p=pile.potCost}</Chip>;
+											 backgroundColor={pile.sel ? "#9DC3C1" : null}>{pile.name} {pile.amt} {'c=' + pile.coinCost} {'p=' + pile.potCost}</Chip>;
 				}, this)}
 				</div>
 				<Divider />
