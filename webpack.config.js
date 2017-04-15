@@ -4,8 +4,7 @@ var path = require('path');
 module.exports = {
 	context: path.resolve(__dirname, './src/client'),
   entry: [
-    './Container',
-		'webpack-hot-middleware/client'
+    './Container'
   ],
   output: {
     path: path.resolve(__dirname, './public'),
