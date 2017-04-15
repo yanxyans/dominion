@@ -18,7 +18,7 @@ jsdom.env("", function(err, window) {
 var Game = require(path.resolve(__dirname, 'game'));
 var User = require(path.resolve(__dirname, 'user'));
 var game = new Game(io);
-var room = 'dominion0';
+var room = 'first_game';
 var set = {
 	start: {
 		estate: 3,
@@ -46,14 +46,15 @@ var set = {
 };
 game.newRoom(room, set);
 
+app.use(express.static(path.resolve(__dirname, '..', '..', 'public')));
+/**
 var webpack = require('webpack');
 var webpackConfig = require('../../webpack.config');
 var compiler = webpack(webpackConfig);
-app.use(express.static(path.resolve(__dirname, '..', '..', 'public')));
 app.use(require('webpack-dev-middleware')(compiler, {
   noInfo: true, publicPath: webpackConfig.output.publicPath
 }));
-app.use(require('webpack-hot-middleware')(compiler));
+app.use(require('webpack-hot-middleware')(compiler));**/
 
 server.listen(port, function () {
   console.log('Server listening at port %d', port);
