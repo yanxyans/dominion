@@ -99,7 +99,9 @@ Game.prototype.addUser = function(user, room) {
 					return {
 						name: cardKey,
 						amt: this.kingdom[cardKey],
-						sel: this.kingdomCards[cardKey].selected
+						sel: this.kingdomCards[cardKey].selected,
+						coinCost: this.kingdomCards[cardKey].coinCost,
+						potCost: this.kingdomCards[cardKey].potCost
 					};
 				}, game.set),
 				players: game.players.filter(function(player) {
@@ -186,7 +188,9 @@ Game.prototype.enterUser = function(user, room) {
 					return {
 						name: cardKey,
 						amt: this.kingdom[cardKey],
-						sel: this.kingdomCards[cardKey].selected
+						sel: this.kingdomCards[cardKey].selected,
+						coinCost: this.kingdomCards[cardKey].coinCost,
+						potCost: this.kingdomCards[cardKey].potCost
 					};
 				}, game.set),
 				players: game.players.filter(function(player) {
@@ -857,7 +861,9 @@ Game.prototype.emitRoomBoard = function(room) {
 					return {
 						name: cardKey,
 						amt: this.kingdom[cardKey],
-						sel: this.kingdomCards[cardKey].selected
+						sel: this.kingdomCards[cardKey].selected,
+						coinCost: this.kingdomCards[cardKey].coinCost,
+						potCost: this.kingdomCards[cardKey].potCost
 					};
 				}, game.set),
 				players: game.players.filter(function(player) {

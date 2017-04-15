@@ -184,7 +184,3 @@ class Container extends React.Component {
 };
  
 ReactDOM.render(<Container />, document.getElementById('root'));
-
-if (module.hot) {
-	module.hot.accept();
-}

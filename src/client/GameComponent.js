@@ -128,7 +128,7 @@ export default class Container extends React.Component {
 					return <Chip key={index}
 											 style={styles.chip}
 											 onTouchTap={this.props._clickCard.bind(null, 'buy', pile.name)}
-											 backgroundColor={pile.sel ? "#9DC3C1" : null}>{pile.name} {pile.amt}</Chip>;
+											 backgroundColor={pile.sel ? "#9DC3C1" : null}>{pile.name} {pile.amt} {c=pile.coinCost} {p=pile.potCost}</Chip>;
 				}, this)}
 				</div>
 				<Divider />
