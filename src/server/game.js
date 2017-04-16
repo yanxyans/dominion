@@ -100,8 +100,7 @@ Game.prototype.addUser = function(user, room) {
 						name: cardKey,
 						amt: this.kingdom[cardKey],
 						sel: this.kingdomCards[cardKey].selected,
-						coinCost: this.kingdomCards[cardKey].coinCost,
-						potCost: this.kingdomCards[cardKey].potCost
+						types: this.kingdomCards[cardKey].types
 					};
 				}, game.set),
 				players: game.players.filter(function(player) {
@@ -111,7 +110,10 @@ Game.prototype.addUser = function(user, room) {
 					return player;
 				}),
 				trash: game.trash.map(function(card) {
-					return card.name;
+					return {
+						name: card.name,
+						types: card.types
+					};
 				})
 			});
 		}
@@ -192,8 +194,7 @@ Game.prototype.enterUser = function(user, room) {
 						name: cardKey,
 						amt: this.kingdom[cardKey],
 						sel: this.kingdomCards[cardKey].selected,
-						coinCost: this.kingdomCards[cardKey].coinCost,
-						potCost: this.kingdomCards[cardKey].potCost
+						types: this.kingdomCards[cardKey].types
 					};
 				}, game.set),
 				players: game.players.filter(function(player) {
@@ -203,7 +204,10 @@ Game.prototype.enterUser = function(user, room) {
 					return player;
 				}),
 				trash: game.trash.map(function(card) {
-					return card.name;
+					return {
+						name: card.name,
+						types: card.types
+					};
 				})
 			});
 			
@@ -832,9 +836,9 @@ Game.prototype.emitPlayer = function(player, room) {
 			'_game_player', {
 				name: player.name,
 				deckSize: player.deck ? player.deck.length: null,
-				discard: player.discard ? player.discard.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-				inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-				hand: player.hand ? player.hand.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
+				discard: player.discard ? player.discard.map(function(card) { return {name: card.name, sel: card.selected, types: card.types}; }) : [],
+				inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected, types: card.types}; }) : [],
+				hand: player.hand ? player.hand.map(function(card) { return {name: card.name, sel: card.selected, types: card.types}; }) : [],
 				resource: player.resource ? player.resource : {},
 				turn: game && game.phase ? (player.spot === game.turn) : true
 			},
@@ -847,9 +851,9 @@ Game.prototype.getPlayer = function(player) {
 		return {
 			name: player.name,
 			deckSize: player.deck ? player.deck.length : null,
-			discardTop: player.discard ? player.discard.slice(-1).map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-			inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-			hand: player.hand ? player.hand.map(function(card) { return {name: 'hidden', sel: card.selected}; }) : [],
+			discardTop: player.discard ? player.discard.slice(-1).map(function(card) { return {name: card.name, sel: card.selected, types: card.types}; }) : [],
+			inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected, types: card.types}; }) : [],
+			hand: player.hand ? player.hand.map(function(card) { return {name: 'hidden', sel: card.selected, types: []}; }) : [],
 			resource: player.resource ? player.resource : {},
 			spot: player.spot
 		};
@@ -870,8 +874,7 @@ Game.prototype.emitRoomBoard = function(room) {
 						name: cardKey,
 						amt: this.kingdom[cardKey],
 						sel: this.kingdomCards[cardKey].selected,
-						coinCost: this.kingdomCards[cardKey].coinCost,
-						potCost: this.kingdomCards[cardKey].potCost
+						types: this.kingdomCards[cardKey].types
 					};
 				}, game.set),
 				players: game.players.filter(function(player) {
@@ -881,7 +884,10 @@ Game.prototype.emitRoomBoard = function(room) {
 					return player;
 				}),
 				trash: game.trash.map(function(card) {
-					return card.name;
+					return {
+						name: card.name,
+						types: card.types
+					};
 				})
 			});
 		}, this);
