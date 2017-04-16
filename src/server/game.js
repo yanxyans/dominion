@@ -899,19 +899,19 @@ Game.prototype.getAction = function(player, room) {
 	if (game && game.turn === -1 || game.players[game.turn] === player) {
 		switch (game.phase) {
 			case 0:
-				return ["Start Game", this.start.bind(this, player, room)];
+				return ["start_game", this.start.bind(this, player, room)];
 			case 1:
-				return ["End Turn", this.end.bind(this, player, room)];
+				return ["end_turn", this.end.bind(this, player, room)];
 			case 2:
-				return ["End Turn", this.end.bind(this, player, room)];
+				return ["end_turn", this.end.bind(this, player, room)];
 			case 3:
-				return ["End Turn", this.end.bind(this, player, room)];
+				return ["end_turn", this.end.bind(this, player, room)];
 			case 4:
-				return ["Apply Action", this.applyAction.bind(this, player, room)];
+				return ["apply_action", this.applyAction.bind(this, player, room)];
 			case 5:
-				return ["Apply Reaction", this.applyReaction.bind(this, player, room)];
+				return ["apply_reaction", this.applyReaction.bind(this, player, room)];
 			case 6:
-				return ["Apply Attack", this.applyAttack.bind(this, player, room)];
+				return ["apply_attack", this.applyAttack.bind(this, player, room)];
 			default:
 				// do nothing
 		}
