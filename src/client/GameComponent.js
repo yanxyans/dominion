@@ -27,7 +27,7 @@ export default class Container extends React.Component {
 	toggleLast = (e) => {
 		var header = document.getElementById(e.target.id);
 		var parentID = document.getElementById(e.target.id.replace('_tap', ''));
-		header.style.color = header.style.color === 'rgba(0, 0, 0, 0.541176)' ? '#D8E6E7' : 'rgba(0, 0, 0, 0.541176)';
+		header.style.color = header.style.color === 'rgba(0, 0, 0, 0.541176)' ? '#090707' : 'rgba(0, 0, 0, 0.541176)';
 
 		//get the first inner DIV which contains all the a elements
 		var childrenArr = parentID.children;
@@ -37,19 +37,19 @@ export default class Container extends React.Component {
 		}
 	};
 	
-	getColor = (types) => {
+	getColor = (sel, types) => {
 		if (types.includes('attack')) {
-			return '#E53A40';
+			return sel ? '#b92f66' : '#B85B80';
 		} else if (types.includes('reaction')) {
-			return '#30A9DE';
+			return sel ? '#37b1d1' : '#7BBCCD';
 		} else if (types.includes('treasure')) {
-			return '#EFDC05';
+			return sel ? '#f1ad23' : '#F0C060';
 		} else if (types.includes('victory')) {
-			return '#519D9E';
+			return sel ? '#11545a' : '#19828B';
 		} else if (types.includes('curse')) {
-			return '#D1B6E1';
+			return sel ? '#902b99' : '#915996';
 		} else {
-			return null;
+			return sel ? '#8b8787' : null;
 		}
 	};
 	
@@ -61,7 +61,7 @@ export default class Container extends React.Component {
 			</div>
 		) : null;
 		let PlayerTable = this.props.player ? (
-			<MobileTearSheet isTurn={this.props.player.turn ? 'solid 3px #8CD790' : 'solid 1px #d9d9d9'}>
+			<MobileTearSheet isTurn={this.props.player.turn ? 'dashed 3px #285943' : 'solid 1px #d9d9d9'}>
 				<List>
 					<ListItem primaryText={'name = ' + this.props.player.name} />
 					{this.props.player.deckSize != null ? <ListItem primaryText={'deck size = ' + this.props.player.deckSize} /> : null}
@@ -75,21 +75,21 @@ export default class Container extends React.Component {
 					<Subheader id={'discard_tap'} onTouchTap={this.toggleLast}>Discard</Subheader>
 					<div id='discard' style={styles.wrapper}>
 					{this.props.player.discard.map(function(card, index) {
-						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'discard', index)} backgroundColor={card.sel ? "#77AF9C" : this.getColor(card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === this.props.player.discard.length - 1 ? "?!" : "?"}</Avatar>{card.name}</Chip>;
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'discard', index)} backgroundColor={this.getColor(card.sel, card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === this.props.player.discard.length - 1 ? "?!" : "?"}</Avatar>{card.name}</Chip>;
 					}, this)}
 					</div>
 					<Divider />
 					<Subheader id={'in_play_tap'} onTouchTap={this.toggleLast}>Played</Subheader>
 					<div id='in_play' style={styles.wrapper}>
 					{this.props.player.inPlay.map(function(card, index) {
-						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_play', index)} backgroundColor={card.sel ? "#77AF9C" : this.getColor(card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === this.props.player.inPlay.length - 1 ? "?!" : "?"}</Avatar>{card.name}</Chip>;
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_play', index)} backgroundColor={this.getColor(card.sel, card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === this.props.player.inPlay.length - 1 ? "?!" : "?"}</Avatar>{card.name}</Chip>;
 					}, this)}
 					</div>
 					<Divider />
 					<Subheader id={'in_hand_tap'} onTouchTap={this.toggleLast}>Hand</Subheader>
 					<div id='in_hand' style={styles.wrapper}>
 					{this.props.player.hand.map(function(card, index) {
-						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_hand', index)} backgroundColor={card.sel ? "#77AF9C" : this.getColor(card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === this.props.player.hand.length - 1 ? "?!" : "?"}</Avatar>{card.name}</Chip>;
+						return <Chip key={index} style={styles.chip} onTouchTap={this.props._clickCard.bind(null, 'in_hand', index)} backgroundColor={this.getColor(card.sel, card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === this.props.player.hand.length - 1 ? "?!" : "?"}</Avatar>{card.name}</Chip>;
 					}, this)}
 					</div>
 					{ActionList}
@@ -100,7 +100,7 @@ export default class Container extends React.Component {
 			<div id='players'>
 				{PlayerTable}
 				{this.props.players.map(function(player, index) {
-					return <MobileTearSheet key={index} isTurn={player.turn ? 'solid 3px #8CD790' : 'solid 1px #d9d9d9'}>
+					return <MobileTearSheet key={index} isTurn={player.turn ? 'dashed 3px #285943' : 'solid 1px #d9d9d9'}>
 								   <List>
 										 <ListItem primaryText={'name = ' + player.name} onTouchTap={this.props._rec.bind(null, player.spot)}/>
 										 {player.deckSize != null ? <ListItem primaryText={'deck size = ' + player.deckSize} /> : null}
@@ -114,21 +114,21 @@ export default class Container extends React.Component {
 								 		 <Subheader id={'discard' + index + '_tap'} onTouchTap={this.toggleLast}>Discard</Subheader>
 										 <div id={'discard' + index} style={styles.wrapper}>
 										 {player.discardTop.map(function(card, index) {
-											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#77AF9C" : this.getColor(card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>?!</Avatar>{card.name}</Chip>;
+											 return <Chip key={index} style={styles.chip} backgroundColor={getColor(card.sel, card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>?!</Avatar>{card.name}</Chip>;
 										 }, this)}
 										 </div>
 										 <Divider />
 										 <Subheader id={'in_play' + index + '_tap'} onTouchTap={this.toggleLast}>Played</Subheader>
 										 <div id={'in_play' + index} style={styles.wrapper}>
 										 {player.inPlay.map(function(card, index) {
-											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#77AF9C" : this.getColor(card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === player.inPlay.length - 1 ? "?!" : "?"}</Avatar>{card.name}</Chip>;
+											 return <Chip key={index} style={styles.chip} backgroundColor={this.getColor(card.sel, card.types)}><Avatar size={32} onMouseEnter={this.props._help.bind(null, card.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === player.inPlay.length - 1 ? "?!" : "?"}</Avatar>{card.name}</Chip>;
 										 }, this)}
 										 </div>
 										 <Divider />
 										 <Subheader id={'in_hand' + index + '_tap'} onTouchTap={this.toggleLast}>Hand</Subheader>
 										 <div id={'in_hand' + index} style={styles.wrapper}>
 										 {player.hand.map(function(card, index) {
-											 return <Chip key={index} style={styles.chip} backgroundColor={card.sel ? "#77AF9C" : this.getColor(card.types)}>{card.name}</Chip>;
+											 return <Chip key={index} style={styles.chip} backgroundColor={this.getColor(card.sel, card.types)}>{card.name}</Chip>;
 										 }, this)}
 										</div>
 									 </List>
@@ -145,7 +145,7 @@ export default class Container extends React.Component {
 					return <Chip key={index}
 											 style={styles.chip}
 											 onTouchTap={this.props._clickCard.bind(null, 'buy', pile.name)}
-											 backgroundColor={pile.sel ? "#77AF9C" : this.getColor(pile.types)}>
+											 backgroundColor={this.getColor(pile.sel, pile.types)}>
 											 <Avatar size={32} onMouseEnter={this.props._help.bind(null, pile.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === this.props.piles.length - 1 ? "?!" : "?"}</Avatar>{pile.name + " " + pile.amt}
 								 </Chip>;
 				}, this)}
@@ -155,7 +155,7 @@ export default class Container extends React.Component {
 				<div id='trash' style={styles.wrapper}>
 				{this.props.trash.map(function(trash_card, index) {
 					return <Chip key={index}
-											 style={styles.chip}><Avatar size={32} onMouseEnter={this.props._help.bind(null, trash_card)} onMouseLeave={this.props._help.bind(null, '')} backgroundColor={this.getColor(trash_card.types)}>{index === this.props.trash.length - 1 ? "?!" : "?"}</Avatar>{trash_card.name}</Chip>;
+											 style={styles.chip}><Avatar size={32} onMouseEnter={this.props._help.bind(null, trash_card)} onMouseLeave={this.props._help.bind(null, '')} backgroundColor={this.getColor(false, trash_card.types)}>{index === this.props.trash.length - 1 ? "?!" : "?"}</Avatar>{trash_card.name}</Chip>;
 				}, this)}
 				</div>
 			</MobileTearSheet>
