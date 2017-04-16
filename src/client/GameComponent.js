@@ -56,7 +56,6 @@ export default class Container extends React.Component {
   render() {
 		let ActionList = this.props.action ? (
 			<div id='action'>
-				<Divider />
 				<ListItem primaryText={this.props.actionName} onTouchTap={this.handleAction} />
 			</div>
 		) : null;

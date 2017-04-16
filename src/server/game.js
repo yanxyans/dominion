@@ -673,7 +673,7 @@ function getCard(card) {
 				return true;
 			}, false);
 		case 'workshop':
-			return new actionCard("workshop", 4, 0, ["action"], function(player, game) {
+			return new actionCard("workshop", 3, 0, ["action"], function(player, game) {
 				game.phase = 4;
 				player.todo.push(gainAction.bind(null, player, game, 4, 0, [], 'discard'));
 				return true;
