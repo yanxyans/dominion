@@ -18,7 +18,7 @@ export default class MenuComponent extends React.Component {
   render() {
     return (
 			<div id='menu'>
-				<MobileTearSheet>
+				<MobileTearSheet id='sheet'>
 					<List>
 						<NameComponent name={this.props.name} _setName={this.props._setName} />
 						<JoinComponent _joinGame={this.props._joinGame} />
@@ -30,7 +30,7 @@ export default class MenuComponent extends React.Component {
 						})}
 					</SelectableList>
 				</MobileTearSheet>
-				<MobileTearSheet>
+				<MobileTearSheet id='sheet'>
 					<List>
 						<ListItem primaryText="a e s t h e t i c" />
 						{this.props.helpCard == '' ? null :
