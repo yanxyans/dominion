@@ -112,7 +112,11 @@ class Container extends React.Component {
 	};
 	
 	_help = (card_name) => {
-		this.setState({help: '/asset/cards/' + card_name + '.jpg'});
+		if (card_name === '') {
+			this.setState({help: ''});
+		} else {
+			this.setState({help: '/asset/cards/' + card_name + '.jpg'});
+		}
 	};
 	
 	componentDidMount = () => {
