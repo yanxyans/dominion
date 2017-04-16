@@ -63,7 +63,7 @@ export default class Container extends React.Component {
 		let PlayerTable = this.props.player ? (
 			<MobileTearSheet isTurn={this.props.player.turn ? 'dashed 3px #285943' : 'solid 1px #d9d9d9'}>
 				<List>
-					<ListItem primaryText={'name = ' + this.props.player.name} />
+					<ListItem primaryText={'name=' + this.props.player.name} />
 					{this.props.player.deckSize != null ? <ListItem primaryText={'deck size=' + this.props.player.deckSize} /> : null}
 					{Object.keys(this.props.player.resource).length ? (
 					<ListItem primaryText={'action=' + this.props.player.resource.action +
@@ -102,7 +102,7 @@ export default class Container extends React.Component {
 				{this.props.players.map(function(player, index) {
 					return <MobileTearSheet key={index} isTurn={player.turn ? 'dashed 3px #285943' : 'solid 1px #d9d9d9'}>
 								   <List>
-										 <ListItem primaryText={'name = ' + player.name} onTouchTap={this.props._rec.bind(null, player.spot)}/>
+										 <ListItem primaryText={'name=' + player.name} onTouchTap={this.props._rec.bind(null, player.spot)}/>
 										 {player.deckSize != null ? <ListItem primaryText={'deck size=' + player.deckSize} /> : null}
 										 {Object.keys(player.resource).length ? (
 										 <ListItem primaryText={'action=' + player.resource.action +

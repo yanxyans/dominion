@@ -44,7 +44,7 @@ export default class NameComponent extends React.Component {
 
     return (
       <div>
-				<ListItem primaryText={'name = ' + this.props.name} onTouchTap={this.handleOpen} />
+				<ListItem primaryText={'name=' + this.props.name} onTouchTap={this.handleOpen} />
         <Dialog
           title='enter display name'
           actions={actions}
