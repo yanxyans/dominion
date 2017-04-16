@@ -5,6 +5,14 @@ import MobileTearSheet from './MobileTearSheet';
 import NameComponent from './NameComponent';
 import JoinComponent from './JoinComponent';
 import SelectableList from './SelectableList';
+import {Card, CardMedia} from 'material-ui/Card';
+
+const styles = {
+  card: {
+    display: 'flex',
+		justifyContent: 'justify-content'
+  }
+};
 
 export default class MenuComponent extends React.Component {
   render() {
@@ -25,6 +33,12 @@ export default class MenuComponent extends React.Component {
 				<MobileTearSheet>
 					<List>
 						<ListItem primaryText="a e s t h e t i c" />
+						{this.props.helpCard === '' ? null :
+						 <Card style={styles.card}>
+						   <CardMedia>
+								 <img src={this.props.helpCard} />
+							 </CardMedia>
+						 </Card>}
 					</List>
 				</MobileTearSheet>
 			</div>

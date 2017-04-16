@@ -26,7 +26,8 @@ class Container extends React.Component {
 		msg: "",
 		open: false,
 		finalScore: [],
-		openScore: false
+		openScore: false,
+		help: ''
 	};
 	
 	handleRequestClose = () => {
@@ -110,6 +111,10 @@ class Container extends React.Component {
 		this.setState({finalScore: endScores, openScore: true});
 	};
 	
+	_help = (card_name) => {
+		this.setState({help: '/asset/cards/' + card_name + '.jpg'});
+	};
+	
 	componentDidMount = () => {
 		this.socket = io();
 		this.socket.on('_init', this._init);
@@ -143,13 +148,15 @@ class Container extends React.Component {
 												 players={this.state.players}
 												 _clickCard={this._clickCard}
 												 _rec={this._rec}
-												 trash={this.state.trash} />
+												 trash={this.state.trash}
+												 _help={this._help} />
 					<MenuComponent name={this.state.name}
 												 _setName={this._setName}
 												 rooms={this.state.rooms}
 												 inRoom={this.state.inRoom}
 												 _joinGame={this._joinGame}
-												 _enterGame={this._enterGame} />
+												 _enterGame={this._enterGame}
+												 helpCard={this.state.help} />
 					<Snackbar open={this.state.open}
 										message={this.state.msg}
 										autoHideDuration={4000}
