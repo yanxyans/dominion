@@ -63,7 +63,7 @@ export default class Container extends React.Component {
 			<MobileTearSheet isTurn={this.props.player.turn ? 'solid 5px #285943' : 'solid 1px #d9d9d9'} id='sheet'>
 				<List>
 					<ListItem primaryText={'name=' + this.props.player.name} />
-					{this.props.player.deckSize != null ? <ListItem primaryText={'deck size=' + this.props.player.deckSize} /> : null}
+					{this.props.player.deckSize != null ? <ListItem primaryText={'deck_size=' + this.props.player.deckSize} /> : null}
 					{Object.keys(this.props.player.resource).length ? (
 					<ListItem primaryText={'action=' + this.props.player.resource.action +
 																 ' buy=' + this.props.player.resource.buy +
@@ -103,7 +103,7 @@ export default class Container extends React.Component {
 					return <MobileTearSheet key={index} isTurn={player.turn ? 'solid 5px #285943' : 'solid 1px #d9d9d9'} id='sheet'>
 								   <List>
 										 <ListItem primaryText={'name=' + player.name} onTouchTap={this.props._rec.bind(null, player.spot)}/>
-										 {player.deckSize != null ? <ListItem primaryText={'deck size=' + player.deckSize} /> : null}
+										 {player.deckSize != null ? <ListItem primaryText={'deck_size=' + player.deckSize} /> : null}
 										 {Object.keys(player.resource).length ? (
 										 <ListItem primaryText={'action=' + player.resource.action +
 																						' buy=' + player.resource.buy +
