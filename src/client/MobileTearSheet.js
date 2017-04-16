@@ -28,9 +28,7 @@ class MobileTearSheet extends Component {
         width: '100%',
       },
       container: {
-				borderTop: this.props.isTurn ? this.props.isTurn : 'solid 1px #d9d9d9',
-				borderLeft: this.props.isTurn ? this.props.isTurn : 'solid 1px #d9d9d9',
-				borderRight: this.props.isTurn ? this.props.isTurn : 'solid 1px #d9d9d9',
+				border: this.props.isTurn ? this.props.isTurn : 'solid 1px #d9d9d9',
         height: this.props.height,
         overflow: 'auto',
       },
@@ -47,7 +45,6 @@ class MobileTearSheet extends Component {
         <div style={prepareStyles(styles.container)}>
           {this.props.children}
         </div>
-        <img style={prepareStyles(styles.bottomTear)} src='asset/bottom-tear.svg' />
       </div>
     );
   }
