@@ -45,7 +45,7 @@ export default class Container extends React.Component {
 			</div>
 		) : null;
 		let PlayerTable = this.props.player ? (
-			<MobileTearSheet>
+			<MobileTearSheet isTurn={this.props.player.turn ? 'solid 3px #8CD790' : 'solid 1px #d9d9d9'}>
 				<List>
 					<ListItem primaryText={'name = ' + this.props.player.name} />
 					{this.props.player.deckSize != null ? <ListItem primaryText={'deck size = ' + this.props.player.deckSize} /> : null}
@@ -84,7 +84,7 @@ export default class Container extends React.Component {
 			<div id='players'>
 				{PlayerTable}
 				{this.props.players.map(function(player, index) {
-					return <MobileTearSheet key={index}>
+					return <MobileTearSheet key={index} isTurn={player.turn ? 'solid 3px #8CD790' : 'solid 1px #d9d9d9'}>
 								   <List>
 										 <ListItem primaryText={'name = ' + player.name} onTouchTap={this.props._rec.bind(null, player.spot)}/>
 										 {player.deckSize != null ? <ListItem primaryText={'deck size = ' + player.deckSize} /> : null}
@@ -123,7 +123,7 @@ export default class Container extends React.Component {
 		
 		let PileTable = Object.keys(this.props.piles).length ? (
 			<MobileTearSheet>
-				<Subheader>Piles</Subheader>
+				<Subheader id='piles_tap' onTouchTap={this.toggleLast}>Piles</Subheader>
 				<div id='piles' style={styles.wrapper}>
 				{this.props.piles.map(function(pile, index) {
 					return <Chip key={index}
@@ -135,7 +135,7 @@ export default class Container extends React.Component {
 				}, this)}
 				</div>
 				<Divider />
-				<Subheader>Trash</Subheader>
+				<Subheader id='trash_tap' onTouchTap={this.toggleLast}>Trash</Subheader>
 				<div id='trash' style={styles.wrapper}>
 				{this.props.trash.map(function(trash_card, index) {
 					return <Chip key={index}

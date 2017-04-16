@@ -106,7 +106,10 @@ Game.prototype.addUser = function(user, room) {
 				}, game.set),
 				players: game.players.filter(function(player) {
 					return player !== null;
-				}).map(this.getPlayer),
+				}).map(this.getPlayer).map(function(player) {
+					player.turn = game.phase ? (game.turn === player.spot) : true;
+					return player;
+				}),
 				trash: game.trash.map(function(card) {
 					return card.name;
 				})
@@ -195,7 +198,10 @@ Game.prototype.enterUser = function(user, room) {
 				}, game.set),
 				players: game.players.filter(function(player) {
 					return player && player.id !== user.id;
-				}).map(this.getPlayer),
+				}).map(this.getPlayer).map(function(player) {
+					player.turn = game.phase ? (game.turn === player.spot) : true;
+					return player;
+				}),
 				trash: game.trash.map(function(card) {
 					return card.name;
 				})
@@ -813,6 +819,11 @@ Game.prototype.emitRoomUser = function(room) {
 };
 
 Game.prototype.emitPlayer = function(player, room) {
+	var game = this.rooms[room];
+	if (game && game.phase && game.players[game.turn].id !== player.id) {
+		this.emitPlayer(game.players[game.turn], room);
+	}
+	
 	var socketRoom = this.io.sockets.adapter.rooms[room];
 	if (player &&
 			socketRoom &&
@@ -824,13 +835,10 @@ Game.prototype.emitPlayer = function(player, room) {
 				discard: player.discard ? player.discard.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
 				inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
 				hand: player.hand ? player.hand.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-				resource: player.resource ? player.resource : {}
+				resource: player.resource ? player.resource : {},
+				turn: game && game.phase ? (player.spot === game.turn) : true
 			},
 			...this.getAction(player, room));
-	}
-	var game = this.rooms[room];
-	if (game && game.phase && game.players[game.turn].id !== player.id) {
-		this.emitPlayer(game.players[game.turn], room);
 	}
 };
 
@@ -868,7 +876,10 @@ Game.prototype.emitRoomBoard = function(room) {
 				}, game.set),
 				players: game.players.filter(function(player) {
 					return player && player.id !== user;
-				}).map(this.getPlayer),
+				}).map(this.getPlayer).map(function(player) {
+					player.turn = game.phase ? (game.turn === player.spot) : true;
+					return player;
+				}),
 				trash: game.trash.map(function(card) {
 					return card.name;
 				})

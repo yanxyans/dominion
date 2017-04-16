@@ -28,8 +28,9 @@ class MobileTearSheet extends Component {
         width: '100%',
       },
       container: {
-        border: 'solid 1px #d9d9d9',
-        borderBottom: 'none',
+				borderTop: this.props.isTurn ? this.props.isTurn : 'solid 1px #d9d9d9',
+				borderLeft: this.props.isTurn ? this.props.isTurn : 'solid 1px #d9d9d9',
+				borderRight: this.props.isTurn ? this.props.isTurn : 'solid 1px #d9d9d9',
         height: this.props.height,
         overflow: 'auto',
       },
