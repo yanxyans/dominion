@@ -303,16 +303,34 @@ Game.prototype.end = function(player, room) {
 			var playerScores = game.players.filter(function(pl) {
 				return pl;
 			}).map(function(pl) {
-				var score = pl.hand.concat(pl.discard).concat(pl.inPlay).concat(pl.deck).filter(function(ca) {
+				var pointCards = pl.hand.concat(pl.discard).concat(pl.inPlay).concat(pl.deck).filter(function(ca) {
 					return ca.types.includes('victory') || ca.types.includes('curse');
-				}).reduce(function(res, ca) {
+				});
+				var pointCardsRef = {};
+				for (var i = 0; i < pointCards.length; i++) {
+					var pointCard = pointCards[i];
+					if (pointCardsRef[pointCard.name]) {
+						pointCardsRef[pointCard.name].amt++;
+					} else {
+						pointCardsRef[pointCard.name] = {
+							types: pointCard.types,
+							amt: 1,
+							points: pointCard.victoryPoints
+						};
+					}
+				}
+				var score = pointCards.reduce(function(res, ca) {
 					ca.effect(pl, game);
 					return res + ca.victoryPoints;
 				}, 0);
 				return {
 					name: pl.name,
-					score: score
+					score: score,
+					cards: pointCardsRef,
+					show: false
 				};
+			}).sort(function(scoreA, scoreB) {
+				return scoreA.score === scoreB.score ? 0 : +(scoreA.score < scoreB.score) || -1;
 			});
 			this.io.in(room).emit('_end_score', playerScores);
 			

@@ -8,8 +8,24 @@ import Snackbar from 'material-ui/Snackbar';
 import FlatButton from 'material-ui/FlatButton';
 import Dialog from 'material-ui/Dialog';
 import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
+import Chip from 'material-ui/Chip';
 
 injectTapEventPlugin();
+
+function getNumber(theNumber)
+{
+    if(theNumber > 0){
+        return "+" + theNumber;
+    }else{
+        return theNumber.toString();
+    }
+}
+
+const styles = {
+  chip: {
+    margin: 4,
+  }
+};
 
 class Container extends React.Component {
 	state = {
@@ -30,6 +46,22 @@ class Container extends React.Component {
 		help: ''
 	};
 	
+	getColor = (types) => {
+		if (types.includes('attack')) {
+			return '#B85B80';
+		} else if (types.includes('reaction')) {
+			return '#7BBCCD';
+		} else if (types.includes('treasure')) {
+			return '#F0C060';
+		} else if (types.includes('victory')) {
+			return '#19828B';
+		} else if (types.includes('curse')) {
+			return '#915996';
+		} else {
+			return null;
+		}
+	};
+	
 	handleRequestClose = () => {
     this.setState({
       open: false,
@@ -41,6 +73,14 @@ class Container extends React.Component {
       openScore: false,
     });
   };
+	
+	handleRowSelection = (rowIds) => {
+		var newFinalScore = this.state.finalScore.map(function(score, idx) {
+			score.show = rowIds.includes(idx);
+			return score;
+		});
+		this.setState({finalScore: newFinalScore});
+	};
 	
 	_init = (name) => {
 		this.setState({name: name});
@@ -171,9 +211,9 @@ class Container extends React.Component {
 						modal={true}
 						open={this.state.openScore}
 						onRequestClose={this.handleCloseScore}>
-						<Table>
-							<TableHeader>
-								<TableRow>
+						<Table multiSelectable={true} onRowSelection={this.handleRowSelection}>
+							<TableHeader displaySelectAll={false}>
+								<TableRow selectable={false}>
 									<TableHeaderColumn>name</TableHeaderColumn>
 									<TableHeaderColumn>score</TableHeaderColumn>
 								</TableRow>
@@ -182,9 +222,12 @@ class Container extends React.Component {
 								{this.state.finalScore.map(function(score, index) {
 									return <TableRow key={index}>
 													 <TableRowColumn>{score.name}</TableRowColumn>
-													 <TableRowColumn>{score.score}</TableRowColumn>
+													 <TableRowColumn>{!score.show ? score.score : Object.keys(score.cards).map(function(ca) {
+														 var card = score.cards[ca];
+														 return <Chip style={styles.chip} backgroundColor={this.getColor(card.types)}>{ca + " (" + card.amt + ") (" + getNumber(card.points) + ")"}</Chip>;
+													 }, this)}</TableRowColumn>
 												 </TableRow>;
-								})}
+								}, this)}
 							</TableBody>
 						</Table>
 					</Dialog>
