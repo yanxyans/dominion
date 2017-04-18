@@ -492,7 +492,7 @@ function gainAction(player, game, coinCost, potCost, types, gainDst, nextPhase) 
 	});
 	if (selected.length === 1) {
 		var card = selected[0];
-		game.set.kingdomCards[card] = false;
+		game.set.kingdomCards[card].selected = false;
 		gain(game.set.kingdom, player[gainDst], card, 1);
 		if (player.todo.length === 1) {
 			game.phase = 1;
@@ -611,7 +611,6 @@ function getCard(card) {
 					var selected = player.hand.filter(function(card) {
 						return card.selected && card.types.includes('treasure');
 					});
-					console.log(selected);
 					if (selected.length === 0) {
 						if (player.todo.length === 1) {
 							game.phase = 1;

@@ -116,7 +116,7 @@ export default class Container extends React.Component {
 										 <Subheader id={'in_hand' + index + '_tap'} onTouchTap={this.toggleLast} style={styles.header}>hand</Subheader>
 										 <div id={'in_hand' + index} style={styles.wrapper}>
 										 {player.hand.map(function(card, index) {
-											 return <Chip key={index} style={styles.chip} backgroundColor={this.getColor(false, card.types)}>{card.name}</Chip>;
+											 return <Chip key={index} style={styles.chip}>{card.name}</Chip>;
 										 }, this)}
 										 </div>
 										 <Divider />
@@ -158,7 +158,8 @@ export default class Container extends React.Component {
 				<div id='trash' style={styles.wrapper}>
 				{this.props.trash.map(function(trash_card, index) {
 					return <Chip key={index}
-											 style={styles.chip}><Avatar size={32} backgroundColor={this.getColor(true, card.types)} onMouseEnter={this.props._help.bind(null, trash_card)} onMouseLeave={this.props._help.bind(null, '')} backgroundColor={this.getColor(false, trash_card.types)}>{index === this.props.trash.length - 1 ? "?!" : "?"}</Avatar>{trash_card.name}</Chip>;
+											 style={styles.chip}
+											 backgroundColor={this.getColor(false, trash_card.types)}><Avatar size={32} backgroundColor={this.getColor(true, trash_card.types)} onMouseEnter={this.props._help.bind(null, trash_card.name)} onMouseLeave={this.props._help.bind(null, '')}>{index === this.props.trash.length - 1 ? "?!" : "?"}</Avatar>{trash_card.name}</Chip>;
 				}, this)}
 				</div>
 			</MobileTearSheet>
