@@ -392,7 +392,12 @@ Game.prototype.applyReaction = function(player, room) {
 			return reactionCard.selected;
 		});
 		if (selected.length === 0) {
-			game.phase = 6;
+			if (player.attack.effect !== null) {
+				game.phase = 6;
+			} else {
+				player.attack.next();
+				player.attack = null;
+			}
 			this.cleanGame(player, game);
 			this.emitRoomBoard(room);
 		} else if (selected.length === 1) {
@@ -400,7 +405,12 @@ Game.prototype.applyReaction = function(player, room) {
 			sel.selected = false;
 			if (sel.effect(player, game, player.hand.indexOf(selected[0]), 'reaction')) {
 				if (player.reaction.length === 0) {
-					game.phase = 6
+					if (player.attack.effect !== null) {
+						game.phase = 6;
+					} else {
+						player.attack.next();
+						player.attack = null;
+					}
 				}
 				this.cleanGame(player, game);
 				this.emitRoomBoard(room);
@@ -601,6 +611,7 @@ function getCard(card) {
 					var selected = player.hand.filter(function(card) {
 						return card.selected && card.types.includes('treasure');
 					});
+					console.log(selected);
 					if (selected.length === 0) {
 						if (player.todo.length === 1) {
 							game.phase = 1;
@@ -624,9 +635,7 @@ function getCard(card) {
 					draw(player, 2);
 				} else if (effectType === 'reaction') {
 					if (player.attack) {
-						player.attack.effect = function() {
-							return true;
-						};
+						player.attack.effect = null;
 					}
 				}
 				return true;
@@ -911,7 +920,7 @@ Game.prototype.getAction = function(player, room) {
 			case 5:
 				return ["apply_reaction", this.applyReaction.bind(this, player, room)];
 			case 6:
-				return ["apply_attack", this.applyAttack.bind(this, player, room)];
+					return ["apply_attack", this.applyAttack.bind(this, player, room)];
 			default:
 				// do nothing
 		}
