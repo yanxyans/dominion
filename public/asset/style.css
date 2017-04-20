@@ -4,18 +4,23 @@
 
 #container {
 	flex-flow: row nowrap;
-	justify-content: space-between;
+	justify-content: flex-start;
 }
 
-#game {
+#menu, #game {
 	flex-flow: column nowrap;
-	flex: 1 0 auto;
 }
 
 #menu {
-	flex-flow: column nowrap;
-	flex: 1 0 auto;
-	align-items: flex-end;
+	flex: 1 1 0;
+}
+
+#game {
+	flex: 4 1 0;
+}
+
+#players, #gameBoard {
+	flex: 1 1 0;
 }
 
 #root {

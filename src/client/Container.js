@@ -184,6 +184,13 @@ class Container extends React.Component {
     return (
 			<MuiThemeProvider>
 				<div id='container'>
+					<MenuComponent name={this.state.name}
+												 _setName={this._setName}
+												 rooms={this.state.rooms}
+												 inRoom={this.state.inRoom}
+												 _joinGame={this._joinGame}
+												 _enterGame={this._enterGame}
+												 helpCard={this.state.help} />
 					<GameComponent users={this.state.users}
 												 player={this.state.player}
 												 actionName={this.state.actionName}
@@ -194,13 +201,6 @@ class Container extends React.Component {
 												 _rec={this._rec}
 												 trash={this.state.trash}
 												 _help={this._help} />
-					<MenuComponent name={this.state.name}
-												 _setName={this._setName}
-												 rooms={this.state.rooms}
-												 inRoom={this.state.inRoom}
-												 _joinGame={this._joinGame}
-												 _enterGame={this._enterGame}
-												 helpCard={this.state.help} />
 					<Snackbar open={this.state.open}
 										message={this.state.msg}
 										autoHideDuration={4000}
