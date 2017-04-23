@@ -16,15 +16,6 @@ var publicPath = path.resolve(__dirname, 'public');
 var gamePath = path.resolve(__dirname, 'src', 'server', 'game.js');
 var userPath = path.resolve(__dirname, 'src', 'server', 'user.js');
 
-var jsdom = require('jsdom').jsdom;
-jsdom.env("", function(err, window) {
-	if (err) {
-		console.error(err);
-		return;
-	}
-	global.$ = require('jquery')(window);
-});
-
 var Game = require(gamePath);
 var User = require(userPath);
 var game = new Game(io);
@@ -55,6 +46,7 @@ var set = {
 	}
 };
 game.newRoom(room, set);
+game.newRoom('t', set);
 
 // We point to our static assets
 app.use(express.static(publicPath));

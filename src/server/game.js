@@ -94,6 +94,7 @@ Game.prototype.addUser = function(user, room) {
 			this.emitRoomBoard(room);
 		} else {
 			// get board state
+			user.emit('_game_player');
 			user.emit('_game_board', {
 				piles: Object.keys(game.set.kingdom).map(function(cardKey) {
 					return {
@@ -214,6 +215,8 @@ Game.prototype.enterUser = function(user, room) {
 			var isPlayer = user.games[room];
 			if (isPlayer !== -1) {
 				this.emitPlayer(game.players[isPlayer], room);
+			} else {
+				user.emit('_game_player');
 			}
 		}
 	}

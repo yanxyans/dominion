@@ -1,6 +1,7 @@
 function User(socket) {
 	this.socket = socket;
 	this.id = socket.id;
+	// generate a random name
 	this.name = socket.id.substring(0, 7);
 	this.games = {};
 	this.inGame = null;
@@ -9,57 +10,55 @@ function User(socket) {
 // user life cycle management
 
 User.prototype.setName = function(name) {
-	var cleanName = $('<div/>').text(name).text();
-	if (cleanName) {
-		this.name = cleanName;
+	var cleanName = name.replace(/[^a-z0-9]/gi,'');
+	if (cleanName && cleanName.length <= 20) {
+		this.name = name;
 		this.emit('_user_name', {
 			head: 'ok',
 			body: 'name is set'
-		}, cleanName);
+		}, name);
 	} else {
 		this.emit('_user_name', {
 			head: 'err',
-			body: 'invalid name'
+			body: 'name has to be alphanumeric and less than twenty characters'
 		});
 	}
 };
 
 User.prototype.addGame = function(game, spot) {
 	// view will be updated in enterGame
-	this.games[game] = spot;
+	if (game) {
+		this.games[game] = spot;
+	}
 };
 
 User.prototype.removeGame = function(game) {
-	delete this.games[game];
-	if (this.inGame === game) {
-		this.switchGame(this.inGame, null);
+	if (game) {
+		delete this.games[game];
+		if (game === this.inGame) {
+			this.socket.leave(game);
+			this.inGame = null;
+			this.emit('_game_user', {});
+			this.emit('_game_board', {
+				piles: [],
+				players: [],
+				trash: []
+			});
+			this.emit('_game_player');
+		}
+		this.emit('_user_room', {
+			head: 'ok',
+			body: 'left room'
+		}, this.getRoom());
 	}
-	this.emit('_user_room', {
-		head: 'ok',
-		body: 'left room'
-	}, this.getRoom());
+
 };
 
 User.prototype.switchGame = function(fromGame, toGame) {
-	if (fromGame !== null) {
+	if (fromGame && toGame) {
 		this.socket.leave(fromGame);
-	}
-	if (toGame !== null) {
 		this.socket.join(toGame);
-	}
-
-	this.inGame = toGame;
-	if (toGame === null) {
-		this.emit('_game_user', {});
-		this.emit('_game_board', {
-			piles: {},
-			players: []
-		});
-		this.emit('_game_player', null, null, null);
-	} else if (fromGame &&
-						 this.games[fromGame] !== -1 &&
-						 this.games[toGame] === -1) {
-		this.emit('_game_player', null, null, null);
+		this.inGame = toGame;
 	}
 };
 
@@ -71,9 +70,18 @@ User.prototype.enterGame = function(game) {
 		});
 		return false;
 	} else {
+		// switch from old game to new game
 		var oldGame = this.inGame;
-		if (oldGame === game) {
-			// do nothing
+		if (!oldGame) {
+			this.socket.join(game);
+			this.inGame = game;
+			this.emit('_user_room', {
+				head: 'ok',
+				body: 'entered room'
+			}, this.getRoom());
+			return true;
+		} else if (oldGame === game) {
+			// do nothing, already in new game
 			return false;
 		} else {
 			this.switchGame(oldGame, game);
@@ -88,8 +96,8 @@ User.prototype.enterGame = function(game) {
 
 // user view management
 
-User.prototype.emit = function(eventName, ...args) {
-	this.socket.emit(eventName, ...args);
+User.prototype.emit = function(...args) {
+	this.socket.emit(...args);
 };
 
 User.prototype.getRoom = function() {
