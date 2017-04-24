@@ -1,3 +1,5 @@
+var Player = require('./player');
+
 function Game(io) {
 	this.io = io;
 	this.rooms = {};
@@ -80,13 +82,7 @@ Game.prototype.addUser = function(user, room) {
 		this.emitRoomUser(room);
 		
 		if (userType) {
-			var player = {
-				spot: playerSpot,
-				id: user.id,
-				name: user.name,
-				socket: user.socket,
-				seated: true
-			};
+			var player = new Player(user, playerSpot);
 			
 			game.players[playerSpot] = player;
 			// get player resources and action if applicable
