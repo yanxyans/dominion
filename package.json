@@ -20,8 +20,6 @@
   "dependencies": {
     "express": "^4.14.1",
     "http-proxy": "^1.16.2",
-    "jquery": "^3.1.1",
-    "jsdom": "^9.11.0",
     "material-ui": "^0.17.0",
     "react": "^15.5.4",
     "react-dom": "^15.5.4",
