@@ -13,8 +13,8 @@ var httpProxy = require('http-proxy');
 var proxy = httpProxy.createProxyServer();
 
 var publicPath = path.resolve(__dirname, 'public');
-var gamePath = path.resolve(__dirname, 'src', 'server', 'game.js');
-var userPath = path.resolve(__dirname, 'src', 'server', 'user.js');
+var gamePath = path.resolve(__dirname, 'server', 'game.js');
+var userPath = path.resolve(__dirname, 'server', 'user.js');
 
 var Game = require(gamePath);
 var User = require(userPath);
@@ -56,7 +56,7 @@ if (!isProduction) {
   // We require the bundler inside the if block because
   // it is only needed in a development environment. Later
   // you will see why this is a good idea
-  var bundle = require('./src/server/bundle.js');
+  var bundle = require('./server/bundle.js');
   bundle();
 
   // Any requests to localhost:3000/build is proxied
