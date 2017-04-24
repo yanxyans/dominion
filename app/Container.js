@@ -169,6 +169,7 @@ class Container extends React.Component {
 		this.socket.on('_game_board', this._board);
 		this.socket.on('_reaction', this._reaction);
 		this.socket.on('_end_score', this._end_score);
+		this._joinGame('first_game');
 	}
 	
   render() {

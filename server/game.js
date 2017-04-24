@@ -109,7 +109,8 @@ Game.prototype.addUser = function(user, room) {
 				trash: game.trash.map(function(card) {
 					return {
 						name: card.name,
-						types: card.types
+						types: card.types,
+						sel: card.selected
 					};
 				})
 			});
@@ -203,7 +204,8 @@ Game.prototype.enterUser = function(user, room) {
 				trash: game.trash.map(function(card) {
 					return {
 						name: card.name,
-						types: card.types
+						types: card.types,
+						sel: card.selected
 					};
 				})
 			});
@@ -878,7 +880,7 @@ Game.prototype.getPlayer = function(player) {
 			deckSize: player.deck ? player.deck.length : null,
 			discardTop: player.discard ? player.discard.slice(-1).map(function(card) { return {name: card.name, sel: card.selected, types: card.types}; }) : [],
 			inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected, types: card.types}; }) : [],
-			hand: player.hand ? player.hand.map(function(card) { return {name: 'hidden', sel: card.selected, types: []}; }) : [],
+			hand: player.hand ? player.hand.map(function(card) { return {sel: card.selected, types: []}; }) : [],
 			resource: player.resource ? player.resource : {},
 			spot: player.spot
 		};
@@ -911,7 +913,8 @@ Game.prototype.emitRoomBoard = function(room) {
 				trash: game.trash.map(function(card) {
 					return {
 						name: card.name,
-						types: card.types
+						types: card.types,
+						sel: card.selected
 					};
 				})
 			});
