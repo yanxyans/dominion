@@ -159,7 +159,7 @@ Game.prototype.removeUser = function(user, room) {
 Game.prototype.reconnect = function(user, spot) {
 	var room = user.inGame;
 	var game = this.rooms[room];
-	if (game && game.players[spot] && !game.players[spot].seated) {
+	if (game && game.players[spot] && !game.players[spot].seated && (user.games[room] < 0)) {
 		game.players[spot].id = user.id;
 		game.players[spot].name = user.name;
 		game.players[spot].socket = user.socket;
