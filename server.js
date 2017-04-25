@@ -26,23 +26,23 @@ var set = {
 		copper: 7
 	},
 	kingdom: {
-		copper: 60,
-		silver: 40,
-		gold: 30,
-		estate: 24,
-		duchy: 12,
-		province: 12,
-		curse: 30,
-		cellar: 10,
-		market: 10,
-		militia: 10,
-		mine: 10,
-		moat: 10,
-		remodel: 10,
-		smithy: 10,
-		village: 10,
-		woodcutter: 10,
-		workshop: 10
+		copper: [60, 60, 60],
+		silver: [40, 40, 40],
+		gold: [30, 30, 30],
+		estate: [14, 21, 24],
+		duchy: [8, 12, 12],
+		province: [8, 12, 12],
+		curse: [10, 20, 30],
+		cellar: [10, 10, 10],
+		market: [10, 10, 10],
+		militia: [10, 10, 10],
+		mine: [10, 10, 10],
+		moat: [10, 10, 10],
+		remodel: [10, 10, 10],
+		smithy: [10, 10, 10],
+		village: [10, 10, 10],
+		woodcutter: [10, 10, 10],
+		workshop: [10, 10, 10]
 	}
 };
 game.newRoom(room, set);
@@ -90,4 +90,3 @@ io.on('connection', function(socket) {
 	socket.on('_click_card', game.clickCard.bind(game, user));
 	socket.on('_reconnect', game.reconnect.bind(game, user));
 });
-
