@@ -288,6 +288,7 @@ Game.prototype.start = function(player, room) {
 		
 		players[0].resource.action = 1;
 		players[0].resource.buy = 1;
+		this.emitPlayer(players[0], room);
 		this.emitRoomBoard(room);
 	}
 };
