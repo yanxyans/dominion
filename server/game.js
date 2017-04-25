@@ -314,7 +314,6 @@ Game.prototype.end = function(player, room) {
 						pointCardsRef[pointCard.name].amt++;
 					} else {
 						pointCardsRef[pointCard.name] = {
-							types: pointCard.types,
 							amt: 1,
 							points: pointCard.victoryPoints
 						};

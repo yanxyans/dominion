@@ -8,9 +8,16 @@ import Snackbar from 'material-ui/Snackbar';
 import FlatButton from 'material-ui/FlatButton';
 import Dialog from 'material-ui/Dialog';
 import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
-import Chip from 'material-ui/Chip';
+import GameCard from './GameCard';
 
 injectTapEventPlugin();
+
+const styles = {
+  wrapper: {
+    display: 'flex',
+    flexFlow: 'row wrap',
+  }
+};
 
 function getNumber(theNumber)
 {
@@ -20,12 +27,6 @@ function getNumber(theNumber)
         return theNumber.toString();
     }
 }
-
-const styles = {
-  chip: {
-    margin: 4,
-  }
-};
 
 class Container extends React.Component {
 	state = {
@@ -45,23 +46,7 @@ class Container extends React.Component {
 		openScore: false,
 		help: ''
 	};
-	
-	getColor = (types) => {
-		if (types.includes('attack')) {
-			return '#B85B80';
-		} else if (types.includes('reaction')) {
-			return '#7BBCCD';
-		} else if (types.includes('treasure')) {
-			return '#F0C060';
-		} else if (types.includes('victory')) {
-			return '#19828B';
-		} else if (types.includes('curse')) {
-			return '#915996';
-		} else {
-			return null;
-		}
-	};
-	
+
 	handleRequestClose = () => {
     this.setState({
       open: false,
@@ -223,10 +208,17 @@ class Container extends React.Component {
 								{this.state.finalScore.map(function(score, index) {
 									return <TableRow key={index}>
 													 <TableRowColumn>{score.name}</TableRowColumn>
-													 <TableRowColumn>{!score.show ? score.score : Object.keys(score.cards).map(function(ca) {
-														 var card = score.cards[ca];
-														 return <Chip style={styles.chip} backgroundColor={this.getColor(card.types)}>{ca + " (" + card.amt + ") (" + getNumber(card.points) + ")"}</Chip>;
-													 }, this)}</TableRowColumn>
+													 <TableRowColumn><div style={styles.wrapper}>{!score.show ? score.score : Object.keys(score.cards).map(function(cardName, index) {
+														 var card = score.cards[cardName];
+														 return <GameCard key={index}
+																							index={index}
+																							type='end_cards'
+																							name={cardName}
+																							sel={false}
+																							_clickCard={this._clickCard}
+																							_help={this._help}
+																							amt={card.amt} />;
+													 }, this)}</div></TableRowColumn>
 												 </TableRow>;
 								}, this)}
 							</TableBody>
