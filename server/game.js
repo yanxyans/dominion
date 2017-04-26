@@ -343,7 +343,24 @@ Game.prototype.applyReaction = function(player, room) {
 		var selected = player.reaction.filter(function(reactionCard) {
 			return reactionCard.selected;
 		});
+		var afterReact = false;
 		if (selected.length === 0) {
+			afterReact = true;
+		} else if (selected.length === 1) {
+			var sel = selected[0];
+			sel.selected = false;
+			if (sel.effect(player, game, player.hand.indexOf(selected[0]), 'reaction')) {
+				if (player.reaction.length === 0) {
+					afterReact = true;
+				} else {
+					this.cleanGame(player, game);
+					this.emitBoard(null, room);
+				}
+				this.io.in(room).emit('_reaction', player.name + ' reacts with ' + sel.name);
+			}
+		}
+		
+		if (afterReact) {
 			if (player.attack.effect !== null) {
 				game.phase = 6;
 			} else {
@@ -353,23 +370,6 @@ Game.prototype.applyReaction = function(player, room) {
 			}
 			this.cleanGame(player, game);
 			this.emitBoard(null, room);
-		} else if (selected.length === 1) {
-			var sel = selected[0];
-			sel.selected = false;
-			if (sel.effect(player, game, player.hand.indexOf(selected[0]), 'reaction')) {
-				if (player.reaction.length === 0) {
-					if (player.attack.effect !== null) {
-						game.phase = 6;
-					} else {
-						player.attack.next();
-						this.emitPlayer(game.players[game.turn], room);
-						player.attack = null;
-					}
-				}
-				this.cleanGame(player, game);
-				this.emitBoard(null, room);
-				this.io.in(room).emit('_reaction', player.name + ' reacts with ' + sel.name);
-			}
 		}
 	}
 	this.emitPlayer(player, room);
