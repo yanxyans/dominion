@@ -5,20 +5,6 @@ function Game(io) {
 	this.rooms = {};
 }
 
-/**
- * Shuffles array in place.
- * @param {Array} a items The array containing the items.
- */
-function shuffle(a) {
-	var j, x, i;
-	for (i = a.length; i; i--) {
-		j = Math.floor(Math.random() * i);
-		x = a[i - 1];
-		a[i - 1] = a[j];
-		a[j] = x;
-	}
-}
-
 // game room management
 
 Game.prototype.newRoom = function(room, set) {
@@ -269,9 +255,9 @@ Game.prototype.start = function(player, room) {
 			
 			startCards.forEach(function(startCard) {
 				var startCardAmt = set.start[startCard];
-				gain(set.kingdom, gamePlayer.discard, startCard, startCardAmt);
+				gamePlayer.gain(set.kingdom, 'discard', startCard, startCardAmt);
 			}, this);
-			draw(gamePlayer, 5);
+			gamePlayer.draw(5);
 			this.emitPlayer(gamePlayer, room);
 		}
 		
@@ -332,7 +318,7 @@ Game.prototype.end = function(player, room) {
 			player.resource.potion = 0;
 			this.cleanUp(player);
 			player.reaction = [];
-			draw(player, 5);
+			player.draw(5);
 			
 			game.turn = (game.turn + 1) % 4;
 			while (game.players[game.turn] === null) {
@@ -443,15 +429,6 @@ Game.prototype.cleanUp = function(player) {
 	}
 };
 
-function gain(src, dest, card, amt) {
-	var pile_amt = src[card].length;
-	var gain_amt = Math.min(amt, pile_amt);
-	
-	for (var i = 0; i < gain_amt; i++) {
-		dest.push(src[card].pop());
-	}
-};
-
 function treasureCard(name, coinCost, potCost, coinValue, potValue, types, effect, selected) {
 	this.name = name;
 	this.coinCost = coinCost;
@@ -504,7 +481,7 @@ function gainAction(player, game, coinCost, potCost, types, gainDst, nextPhase) 
 	if (selected.length === 1) {
 		var cardName = selected[0];
 		game.set.kingdom[cardName][game.set.kingdom[cardName].length - 1].selected = false;
-		gain(game.set.kingdom, player[gainDst], cardName, 1);
+		player.gain(game.set.kingdom, gainDst, cardName, 1);
 		if (player.todo.length === 1) {
 			game.phase = 1;
 		}
@@ -546,7 +523,7 @@ function getCard(card) {
 						selectedCard.selected = false;
 						player.discard.push(selectedCard);
 					}
-					draw(player, drawAmt);
+					player.draw(drawAmt);
 					if (player.todo.length === 1) {
 						game.phase = 1;
 					}
@@ -557,7 +534,7 @@ function getCard(card) {
 			}, false);
 		case 'market':
 			return new actionCard("market", 5, 0, ["action"], function(player) {
-				draw(player, 1);
+				player.draw(1);
 				player.resource.action++;
 				player.resource.buy++;
 				player.resource.coin++;
@@ -642,7 +619,7 @@ function getCard(card) {
 		case 'moat':
 			return new actionCard("moat", 2, 0, ["action", "reaction"], function(player, game, effectType) {
 				if (effectType === 'action') {
-					draw(player, 2);
+					player.draw(2);
 				} else if (effectType === 'reaction') {
 					if (player.attack) {
 						player.attack.effect = null;
@@ -676,12 +653,12 @@ function getCard(card) {
 			}, false);
 		case 'smithy':
 			return new actionCard("smithy", 4, 0, ["action"], function(player) {
-				draw(player, 3);
+				player.draw(3);
 				return true;
 			}, false);
 		case 'village':
 			return new actionCard("village", 3, 0, ["action"], function(player) {
-				draw(player, 1);
+				player.draw(1);
 				player.resource.action += 2;
 				return true;
 			}, false);
@@ -699,26 +676,6 @@ function getCard(card) {
 			}, false);
 		default:
 			return undefined;
-	}
-};
-
-function draw(player, amt) {
-	if (player) {
-		var deck_amt = player.deck.length;
-		var draw_amt = Math.min(amt, deck_amt);
-		
-		for (var i = 0; i < draw_amt; i++) {
-			var handCard = player.deck.pop();
-			if (handCard.types.includes('reaction')) {
-				player.reaction.push(handCard);
-			}
-			player.hand.push(handCard);
-		}
-		if (draw_amt < amt && player.discard.length) {
-			shuffle(player.discard);
-			[player.deck, player.discard] = [player.discard, player.deck];
-			draw(player, amt - draw_amt);
-		}
 	}
 };
 
@@ -819,7 +776,7 @@ Game.prototype.handleBuy = function(user, card) {
 					player.resource.potion -= kingdomCard.potCost;
 					player.resource.buy--;
 					
-					gain(kingdom, player.discard, card, 1);
+					player.gain(kingdom, 'discard', card, 1);
 					this.emitPlayer(player, room);
 					this.emitRoomBoard(room);
 				}
