@@ -66,40 +66,15 @@ Game.prototype.addUser = function(user, room) {
 		user.addGame(room, playerSpot);
 		user.enterGame(room);
 		this.emitRoomUser(room);
-		
+
 		if (userType) {
 			var player = new Player(user, playerSpot);
-			
 			game.players[playerSpot] = player;
-			// get player resources and action if applicable
 			this.emitPlayer(player, room);
-			this.emitRoomBoard(room);
 		} else {
-			// get board state
 			user.emit('_game_player');
-			user.emit('_game_board', {
-				piles: Object.keys(game.set.kingdom).map(function(cardName) {
-					var len = this[cardName].length;
-					return {
-						name: cardName,
-						amt: len,
-						sel: len ? this[cardName][len - 1].selected : false
-					};
-				}, game.set.kingdom),
-				players: game.players.filter(function(player) {
-					return player !== null;
-				}).map(this.getPlayer).map(function(player) {
-					player.turn = game.phase ? (game.turn === player.spot) : true;
-					return player;
-				}),
-				trash: game.trash.map(function(card) {
-					return {
-						name: card.name,
-						sel: card.selected
-					};
-				})
-			});
 		}
+		this.emitBoard(userType ? null : user, room);
 	}
 };
 
@@ -136,7 +111,7 @@ Game.prototype.removeUser = function(user, room) {
 				game.players[playerSpot].socket = null;
 				game.players[playerSpot].seated = false;
 			}
-			this.emitRoomBoard(room);
+			this.emitBoard(null, room);
 		}
 	}
 };
@@ -154,7 +129,7 @@ Game.prototype.reconnect = function(user, spot) {
 		user.games[room] = spot;
 		
 		this.emitPlayer(game.players[spot], room);
-		this.emitRoomBoard(room);
+		this.emitBoard(null, room);
 		this.emitRoomUser(room);
 	}
 };
@@ -171,28 +146,8 @@ Game.prototype.enterUser = function(user, room) {
 		var res = user.enterGame(room);
 		if (res) {
 			user.emit('_game_user', game.users);
-			user.emit('_game_board', {
-				piles: Object.keys(game.set.kingdom).map(function(cardName) {
-					var len = this[cardName].length;
-					return {
-						name: cardName,
-						amt: len,
-						sel: len ? this[cardName][len - 1].selected : false
-					};
-				}, game.set.kingdom),
-				players: game.players.filter(function(player) {
-					return player && player.id !== user.id;
-				}).map(this.getPlayer).map(function(player) {
-					player.turn = game.phase ? (game.turn === player.spot) : true;
-					return player;
-				}),
-				trash: game.trash.map(function(card) {
-					return {
-						name: card.name,
-						sel: card.selected
-					};
-				})
-			});
+			
+			this.emitBoard(user, room);
 			
 			var isPlayer = user.games[room];
 			if (isPlayer !== -1) {
@@ -262,7 +217,7 @@ Game.prototype.start = function(player, room) {
 			this.emitPlayer(gamePlayer, room);
 		}
 
-		this.emitRoomBoard(room);
+		this.emitBoard(null, room);
 	}
 };
 
@@ -329,7 +284,7 @@ Game.prototype.end = function(player, room) {
 			newPlayer.resource.buy = 1;
 			this.emitPlayer(newPlayer, room);
 			
-			this.emitRoomBoard(room);
+			this.emitBoard(null, room);
 		}
 	}
 	this.emitPlayer(player, room);
@@ -341,7 +296,7 @@ Game.prototype.applyAction = function(player, room) {
 		if (player.todo[0]()) {
 			player.todo.shift();
 			this.cleanGame(player, game);
-			this.emitRoomBoard(room);
+			this.emitBoard(null, room);
 		}
 	}
 	this.emitPlayer(player, room);
@@ -355,7 +310,7 @@ Game.prototype.applyAttack = function(player, room) {
 			this.emitPlayer(game.players[game.turn], room);
 			player.attack = null;
 			this.cleanGame(player, game);
-			this.emitRoomBoard(room);
+			this.emitBoard(null, room);
 		}
 	}
 	this.emitPlayer(player, room);
@@ -397,7 +352,7 @@ Game.prototype.applyReaction = function(player, room) {
 				player.attack = null;
 			}
 			this.cleanGame(player, game);
-			this.emitRoomBoard(room);
+			this.emitBoard(null, room);
 		} else if (selected.length === 1) {
 			var sel = selected[0];
 			sel.selected = false;
@@ -412,7 +367,7 @@ Game.prototype.applyReaction = function(player, room) {
 					}
 				}
 				this.cleanGame(player, game);
-				this.emitRoomBoard(room);
+				this.emitBoard(null, room);
 				this.io.in(room).emit('_reaction', player.name + ' reacts with ' + sel.name);
 			}
 		}
@@ -466,7 +421,7 @@ Game.prototype.doAction = function(game, room, card, player, cardIndex) {
 			this.emitPlayer(game.players[game.turn], room);
 		}
 		this.emitPlayer(player, room);
-		this.emitRoomBoard(room);
+		this.emitBoard(null, room);
 	}
 };
 
@@ -474,7 +429,7 @@ Game.prototype.doTreasure = function(game, room, card, player, cardIndex) {
 	game.phase = 2;
 	card.effect(player, game, cardIndex);
 	this.emitPlayer(player, room, cardIndex);
-	this.emitRoomBoard(room);
+	this.emitBoard(null, room);
 };
 
 Game.prototype.playCard = function(game, room, card, player, possible, cardIndex) {
@@ -506,7 +461,7 @@ Game.prototype.handleInHand = function(user, cardIndex) {
 									 game.phase === 6) {
 					card.selected = !card.selected;
 					this.emitPlayer(player, room);
-					this.emitRoomBoard(room);
+					this.emitBoard(null, room);
 				}
 			}
 		}
@@ -533,12 +488,12 @@ Game.prototype.handleBuy = function(user, card) {
 					
 					player.gain(kingdom, 'discard', card, 1);
 					this.emitPlayer(player, room);
-					this.emitRoomBoard(room);
+					this.emitBoard(null, room);
 				}
 			} else if (game.phase === 4) {
 				kingdomCard.selected = !kingdomCard.selected;
 				this.emitPlayer(player, room);
-				this.emitRoomBoard(room);
+				this.emitBoard(null, room);
 			}
 		}
 	}
@@ -588,38 +543,46 @@ Game.prototype.getPlayer = function(player) {
 	}
 };
 
-Game.prototype.emitRoomBoard = function(room) {
+Game.prototype.emitBoard = function(user, room) {
 	var game = this.rooms[room];
 	var socketRoom = this.io.sockets.adapter.rooms[room];
 	if (game && socketRoom) {
-		var connectedUsers = socketRoom.sockets;
+		if (user) {
+			user.emit('_game_board', this.getGameBoard(game, user.id));
+		} else {
+			var connectedUsers = socketRoom.sockets;
 
-		Object.keys(connectedUsers).forEach(function(user) {
-			// do not emit self to player
-			this.io.to(user).emit('_game_board', {
-				piles: Object.keys(game.set.kingdom).map(function(cardName) {
-					var len = this[cardName].length;
-					return {
-						name: cardName,
-						amt: len,
-						sel: len ? this[cardName][len - 1].selected : false
-					};
-				}, game.set.kingdom),
-				players: game.players.filter(function(player) {
-					return player && player.id !== user;
-				}).map(this.getPlayer).map(function(player) {
-					player.turn = game.phase ? (game.turn === player.spot) : true;
-					return player;
-				}),
-				trash: game.trash.map(function(card) {
-					return {
-						name: card.name,
-						sel: card.selected
-					};
-				})
-			});
-		}, this);
+			Object.keys(connectedUsers).forEach(function(connectedUser) {
+				this.io.to(connectedUser).emit('_game_board', this.getGameBoard(game, connectedUser));
+			}, this);
+		}
 	}
+};
+
+Game.prototype.getGameBoard = function(game, user_id) {
+	return {
+		piles: Object.keys(game.set.kingdom).map(function(cardName) {
+			var len = this[cardName].length;
+			return {
+				name: cardName,
+				amt: len,
+				sel: len ? this[cardName][len - 1].selected : false
+			};
+		}, game.set.kingdom),
+		players: game.players.filter(function(player) {
+			// do not emit self to player
+			return player && player.id !== user_id;
+		}).map(this.getPlayer).map(function(player) {
+			player.turn = game.phase ? (game.turn === player.spot) : true;
+			return player;
+		}),
+		trash: game.trash.map(function(card) {
+			return {
+				name: card.name,
+				sel: card.selected
+			};
+		})
+	};
 };
 
 Game.prototype.getAction = function(player, room) {
