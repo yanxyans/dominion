@@ -245,8 +245,8 @@ Game.prototype.start = function(player, room) {
 			gamePlayer.hand = [];
 			gamePlayer.inPlay = [];
 			gamePlayer.resource = {
-				action: 0,
-				buy: 0,
+				action: i ? 0 : 1,
+				buy: i ? 0 : 1,
 				coin: 0,
 				potion: 0
 			};
@@ -261,10 +261,7 @@ Game.prototype.start = function(player, room) {
 			gamePlayer.draw(5);
 			this.emitPlayer(gamePlayer, room);
 		}
-		
-		players[0].resource.action = 1;
-		players[0].resource.buy = 1;
-		this.emitPlayer(players[0], room);
+
 		this.emitRoomBoard(room);
 	}
 };
