@@ -327,6 +327,7 @@ Game.prototype.end = function(player, room) {
 			var newPlayer = game.players[game.turn];
 			newPlayer.resource.action = 1;
 			newPlayer.resource.buy = 1;
+			this.emitPlayer(newPlayer, room);
 			
 			this.emitRoomBoard(room);
 		}
@@ -351,6 +352,7 @@ Game.prototype.applyAttack = function(player, room) {
 	if (game && game.phase === 6) {
 		if (player.attack.effect()) {
 			player.attack.next();
+			this.emitPlayer(game.players[game.turn], room);
 			player.attack = null;
 			this.cleanGame(player, game);
 			this.emitRoomBoard(room);
@@ -391,6 +393,7 @@ Game.prototype.applyReaction = function(player, room) {
 				game.phase = 6;
 			} else {
 				player.attack.next();
+				this.emitPlayer(game.players[game.turn], room);
 				player.attack = null;
 			}
 			this.cleanGame(player, game);
@@ -404,6 +407,7 @@ Game.prototype.applyReaction = function(player, room) {
 						game.phase = 6;
 					} else {
 						player.attack.next();
+						this.emitPlayer(game.players[game.turn], room);
 						player.attack = null;
 					}
 				}
@@ -458,6 +462,9 @@ Game.prototype.doAction = function(game, room, card, player, cardIndex) {
 	if (player.resource.action) {
 		player.resource.action--;
 		card.effect(player, game, cardIndex, 'action');
+		if (game.players[game.turn] !== player) {
+			this.emitPlayer(game.players[game.turn], room);
+		}
 		this.emitPlayer(player, room);
 		this.emitRoomBoard(room);
 	}
@@ -548,11 +555,8 @@ Game.prototype.emitRoomUser = function(room) {
 
 Game.prototype.emitPlayer = function(player, room) {
 	var game = this.rooms[room];
-	if (game && game.phase && game.players[game.turn].id !== player.id) {
-		this.emitPlayer(game.players[game.turn], room);
-	}
-	
 	var socketRoom = this.io.sockets.adapter.rooms[room];
+	
 	if (player &&
 			socketRoom &&
 			player.id in socketRoom.sockets) {
