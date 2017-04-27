@@ -22,8 +22,8 @@ var game = new Game(io);
 var room = 'first_game';
 var set = {
 	start: {
-		estate: 3,
-		copper: 7
+		militia: 1,
+		moat: 1
 	},
 	kingdom: {
 		copper: [60, 60, 60],

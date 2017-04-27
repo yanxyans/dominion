@@ -36,7 +36,7 @@ Game.prototype.initRoom = function(room) {
 			start: {},
 			kingdom: {}
 		};
-		game.phase = 0;
+		game.state = "init";
 		game.turn = -1;
 		game.trash = [];
 	}
@@ -55,7 +55,7 @@ Game.prototype.addUser = function(user, room) {
 			body: 'user in room'
 		});
 	} else {
-		var playerSpot = !game.phase && game.spots.length > 0 ? game.spots.pop() : -1;
+		var playerSpot = game.state === "init" && game.spots.length > 0 ? game.spots.pop() : -1;
 		// 0 for spectator, 1 for player
 		var userType = playerSpot === -1 ? 0 : 1;
 		game.users[user.id] = {
@@ -100,7 +100,7 @@ Game.prototype.removeUser = function(user, room) {
 		this.emitRoomUser(room);
 		
 		if (userType) {
-			if (!game.phase) {
+			if (game.state === "init") {
 				// remove player
 				game.players[playerSpot] = null;
 				game.spots.push(playerSpot);
@@ -165,10 +165,10 @@ Game.prototype.start = function(player, room) {
 	var game = this.rooms[room];
 	if (!game || game.spots.length > 2) {
 		this.emitPlayer(player, room);
-	} else if (game.phase) {
+	} else if (game.state !== "init") {
 		// game already in progress
 	} else {
-		game.phase = 1;
+		game.state = "in_progress";
 		
 		var players = game.players.filter(function(player) {
 			return player !== null;
@@ -214,6 +214,7 @@ Game.prototype.start = function(player, room) {
 				gamePlayer.gain(set.kingdom, 'discard', startCard, startCardAmt);
 			}, this);
 			gamePlayer.draw(5);
+			gamePlayer.phase = i ? 0 : 1;
 			this.emitPlayer(gamePlayer, room);
 		}
 
@@ -223,7 +224,7 @@ Game.prototype.start = function(player, room) {
 
 Game.prototype.end = function(player, room) {
 	var game = this.rooms[room];
-	if (game && game.phase >= 1 && game.phase <= 3) {
+	if (game && game.state === "in_progress" && player.phase >= 1 && player.phase <= 3) {
 		var zeroPiles = Object.keys(game.set.kingdom).filter(function(card) {
 			return game.set.kingdom[card].length === 0;
 		});
@@ -272,16 +273,17 @@ Game.prototype.end = function(player, room) {
 			this.cleanUp(player);
 			player.reaction = [];
 			player.draw(5);
+			player.phase = 0;
 			
 			game.turn = (game.turn + 1) % 4;
 			while (game.players[game.turn] === null) {
 				game.turn = (game.turn + 1) % 4;
 			}
-			game.phase = 1;
-
+			
 			var newPlayer = game.players[game.turn];
 			newPlayer.resource.action = 1;
 			newPlayer.resource.buy = 1;
+			newPlayer.phase = 1;
 			this.emitPlayer(newPlayer, room);
 			
 			this.emitBoard(null, room);
@@ -292,7 +294,7 @@ Game.prototype.end = function(player, room) {
 
 Game.prototype.applyAction = function(player, room) {
 	var game = this.rooms[room];
-	if (game && game.phase === 4) {
+	if (game && game.state === "in_progress" && player.phase === 4) {
 		if (player.todo[0]()) {
 			player.todo.shift();
 			this.cleanGame(player, game);
@@ -304,7 +306,7 @@ Game.prototype.applyAction = function(player, room) {
 
 Game.prototype.applyAttack = function(player, room) {
 	var game = this.rooms[room];
-	if (game && game.phase === 6) {
+	if (game && game.state === "in_progress" && player.phase === 6) {
 		if (player.attack.effect()) {
 			player.attack.next();
 			this.emitPlayer(game.players[game.turn], room);
@@ -339,7 +341,7 @@ Game.prototype.cleanGame = function(player, game) {
 
 Game.prototype.applyReaction = function(player, room) {
 	var game = this.rooms[room];
-	if (game && game.phase === 5) {
+	if (game && game.state === "in_progress" && player.phase === 5) {
 		var selected = player.reaction.filter(function(reactionCard) {
 			return reactionCard.selected;
 		});
@@ -362,7 +364,7 @@ Game.prototype.applyReaction = function(player, room) {
 		
 		if (afterReact) {
 			if (player.attack.effect !== null) {
-				game.phase = 6;
+				player.phase = 6;
 			} else {
 				player.attack.next();
 				this.emitPlayer(game.players[game.turn], room);
@@ -426,10 +428,12 @@ Game.prototype.doAction = function(game, room, card, player, cardIndex) {
 };
 
 Game.prototype.doTreasure = function(game, room, card, player, cardIndex) {
-	game.phase = 2;
-	card.effect(player, game, cardIndex);
-	this.emitPlayer(player, room, cardIndex);
-	this.emitBoard(null, room);
+	if (player) {
+		player.phase = 2;
+		card.effect(player, game, cardIndex);
+		this.emitPlayer(player, room, cardIndex);
+		this.emitBoard(null, room);
+	}
 };
 
 Game.prototype.playCard = function(game, room, card, player, possible, cardIndex) {
@@ -445,20 +449,18 @@ Game.prototype.playCard = function(game, room, card, player, possible, cardIndex
 Game.prototype.handleInHand = function(user, cardIndex) {
 	var room = user.inGame;
 	var game = this.rooms[room];
-	if (game && game.phase) {
+	if (game && game.state === "in_progress") {
 		var player = game.players[game.turn];
 		if (player.id === user.id && cardIndex in player.hand) {
 			var card = player.hand[cardIndex];
 			if (card) {
-				if (game.phase >= 1 && game.phase <= 2) {
-					var phase = game.phase === 1 ? ['action', 'treasure'] : ['treasure'];
+				if (player.phase >= 1 && player.phase <= 2) {
+					var phase = player.phase === 1 ? ['action', 'treasure'] : ['treasure'];
 					var possiblePlays = phase.filter(function(n) {
 						return card.types.indexOf(n) !== -1;
 					});
 					this.playCard(game, room, card, player, possiblePlays, cardIndex);
-				} else if (game.phase === 4 ||
-									 game.phase === 5 ||
-									 game.phase === 6) {
+				} else if (player.phase >= 4 && player.phase <= 6) {
 					card.selected = !card.selected;
 					this.emitPlayer(player, room);
 					this.emitBoard(null, room);
@@ -471,16 +473,16 @@ Game.prototype.handleInHand = function(user, cardIndex) {
 Game.prototype.handleBuy = function(user, card) {
 	var room = user.inGame;
 	var game = this.rooms[room];
-	if (game && game.phase) {
+	if (game && game.state === "in_progress") {
 		var player = game.players[game.turn];
 		var kingdom = game.set.kingdom;
 		if (player.id === user.id && kingdom[card].length) {
 			var kingdomCard = kingdom[card][kingdom[card].length - 1];
-			if (game.phase >= 1 && game.phase <= 3) {
+			if (player.phase >= 1 && player.phase <= 3) {
 				if ((kingdomCard.coinCost <= player.resource.coin) &&
 						(kingdomCard.potCost <= player.resource.potion) &&
 						player.resource.buy) {
-					game.phase = 3;
+					player.phase = 3;
 					
 					player.resource.coin -= kingdomCard.coinCost;
 					player.resource.potion -= kingdomCard.potCost;
@@ -490,7 +492,7 @@ Game.prototype.handleBuy = function(user, card) {
 					this.emitPlayer(player, room);
 					this.emitBoard(null, room);
 				}
-			} else if (game.phase === 4) {
+			} else if (player.phase === 4) {
 				kingdomCard.selected = !kingdomCard.selected;
 				this.emitPlayer(player, room);
 				this.emitBoard(null, room);
@@ -514,7 +516,8 @@ Game.prototype.emitPlayer = function(player, room) {
 	
 	if (player &&
 			socketRoom &&
-			player.id in socketRoom.sockets) {
+			player.id in socketRoom.sockets &&
+			game) {
 		player.socket.emit(
 			'_game_player', {
 				name: player.name,
@@ -523,7 +526,7 @@ Game.prototype.emitPlayer = function(player, room) {
 				inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
 				hand: player.hand ? player.hand.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
 				resource: player.resource ? player.resource : {},
-				turn: game && game.phase ? (player.spot === game.turn) : true
+				turn: game.state === "init" ? true : player.phase > 0
 			},
 			...this.getAction(player, room));
 	}
@@ -538,7 +541,8 @@ Game.prototype.getPlayer = function(player) {
 			inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
 			hand: player.hand ? player.hand.map(function(card) { return {sel: card.selected}; }) : [],
 			resource: player.resource ? player.resource : {},
-			spot: player.spot
+			spot: player.spot,
+			turn: player.phase > 0
 		};
 	}
 };
@@ -573,7 +577,7 @@ Game.prototype.getGameBoard = function(game, user_id) {
 			// do not emit self to player
 			return player && player.id !== user_id;
 		}).map(this.getPlayer).map(function(player) {
-			player.turn = game.phase ? (game.turn === player.spot) : true;
+			player.turn = game.state === "init" ? true : player.turn;
 			return player;
 		}),
 		trash: game.trash.map(function(card) {
@@ -587,10 +591,15 @@ Game.prototype.getGameBoard = function(game, user_id) {
 
 Game.prototype.getAction = function(player, room) {
 	var game = this.rooms[room];
-	if (game && game.turn === -1 || game.players[game.turn] === player) {
-		switch (game.phase) {
+	if (game) {
+		if (game.state === 'init') {
+			return ["start_game", this.start.bind(this, player, room)];
+		}
+		
+		switch (player.phase) {
 			case 0:
-				return ["start_game", this.start.bind(this, player, room)];
+				// standby phase
+				break;
 			case 1:
 				return ["end_turn", this.end.bind(this, player, room)];
 			case 2:
@@ -602,7 +611,7 @@ Game.prototype.getAction = function(player, room) {
 			case 5:
 				return ["apply_reaction", this.applyReaction.bind(this, player, room)];
 			case 6:
-					return ["apply_attack", this.applyAttack.bind(this, player, room)];
+				return ["apply_attack", this.applyAttack.bind(this, player, room)];
 			default:
 				// do nothing
 		}

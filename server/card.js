@@ -53,7 +53,7 @@ function gainAction(player, game, coinCost, potCost, types, gainDst, nextPhase) 
 		game.set.kingdom[cardName][game.set.kingdom[cardName].length - 1].selected = false;
 		player.gain(game.set.kingdom, gainDst, cardName, 1);
 		if (player.todo.length === 1) {
-			game.phase = 1;
+			player.phase = 1;
 		}
 		return true;
 	}
@@ -79,7 +79,7 @@ function getCard(card) {
 		case 'cellar':
 			return new actionCard("cellar", 2, 0, ["action"], function(player, game) {
 				player.resource.action++;
-				game.phase = 4;
+				player.phase = 4;
 				var cellarAction = function(player, game) {
 					var selected = [];
 					player.hand.forEach(function(el, index) {
@@ -95,7 +95,7 @@ function getCard(card) {
 					}
 					player.draw(drawAmt);
 					if (player.todo.length === 1) {
-						game.phase = 1;
+						player.phase = 1;
 					}
 					return true;
 				};
@@ -148,7 +148,8 @@ function getCard(card) {
 								game.turn = players[(index + 1) % players.length].spot;
 								
 								var nextPlayer = game.players[game.turn];
-								game.phase = nextPlayer.attack ? (nextPlayer.reaction.length ? 5 : 6) : 1;
+								pl.phase = 0;
+								nextPlayer.phase = nextPlayer.attack ? (nextPlayer.reaction.length ? 5 : 6) : 1;
 							}
 						};
 					}
@@ -158,20 +159,21 @@ function getCard(card) {
 				while (game.players[game.turn] === null) {
 					game.turn = (game.turn + 1) % 4;
 				}
-				game.phase = game.players[game.turn].reaction.length ? 5 : 6;
+				player.phase = 0;
+				game.players[game.turn].phase = game.players[game.turn].reaction.length ? 5 : 6;
 				
 				return true;
 			}, false);
 		case 'mine':
 			return new actionCard("mine", 5, 0, ["action"], function(player, game) {
-				game.phase = 4;
+				player.phase = 4;
 				var mineAction = function(player, game) {
 					var selected = player.hand.filter(function(card) {
 						return card.selected && card.types.includes('treasure');
 					});
 					if (selected.length === 0) {
 						if (player.todo.length === 1) {
-							game.phase = 1;
+							player.phase = 1;
 						}
 						return true;
 					} else if (selected.length === 1) {
@@ -199,14 +201,14 @@ function getCard(card) {
 			}, false);
 		case 'remodel':
 			return new actionCard("remodel", 4, 0, ["action"], function(player, game) {
-				game.phase = 4;
+				player.phase = 4;
 				var remodelAction = function(player, game) {
 					var selected = player.hand.filter(function(card) {
 						return card.selected;
 					});
 					if (selected.length === 0 && player.hand.length === 0) {
 						if (player.todo.length === 1) {
-							game.phase = 1;
+							player.phase = 1;
 						}
 						return true;
 					} else if (selected.length === 1) {

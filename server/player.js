@@ -21,6 +21,8 @@ function Player(user, spot) {
 	this.todo = [];
 	this.attack = null;
 	this.reaction = [];
+	
+	this.phase = 0;
 }
 
 Player.prototype.gain = function(src, dest, card, amt) {
