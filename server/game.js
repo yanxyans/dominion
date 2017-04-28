@@ -215,6 +215,8 @@ Game.prototype.start = function(player, room) {
 			}, this);
 			gamePlayer.draw(5);
 			gamePlayer.phase = i ? 0 : 1;
+			
+			gamePlayer.next = players[(i + 1) % players.length].spot;
 			this.emitPlayer(gamePlayer, room);
 		}
 
@@ -275,10 +277,7 @@ Game.prototype.end = function(player, room) {
 			player.draw(5);
 			player.phase = 0;
 			
-			game.turn = (game.turn + 1) % 4;
-			while (game.players[game.turn] === null) {
-				game.turn = (game.turn + 1) % 4;
-			}
+			player.nextPlayer(game);
 			
 			var newPlayer = game.players[game.turn];
 			newPlayer.resource.action = 1;

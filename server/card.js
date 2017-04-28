@@ -155,10 +155,7 @@ function getCard(card) {
 					}
 				});
 				
-				game.turn = (game.turn + 1) % 4;
-				while (game.players[game.turn] === null) {
-					game.turn = (game.turn + 1) % 4;
-				}
+				player.nextPlayer(game);
 				player.phase = 0;
 				game.players[game.turn].phase = game.players[game.turn].reaction.length ? 5 : 6;
 				

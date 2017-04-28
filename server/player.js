@@ -23,6 +23,7 @@ function Player(user, spot) {
 	this.reaction = [];
 	
 	this.phase = 0;
+	this.next = -1;
 }
 
 Player.prototype.gain = function(src, dest, card, amt) {
@@ -57,6 +58,10 @@ Player.prototype.draw = function(amt) {
 		[this.deck, this.discard] = [this.discard, this.deck];
 		this.draw(amt - draw_amt);
 	}
+};
+
+Player.prototype.nextPlayer = function(game) {
+	game.turn = this.next;
 };
 
 module.exports = Player;
