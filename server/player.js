@@ -64,4 +64,16 @@ Player.prototype.nextPlayer = function(game) {
 	game.turn = this.next;
 };
 
+
+Player.prototype.cleanUp = function() {
+	var hand_amt = this.hand.length;
+	var inPlay_amt = this.inPlay.length;
+	for (var i = 0; i < hand_amt; i++) {
+		this.discard.push(this.hand.pop());
+	}
+	for (var i = 0; i < inPlay_amt; i++) {
+		this.discard.push(this.inPlay.pop());
+	}
+};
+
 module.exports = Player;

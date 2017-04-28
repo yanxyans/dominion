@@ -272,7 +272,7 @@ Game.prototype.end = function(player, room) {
 			player.resource.buy = 0;
 			player.resource.coin = 0;
 			player.resource.potion = 0;
-			this.cleanUp(player);
+			player.cleanUp();
 			player.reaction = [];
 			player.draw(5);
 			player.phase = 0;
@@ -374,17 +374,6 @@ Game.prototype.applyReaction = function(player, room) {
 		}
 	}
 	this.emitPlayer(player, room);
-};
-
-Game.prototype.cleanUp = function(player) {
-	var hand_amt = player.hand.length;
-	var inPlay_amt = player.inPlay.length;
-	for (var i = 0; i < hand_amt; i++) {
-		player.discard.push(player.hand.pop());
-	}
-	for (var i = 0; i < inPlay_amt; i++) {
-		player.discard.push(player.inPlay.pop());
-	}
 };
 
 Game.prototype.clickCard = function(user, type, card) {
