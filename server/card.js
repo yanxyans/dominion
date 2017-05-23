@@ -1,251 +1,609 @@
+var COPPER_VALUE = 1;
+var SILVER_VALUE = 2;
+var GOLD_VALUE = 3;
+var ESTATE_VALUE = 1;
+var DUCHY_VALUE = 3;
+var PROVINCE_VALUE = 6;
+var CURSE_VALUE = 1;
 
-function treasureCard(name, coinCost, potCost, coinValue, potValue, types, effect, selected) {
-	this.name = name;
-	this.coinCost = coinCost;
-	this.potCost = potCost;
-	this.types = types;
-	this.effect = function(player, game, cardIndex) {
-		player.inPlay.push(player.hand.splice(cardIndex, 1)[0]);
-		
-		player.resource.coin += coinValue;
-		player.resource.potion += potValue;
-		
-		return effect(player, game);
-	};
-	this.selected = selected;
-}
-
-function victoryCard(name, coinCost, potCost, victoryPoints, types, effect, selected) {
-	this.name = name;
-	this.coinCost = coinCost;
-	this.potCost = potCost;
-	this.victoryPoints = victoryPoints;
-	this.types = types;
-	this.effect = function(player, game) {
-		return effect(player, game);
-	};
-	this.selected = selected;
-}
-
-function actionCard(name, coinCost, potCost, types, effect, selected) {
-	this.name = name;
-	this.coinCost = coinCost;
-	this.potCost = potCost;
-	this.types = types;
-	this.effect = function(player, game, cardIndex, effectType) {
-		if (effectType === 'action') {
-			player.inPlay.push(player.hand.splice(cardIndex, 1)[0]);
+function incPlayerCoin(value) {
+	return function(player) {
+		if (player) {
+			player.coin += value;
 		}
-		return effect(player, game, effectType);
 	};
 }
 
-function gainAction(player, game, coinCost, potCost, types, gainDst, nextPhase) {
-	var selected = Object.keys(game.set.kingdom).filter(function(cardName) {
-		var cardPile = game.set.kingdom[cardName];
-		var card = cardPile.length && cardPile[cardPile.length - 1].selected ? cardPile[cardPile.length - 1] : null;
-		return card && card.coinCost <= coinCost && card.potCost <= potCost && types.every(function(val) {
-			return this.indexOf(val) > -1;
-		}, card.types);
-	});
-	if (selected.length === 1) {
-		var cardName = selected[0];
-		game.set.kingdom[cardName][game.set.kingdom[cardName].length - 1].selected = false;
-		player.gain(game.set.kingdom, gainDst, cardName, 1);
-		if (player.todo.length === 1) {
-			player.phase = 1;
+function incPlayerPoints(points) {
+	return function(player) {
+		if (player) {
+			player.points += points;
 		}
+	};
+}
+
+function decPlayerPoints(points) {
+	return function(player) {
+		if (player) {
+			player.points -= points;
+		}
+	};
+}
+
+function cellarAction(player) {
+	if (player) {
+		player.action++;
+		
+		var handSelected = [];
+		player.todo.push({
+			selected: {
+				players: {
+					[player.seat]: {
+						hand: handSelected
+					}
+				}
+			},
+			apply: function(cards, index) {
+				if (cards === player.hand) { // sourcing from player hand
+				  if (index in cards) {
+						var card = cards[index];
+						var found = handSelected.indexOf(card);
+						if (found === -1) {
+							// select
+							handSelected.push(card);
+						} else {
+							// deselect
+							handSelected.splice(found, 1);
+						}
+					}
+				}
+			},
+			discard: function() {
+				this.cntrl = [];
+			},
+			prep: function discard() {
+				this.prepped = true;
+			},
+			resolve: function discard() {
+				var len = handSelected.length;
+				if (len) {
+					for (var i = 0; i < len; i++) {
+						var card = handSelected[i];
+						var index = player.hand.indexOf(card);
+						
+						if (index !== -1) {
+							// discard
+							player.discard.push(player.hand.splice(index, 1)[0]);
+						}
+					}
+					
+					this.todo.push({
+						prep: function draw() {
+							this.amt = len;
+							this.prepped = true;
+						},
+						resolve: function draw() {
+							player.draw(this.amt);
+							this.resolved = true;
+						},
+						prepped: false,
+						resolved: false,
+						cntrl: [],
+						todo: []
+					});
+				}
+				
+				this.resolved = true;
+			},
+			prepped: false,
+			resolved : false,
+			cntrl: ['discard'],
+			todo: []
+		});
+	}
+}
+
+function marketAction(player) {
+	if (player) {
+		player.draw(1);
+		player.action++;
+		player.buy++;
+		player.coin++;
+	}
+}
+
+function militiaAction(player, otherPlayers, piles, trash, turn) {
+	if (player && otherPlayers) {
+		player.coin += 2;
+		
+		var militiaAttack = this.attack;
+		
+		player.todo.push({
+			prep: function attack() {
+				this.players = otherPlayers;
+				this.prepped = true;
+			},
+			resolve: function attack() {
+				for (var i = 0; i < this.players.length; i++) {
+					var p = this.players[i];
+					if (militiaAttack(p)) {
+						turn(p.seat);
+					}
+				}
+				this.resolved = true;
+			},
+			prepped: false,
+			resolved : false,
+			cntrl: [],
+			todo: []			
+		});
+	}
+}
+
+function militiaAttack(player) {
+	if (player && player.hand.length > 3) {
+		var handSelected = [];
+		player.todo.unshift({
+			selected: {
+				players: {
+					[player.seat]: {
+						hand: handSelected
+					}
+				}
+			},
+			apply: function(cards, index) {
+				if (cards === player.hand) { // sourcing from player hand
+				  if (index in cards) {
+						var card = cards[index];
+						var found = handSelected.indexOf(card);
+						if (found === -1 && player.hand.length > handSelected.length + 3) {
+							// select
+							handSelected.push(card);
+						} else if (found !== -1) {
+							// deselect
+							handSelected.splice(found, 1);
+						}
+					}
+				}
+			},
+			discard: function() {
+				if (handSelected.length === player.hand.length - 3) {
+					this.cntrl = [];
+				}
+			},
+			prep: function attacked() {
+				this.prepped = true;
+			},
+			resolve: function attacked() {
+				var len = handSelected.length;
+				for (var i = 0; i < len; i++) {
+					var card = handSelected[i];
+					var index = player.hand.indexOf(card);
+					
+					if (index !== -1) {
+						// discard
+						player.discard.push(player.hand.splice(index, 1)[0]);
+					}
+				}
+				
+				this.resolved = true;
+			},
+			prepped: false,
+			resolved : false,
+			cntrl: ['discard'],
+			todo: []
+		});
+		
 		return true;
+	}
+	
+	return false;
+}
+
+function moatAction(player) {
+	if (player) {
+		player.draw(2);
+	}
+}
+
+function moatReaction(player, ev) {
+	if (player && ev && ev.players) {
+		var index = ev.players.indexOf(player);
+		if (index !== -1) {
+			ev.players.splice(index, 1);
+		}
+	}
+}
+
+function mineAction(player, otherPlayers, piles, tr) {
+	if (player) {
+
+		var handSelected = [];
+		player.todo.push({
+			selected: {
+				players: {
+					[player.seat]: {
+						hand: handSelected
+					}
+				}
+			},
+			apply: function(cards, index) {
+				if (cards === player.hand) { // sourcing from player hand
+				  if (index in cards) {
+						var card = cards[index];
+						var found = handSelected.indexOf(card);
+						if (found === -1 && 'treasure' in card.types && !handSelected.length) {
+							// select
+							handSelected.push(card);
+						} else if (found !== -1) {
+							// deselect
+							handSelected.splice(found, 1);
+						}
+					}
+				}
+			},
+			trash: function() {
+				this.cntrl = [];
+			},
+			prep: function trash() {
+				this.prepped = true;
+			},
+			resolve: function trash() {
+				
+				var len = handSelected.length;
+				if (len === 1) {
+					var card = handSelected[0];
+					
+					// trash
+					var index = player.hand.indexOf(card);
+					if (index !== -1) {
+						tr.push(player.hand.splice(index, 1)[0]);
+						
+						// gain event
+						this.todo.push(gainEvent(piles, function(c) {
+							return c && 'treasure' in c.types && c.coin <= card.coin + 3;
+						}, function(pi) {
+							return !Object.keys(pi).filter( function(pa) {
+								return pi[pa].length && 'treasure' in pi[pa][0].types && pi[pa][0].coin <= card.coin + 3;
+							}).length;
+						},
+							player,
+							'hand'));
+						
+					}
+				}
+				
+				this.resolved = true;
+			},
+			prepped: false,
+			resolved : false,
+			cntrl: ['trash'],
+			todo: []
+		});
+	
+	}
+}
+
+function gainEvent(piles, cond, res, player, dst) {
+	var handSelected = [];
+	var pil = null;
+	var ind = -1;
+	return {
+		selected: {
+			players: {
+				[player.seat]: {
+					hand: handSelected
+				}
+			}
+		},
+		apply: function(cards, index) {
+			if (cards in piles) { // sourcing from piles
+				var pile = piles[cards];
+				if (index in pile) {
+					var card = pile[index];
+					var found = handSelected.indexOf(card);
+					if (found === -1 && !handSelected.length && cond(card)) {
+						// select
+						handSelected.push(card);
+						pil = pile;
+						ind = index;
+					} else if (found !== -1) {
+						// deselect
+						handSelected.splice(found, 1);
+						pil = null;
+						ind = -1;
+					}
+				}
+			}
+		},
+		gain: function() {
+			var len = handSelected.length;
+			if (len) {
+				var card = handSelected[0];
+				pil.splice(ind, 1);
+				player[dst].push(card);
+				
+				this.cntrl = [];
+			} else {
+				if (res(piles)) {
+					this.cntrl = [];
+				}
+			}
+		},
+		prep: function gain() {
+			this.prepped = true;
+		},
+		resolve: function discard() {
+			this.resolved = true;
+		},
+		prepped: false,
+		resolved : false,
+		cntrl: ['gain'],
+		todo: []
+	};
+}
+
+function remodelAction(player, op, piles, tr) {
+	if (player) {
+
+		var handSelected = [];
+		player.todo.push({
+			selected: {
+				players: {
+					[player.seat]: {
+						hand: handSelected
+					}
+				}
+			},
+			apply: function(cards, index) {
+				if (cards === player.hand) { // sourcing from player hand
+				  if (index in cards) {
+						var card = cards[index];
+						var found = handSelected.indexOf(card);
+						if (found === -1 && !handSelected.length) {
+							// select
+							handSelected.push(card);
+						} else if (found !== -1) {
+							// deselect
+							handSelected.splice(found, 1);
+						}
+					}
+				}
+			},
+			trash: function() {
+				if (handSelected.length || !player.hand.length) {
+					this.cntrl = [];
+				}
+			},
+			prep: function trash() {
+				this.prepped = true;
+			},
+			resolve: function trash() {
+				
+				var len = handSelected.length;
+				if (len === 1) {
+					var card = handSelected[0];
+					
+					// trash
+					var index = player.hand.indexOf(card);
+					if (index !== -1) {
+						tr.push(player.hand.splice(index, 1)[0]);
+						
+						// gain event
+						this.todo.push(gainEvent(piles, function(c) {
+							return c && c.coin <= card.coin + 2;
+						}, function(pi) {
+							return !Object.keys(pi).filter( function(pa) {
+								return pi[pa].length && pi[pa][0].coin <= card.coin + 2;
+							}).length;
+						},
+							player,
+							'discard'));
+						
+					}
+				}
+				
+				this.resolved = true;
+			},
+			prepped: false,
+			resolved : false,
+			cntrl: ['trash'],
+			todo: []
+		});
+	
+	}
+
+}
+
+function smithyAction(player) {
+	if (player) {
+		player.draw(3);
+	}
+}
+
+function villageAction(player) {
+	if (player) {
+		player.draw(1);
+		player.action += 2;
+	}
+}
+
+function woodcutterAction(player) {
+	if (player) {
+		player.buy++;
+		player.coin += 2;
+	}
+}
+
+function workshopAction(player, op, piles) {
+	if (player) {
+		// gain event
+		player.todo.push(gainEvent(piles, function(c) {
+			return c && c.coin <= 4;
+		}, function(pi) {
+			return !Object.keys(pi).filter( function(pa) {
+				return pi[pa].length && pi[pa][0].coin <= 4;
+			}).length;
+		},
+			player,
+			'discard'));
+	}
+}
+
+function moatReact(player, src, ev) {
+	if (player && ev && ev.prep && ev.players) {
+		var a = player.hand === src;
+		var b = ev.prep.name === 'attack';
+		var c = !ev.resolved;
+		var d = ev.players.indexOf(player) !== -1;
+		return a && b && c && d;
+		
 	}
 	return false;
 }
 
-function getCard(card) {
-	switch (card) {
-		case 'copper':
-			return new treasureCard("copper", 0, 0, 1, 0, ["treasure"], function() { return true; }, false);
-		case 'silver':
-			return new treasureCard("silver", 3, 0, 2, 0, ["treasure"], function() { return true; }, false);
-		case 'gold':
-			return new treasureCard("gold", 6, 0, 3, 0, ["treasure"], function() { return true; }, false);
-		case 'estate':
-			return new victoryCard("estate", 2, 0, 1, ["victory"], function() { return true; }, false);
-		case 'duchy':
-			return new victoryCard("duchy", 5, 0, 3, ["victory"], function() { return true; }, false);
-		case 'province':
-			return new victoryCard("province", 8, 0, 6, ["victory"], function() { return true; }, false);
-		case 'curse':
-			return new victoryCard("curse", 0, 0, -1, ["curse"], function() { return true; }, false);
+function getCardAttributes(name) {
+	switch (name) {
 		case 'cellar':
-			return new actionCard("cellar", 2, 0, ["action"], function(player, game) {
-				player.resource.action++;
-				player.phase = 4;
-				var cellarAction = function(player, game) {
-					var selected = [];
-					player.hand.forEach(function(el, index) {
-						if (el.selected) {
-							selected.push(index);
-						}
-					});
-					var drawAmt = selected.length;
-					for (var i = selected.length - 1; i > -1; i--) {
-						var selectedCard = player.hand.splice(selected[i], 1)[0];
-						selectedCard.selected = false;
-						player.discard.push(selectedCard);
-					}
-					player.draw(drawAmt);
-					if (player.todo.length === 1) {
-						player.phase = 1;
-					}
-					return true;
-				};
-				player.todo.push(cellarAction.bind(null, player, game));
-				return true;
-			}, false);
-		case 'market':
-			return new actionCard("market", 5, 0, ["action"], function(player) {
-				player.draw(1);
-				player.resource.action++;
-				player.resource.buy++;
-				player.resource.coin++;
-				return true;
-			}, false);
-		case 'militia':
-			return new actionCard("militia", 4, 0, ["action", "attack"], function(player, game) {
-				player.resource.coin += 2;
-				
-				var players = game.players.filter(function(pl) {
-					return pl;
-				});
-				players.forEach(function(pl, index) {
-					if (pl.id === player.id) {
-						// don't attack yourself
-					} else {
-						pl.attack = {
-							effect: function() {
-								var handSize = pl.hand.length;
-								if (handSize <= 3) {
-									return true;
-								}
-								
-								var selected = pl.hand.filter(function(card) {
-									return card.selected;
-								});
-								var selLength = selected.length;
-								var remLength = handSize - selLength;
-								if (remLength >= 3) {
-									for (var i = 0; i < selLength; i++) {
-										selected[i].selected = false;
-										pl.discard.push(pl.hand.splice(pl.hand.indexOf(selected[i]), 1)[0]);
-									}
-									if (remLength === 3) {
-										return true;
-									}
-								}
-								return false;
-							},
-							next: function() {
-								game.turn = players[(index + 1) % players.length].spot;
-								
-								var nextPlayer = game.players[game.turn];
-								pl.phase = 0;
-								nextPlayer.phase = nextPlayer.attack ? (nextPlayer.reaction.length ? 5 : 6) : 1;
-							}
-						};
-					}
-				});
-				
-				player.nextPlayer(game);
-				player.phase = 0;
-				game.players[game.turn].phase = game.players[game.turn].reaction.length ? 5 : 6;
-				
-				return true;
-			}, false);
-		case 'mine':
-			return new actionCard("mine", 5, 0, ["action"], function(player, game) {
-				player.phase = 4;
-				var mineAction = function(player, game) {
-					var selected = player.hand.filter(function(card) {
-						return card.selected && card.types.includes('treasure');
-					});
-					if (selected.length === 0) {
-						if (player.todo.length === 1) {
-							player.phase = 1;
-						}
-						return true;
-					} else if (selected.length === 1) {
-						var card = selected[0];
-						card.selected = false;
-						game.trash.push(player.hand.splice(player.hand.indexOf(card), 1)[0]);
-						player.todo.splice(1, 0, gainAction.bind(null, player, game, card.coinCost + 3, card.potCost, ['treasure'], 'hand'));
-						return true;
-					}
-					return false;
-				};
-				player.todo.push(mineAction.bind(null, player, game));
-				return true;
-			}, false);
-		case 'moat':
-			return new actionCard("moat", 2, 0, ["action", "reaction"], function(player, game, effectType) {
-				if (effectType === 'action') {
-					player.draw(2);
-				} else if (effectType === 'reaction') {
-					if (player.attack) {
-						player.attack.effect = null;
-					}
+			return {
+				coin: 2,
+				types: {
+					action: cellarAction
 				}
-				return true;
-			}, false);
+			};
+		case 'copper':
+			return {
+				coin: 0,
+				types: {
+					treasure: incPlayerCoin(COPPER_VALUE)
+				}
+			};
+		case 'curse':
+			return {
+				coin: 0,
+				types: {
+					curse: decPlayerPoints(CURSE_VALUE)
+				}
+			};
+		case 'duchy':
+			return {
+				coin: 5,
+				types: {
+					victory: incPlayerPoints(DUCHY_VALUE)
+				}
+			};
+		case 'estate':
+			return {
+				coin: 2,
+				types: {
+					victory: incPlayerPoints(ESTATE_VALUE)
+				}
+			};
+		case 'gold':
+			return {
+				coin: 6,
+				types: {
+					treasure: incPlayerCoin(GOLD_VALUE)
+				}
+			};
+		case 'market':
+			return {
+				coin: 5,
+				types: {
+					action: marketAction
+				}
+			};
+		case 'militia':
+			return {
+				coin: 4,
+				types: {
+					attack: militiaAttack,
+					action: militiaAction
+				}
+			};
+		case 'mine':
+			return {
+				coin: 5,
+				types: {
+					action: mineAction
+				}
+			};
+		case 'moat':
+			return {
+				coin: 2,
+				types: {
+					action: moatAction,
+					reaction: moatReaction
+				},
+				canReact: moatReact
+			};
+		case 'province':
+			return {
+				coin: 8,
+				types: {
+					victory: incPlayerPoints(PROVINCE_VALUE)
+				}
+			};
 		case 'remodel':
-			return new actionCard("remodel", 4, 0, ["action"], function(player, game) {
-				player.phase = 4;
-				var remodelAction = function(player, game) {
-					var selected = player.hand.filter(function(card) {
-						return card.selected;
-					});
-					if (selected.length === 0 && player.hand.length === 0) {
-						if (player.todo.length === 1) {
-							player.phase = 1;
-						}
-						return true;
-					} else if (selected.length === 1) {
-						var card = selected[0];
-						card.selected = false;
-						game.trash.push(player.hand.splice(player.hand.indexOf(card), 1)[0]);
-						player.todo.splice(1, 0, gainAction.bind(null, player, game, card.coinCost + 2, card.potCost, [], 'discard'));
-						return true;
-					}
-					return false;
-				};
-				player.todo.push(remodelAction.bind(null, player, game));
-				return true;
-			}, false);
+			return {
+				coin: 4,
+				types: {
+					action: remodelAction
+				}
+			};
+		case 'silver':
+			return {
+				coin: 3,
+				types: {
+					treasure: incPlayerCoin(SILVER_VALUE)
+				}
+			};
 		case 'smithy':
-			return new actionCard("smithy", 4, 0, ["action"], function(player) {
-				player.draw(3);
-				return true;
-			}, false);
+			return {
+				coin: 4,
+				types: {
+					action: smithyAction
+				}
+			};
 		case 'village':
-			return new actionCard("village", 3, 0, ["action"], function(player) {
-				player.draw(1);
-				player.resource.action += 2;
-				return true;
-			}, false);
+			return {
+				coin: 3,
+				types: {
+					action: villageAction
+				}
+			};
 		case 'woodcutter':
-			return new actionCard("woodcutter", 3, 0, ["action"], function(player) {
-				player.resource.buy++;
-				player.resource.coin += 2;
-				return true;
-			}, false);
+			return {
+				coin: 3,
+				types: {
+					action: woodcutterAction
+				}
+			};
 		case 'workshop':
-			return new actionCard("workshop", 3, 0, ["action"], function(player, game) {
-				game.phase = 4;
-				player.todo.push(gainAction.bind(null, player, game, 4, 0, [], 'discard'));
-				return true;
-			}, false);
+			return {
+				coin: 3,
+				types: {
+					action: workshopAction
+				}
+			};
 		default:
-			return undefined;
+			return {
+				coin: null,
+				types: {}
+			};
 	}
 }
 
-module.exports = getCard;
+function Card(name) {
+	var attributes = getCardAttributes(name);
+	
+	this.name = name;
+	this.coin = attributes.coin;
+	this.types = attributes.types;
+	
+	if (attributes.canReact) {
+		this.canReact = attributes.canReact;
+	}
+}
+
+module.exports = Card;

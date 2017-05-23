@@ -39,13 +39,8 @@ export default class GameCardContainer extends React.Component {
 					{this.props.cards.map(function(card, index) {
 						return (!this.state.toggle || (index === this.props.cards.length - 1)) &&
 							<GameCard key={index}
-												index={this.props.type !== 'buy' ? index : card.name}
-												type={this.props.type}
-												name={card.name}
-												sel={card.sel}
-												_clickCard={this.props._clickCard}
-												_help={this.props._help}
-												amt={card.amt} />;
+												name={card} amt={-1}
+												onTouchTap={this.props._tapCard.bind(null, ['players', this.props.seat, this.props.type], index)} />;
 					}, this)}
 				</div>
 			</div>

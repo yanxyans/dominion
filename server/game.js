@@ -1,610 +1,608 @@
 var Player = require('./player');
-var getCard = require('./card');
+var getRandomInt = require('./util').getRandomInt;
+var Card = require('./card');
 
-function Game(io) {
-	this.io = io;
-	this.rooms = {};
+var MAX_PLAYERS = 4;
+var MIN_PLAYERS = 2;
+var TURN_DRAW_AMT = 5;
+var CLEANUP_PHASE = 3;
+
+function Game(start, piles) {
+	this.start = start;
+	this.pilesOrigin = piles;
+	this.pilesWork = {};
+	this.trash = [];
+	
+	this.players = [];
+	this.state = "INIT";
+	this.turn = [];
 }
 
-// game room management
-
-Game.prototype.newRoom = function(room, set) {
-	if (this.rooms[room]) {
-		return {
-			head: 'err',
-			body: 'room is taken'
-		};
+Game.prototype.addPlayer = function(user) {
+	if (this.players.length >= MAX_PLAYERS) {
+		return false;
+	} else if (this.state !== "INIT") {
+		return false;
+	} else if (!user) {
+		return false;
 	}
 	
-	this.rooms[room] = {
-		originSet: set,
-		users: {},
-		players: [null, null, null, null],
-		spots: [3,2, 1, 0]
-	};
-	this.initRoom(room);
-	return {
-		head: 'ok',
-		body: 'room was created'
-	};
+	// game has not started and can has house user
+	this.players.push(new Player(user));
+	return true;
 };
 
-Game.prototype.initRoom = function(room) {
-	var game = this.rooms[room];
-	if (game) {
-		game.set = {
-			start: {},
-			kingdom: {}
-		};
-		game.state = "init";
-		game.turn = -1;
-		game.trash = [];
+Game.prototype.removePlayer = function(user) {
+	if (!user) {
+		return false;
 	}
-};
-
-Game.prototype.addUser = function(user, room) {
-	var game = this.rooms[room];
-	if (!game) {
-		user.emit('_user_room', {
-			head: 'err',
-			body: 'room does not exist'
-		});
-	} else if (user.id in game.users) {
-		user.emit('_user_room', {
-			head: 'err',
-			body: 'user in room'
-		});
-	} else {
-		var playerSpot = game.state === "init" && game.spots.length > 0 ? game.spots.pop() : -1;
-		// 0 for spectator, 1 for player
-		var userType = playerSpot === -1 ? 0 : 1;
-		game.users[user.id] = {
-			name: user.name,
-			type: userType
-		};
-		
-		user.addGame(room, playerSpot);
-		user.enterGame(room);
-		this.emitRoomUser(room);
-
-		if (userType) {
-			var player = new Player(user, playerSpot);
-			game.players[playerSpot] = player;
-			this.emitPlayer(player, room);
-		} else {
-			user.emit('_game_player');
-		}
-		this.emitBoard(userType ? null : user, room);
-	}
-};
-
-Game.prototype.removeUser = function(user, room) {
-	var game = this.rooms[room];
-	if (!game) {
-		user.emit('_user_room', {
-			head: 'err',
-			body: 'room does not exist'
-		});
-	} else if (!(user.id in game.users)) {
-		user.emit('_user_room', {
-			head: 'err',
-			body: 'user not in room'
-		});
-	} else {
-		var userType = game.users[user.id].type;
-		delete game.users[user.id];
-		
-		// user empties his view if left room is current room
-		var playerSpot = user.games[room];
-		user.removeGame(room);
-		this.emitRoomUser(room);
-		
-		if (userType) {
-			if (game.state === "init") {
-				// remove player
-				game.players[playerSpot] = null;
-				game.spots.push(playerSpot);
-			} else {
-				// attempt reconnect
-				game.players[playerSpot].id = null;
-				game.players[playerSpot].name = 'disc';
-				game.players[playerSpot].socket = null;
-				game.players[playerSpot].seated = false;
-			}
-			this.emitBoard(null, room);
-		}
-	}
-};
-
-Game.prototype.reconnect = function(user, spot) {
-	var room = user.inGame;
-	var game = this.rooms[room];
-	if (game && game.players[spot] && !game.players[spot].seated && (user.games[room] < 0)) {
-		game.players[spot].id = user.id;
-		game.players[spot].name = user.name;
-		game.players[spot].socket = user.socket;
-		game.players[spot].seated = true;
-		
-		game.users[user.id].type = 1;
-		user.games[room] = spot;
-		
-		this.emitPlayer(game.players[spot], room);
-		this.emitBoard(null, room);
-		this.emitRoomUser(room);
-	}
-};
-
-Game.prototype.disconnectUser = function(user) {
-	Object.keys(user.games).forEach(function(room) {
-		this.removeUser(user, room);
-	}, this);
-};
-
-Game.prototype.enterUser = function(user, room) {
-	var game = this.rooms[room];
-	if (game) {
-		var res = user.enterGame(room);
-		if (res) {
-			user.emit('_game_user', game.users);
-			
-			this.emitBoard(user, room);
-			
-			var isPlayer = user.games[room];
-			if (isPlayer !== -1) {
-				this.emitPlayer(game.players[isPlayer], room);
-			} else {
-				user.emit('_game_player');
-			}
-		}
-	}
-};
-
-// game life cycle management
-
-Game.prototype.start = function(player, room) {
-	var game = this.rooms[room];
-	if (!game || game.spots.length > 2) {
-		this.emitPlayer(player, room);
-	} else if (game.state !== "init") {
-		// game already in progress
-	} else {
-		game.state = "in_progress";
-		
-		var players = game.players.filter(function(player) {
-			return player !== null;
-		});
-		
-		// init board
-		Object.keys(game.originSet.start).forEach(function(key) {
-			game.set.start[key] = game.originSet.start[key];
-		});
-		Object.keys(game.originSet.kingdom).forEach(function(pileName) {
-			var pile_amt = this.originSet.kingdom[pileName][4 - this.spots.length - 2];
-			
-			this.set.kingdom[pileName] = [];
-			for (var i = 0; i < pile_amt; i++) {
-				this.set.kingdom[pileName].push(getCard(pileName));
-			}
-		}, game);
-		
-		// init player resources
-		var set = game.set;
-		
-		game.turn = players[0].spot;
-		
-		var startCards = Object.keys(set.start);
-		for (var i = 0; i < players.length; i++) {
-			var gamePlayer = players[i];
-			gamePlayer.deck = [];
-			gamePlayer.discard = [];
-			gamePlayer.hand = [];
-			gamePlayer.inPlay = [];
-			gamePlayer.resource = {
-				action: i ? 0 : 1,
-				buy: i ? 0 : 1,
-				coin: 0,
-				potion: 0
-			};
-			gamePlayer.todo = [];
-			gamePlayer.attack = null;
-			gamePlayer.reaction = [];
-			
-			startCards.forEach(function(startCard) {
-				var startCardAmt = set.start[startCard];
-				gamePlayer.gain(set.kingdom, 'discard', startCard, startCardAmt);
-			}, this);
-			gamePlayer.draw(5);
-			gamePlayer.phase = i ? 0 : 1;
-			
-			gamePlayer.next = players[(i + 1) % players.length].spot;
-			this.emitPlayer(gamePlayer, room);
-		}
-
-		this.emitBoard(null, room);
-	}
-};
-
-Game.prototype.end = function(player, room) {
-	var game = this.rooms[room];
-	if (game && game.state === "in_progress" && player.phase >= 1 && player.phase <= 3) {
-		var zeroPiles = Object.keys(game.set.kingdom).filter(function(card) {
-			return game.set.kingdom[card].length === 0;
-		});
-		if (zeroPiles.length >= 3 ||
-				zeroPiles.includes('province') ||
-				zeroPiles.includes('colony')) {
-			var playerScores = game.players.filter(function(pl) {
-				return pl;
-			}).map(function(pl) {
-				var pointCards = pl.hand.concat(pl.discard).concat(pl.inPlay).concat(pl.deck).filter(function(ca) {
-					return ca.types.includes('victory') || ca.types.includes('curse');
-				});
-				var pointCardsRef = {};
-				for (var i = 0; i < pointCards.length; i++) {
-					var pointCard = pointCards[i];
-					if (pointCardsRef[pointCard.name]) {
-						pointCardsRef[pointCard.name].amt++;
-					} else {
-						pointCardsRef[pointCard.name] = {
-							amt: 1,
-							points: pointCard.victoryPoints
-						};
-					}
-				}
-				var score = pointCards.reduce(function(res, ca) {
-					ca.effect(pl, game);
-					return res + ca.victoryPoints;
-				}, 0);
-				return {
-					name: pl.name,
-					score: score,
-					cards: pointCardsRef,
-					show: false
-				};
-			}).sort(function(scoreA, scoreB) {
-				return scoreA.score === scoreB.score ? 0 : +(scoreA.score < scoreB.score) || -1;
-			});
-			this.io.in(room).emit('_end_score', playerScores);
-			
-			this.initRoom(room);
-		} else {
-			player.resource.action = 0;
-			player.resource.buy = 0;
-			player.resource.coin = 0;
-			player.resource.potion = 0;
-			player.cleanUp();
-			player.reaction = [];
-			player.draw(5);
-			player.phase = 0;
-			
-			player.nextPlayer(game);
-			
-			var newPlayer = game.players[game.turn];
-			newPlayer.resource.action = 1;
-			newPlayer.resource.buy = 1;
-			newPlayer.phase = 1;
-			this.emitPlayer(newPlayer, room);
-			
-			this.emitBoard(null, room);
-		}
-	}
-	this.emitPlayer(player, room);
-};
-
-Game.prototype.applyAction = function(player, room) {
-	var game = this.rooms[room];
-	if (game && game.state === "in_progress" && player.phase === 4) {
-		if (player.todo[0]()) {
-			player.todo.shift();
-			this.cleanGame(player, game);
-			this.emitBoard(null, room);
-		}
-	}
-	this.emitPlayer(player, room);
-};
-
-Game.prototype.applyAttack = function(player, room) {
-	var game = this.rooms[room];
-	if (game && game.state === "in_progress" && player.phase === 6) {
-		if (player.attack.effect()) {
-			player.attack.next();
-			this.emitPlayer(game.players[game.turn], room);
-			player.attack = null;
-			this.cleanGame(player, game);
-			this.emitBoard(null, room);
-		}
-	}
-	this.emitPlayer(player, room);
-};
-
-Game.prototype.cleanGame = function(player, game) {
-	player.discard = player.discard.map(function(card) {
-		card.selected = false;
-		return card;
-	});
-	player.inPlay = player.inPlay.map(function(card) {
-		card.selected = false;
-		return card;
-	});
-	player.hand = player.hand.map(function(card) {
-		card.selected = false;
-		return card;
-	});
-	Object.keys(game.set.kingdom).forEach(function(pileName) {
-		var pile_amt = game.set.kingdom[pileName].length;
-		if (pile_amt) {
-			game.set.kingdom[pileName][pile_amt - 1].selected = false;
-		}
-	});
-};
-
-Game.prototype.applyReaction = function(player, room) {
-	var game = this.rooms[room];
-	if (game && game.state === "in_progress" && player.phase === 5) {
-		var selected = player.reaction.filter(function(reactionCard) {
-			return reactionCard.selected;
-		});
-		var afterReact = false;
-		if (selected.length === 0) {
-			afterReact = true;
-		} else if (selected.length === 1) {
-			var sel = selected[0];
-			sel.selected = false;
-			if (sel.effect(player, game, player.hand.indexOf(selected[0]), 'reaction')) {
-				if (player.reaction.length === 0) {
-					afterReact = true;
-				} else {
-					this.cleanGame(player, game);
-					this.emitBoard(null, room);
-				}
-				this.io.in(room).emit('_reaction', player.name + ' reacts with ' + sel.name);
-			}
-		}
-		
-		if (afterReact) {
-			if (player.attack.effect !== null) {
-				player.phase = 6;
-			} else {
-				player.attack.next();
-				this.emitPlayer(game.players[game.turn], room);
-				player.attack = null;
-			}
-			this.cleanGame(player, game);
-			this.emitBoard(null, room);
-		}
-	}
-	this.emitPlayer(player, room);
-};
-
-Game.prototype.clickCard = function(user, type, card) {
-	switch (type) {
-		case 'discard':
-			this.handleDiscard(user, card);
-			break;
-		case 'in_play':
-			this.handleInPlay(user, card);
-			break;
-		case 'in_hand':
-			this.handleInHand(user, card);
-			break;
-		case 'buy':
-			this.handleBuy(user, card);
-			break;
-		default:
-			// do nothing
-	}
-};
-
-Game.prototype.handleDiscard = function(user, card) {
-	// handle discard click
-};
-
-Game.prototype.handleInPlay = function(user, card) {
-	// handle in_play click
-};
-
-Game.prototype.doAction = function(game, room, card, player, cardIndex) {
-	if (player.resource.action) {
-		player.resource.action--;
-		card.effect(player, game, cardIndex, 'action');
-		if (game.players[game.turn] !== player) {
-			this.emitPlayer(game.players[game.turn], room);
-		}
-		this.emitPlayer(player, room);
-		this.emitBoard(null, room);
-	}
-};
-
-Game.prototype.doTreasure = function(game, room, card, player, cardIndex) {
-	if (player) {
-		player.phase = 2;
-		card.effect(player, game, cardIndex);
-		this.emitPlayer(player, room, cardIndex);
-		this.emitBoard(null, room);
-	}
-};
-
-Game.prototype.playCard = function(game, room, card, player, possible, cardIndex) {
-	if (possible.includes('action') && possible.includes('treasure')) {
-		// crown card
-	} else if (possible.includes('action')) {
-		this.doAction(game, room, card, player, cardIndex);
-	} else if (possible.includes('treasure')) {
-		this.doTreasure(game, room, card, player, cardIndex);
-	}
-};
-
-Game.prototype.handleInHand = function(user, cardIndex) {
-	var room = user.inGame;
-	var game = this.rooms[room];
-	if (game && game.state === "in_progress") {
-		var player = game.players[game.turn];
-		if (player.id === user.id && cardIndex in player.hand) {
-			var card = player.hand[cardIndex];
-			if (card) {
-				if (player.phase >= 1 && player.phase <= 2) {
-					var phase = player.phase === 1 ? ['action', 'treasure'] : ['treasure'];
-					var possiblePlays = phase.filter(function(n) {
-						return card.types.indexOf(n) !== -1;
-					});
-					this.playCard(game, room, card, player, possiblePlays, cardIndex);
-				} else if (player.phase >= 4 && player.phase <= 6) {
-					card.selected = !card.selected;
-					this.emitPlayer(player, room);
-					this.emitBoard(null, room);
-				}
-			}
-		}
-	}
-};
-
-Game.prototype.handleBuy = function(user, card) {
-	var room = user.inGame;
-	var game = this.rooms[room];
-	if (game && game.state === "in_progress") {
-		var player = game.players[game.turn];
-		var kingdom = game.set.kingdom;
-		if (player.id === user.id && kingdom[card].length) {
-			var kingdomCard = kingdom[card][kingdom[card].length - 1];
-			if (player.phase >= 1 && player.phase <= 3) {
-				if ((kingdomCard.coinCost <= player.resource.coin) &&
-						(kingdomCard.potCost <= player.resource.potion) &&
-						player.resource.buy) {
-					player.phase = 3;
-					
-					player.resource.coin -= kingdomCard.coinCost;
-					player.resource.potion -= kingdomCard.potCost;
-					player.resource.buy--;
-					
-					player.gain(kingdom, 'discard', card, 1);
-					this.emitPlayer(player, room);
-					this.emitBoard(null, room);
-				}
-			} else if (player.phase === 4) {
-				kingdomCard.selected = !kingdomCard.selected;
-				this.emitPlayer(player, room);
-				this.emitBoard(null, room);
-			}
-		}
-	}
-};
-
-// game view management
-
-Game.prototype.emitRoomUser = function(room) {
-	var game = this.rooms[room];
-	if (game) {
-		this.io.in(room).emit('_game_user', game.users);
-	}
-};
-
-Game.prototype.emitPlayer = function(player, room) {
-	var game = this.rooms[room];
-	var socketRoom = this.io.sockets.adapter.rooms[room];
 	
-	if (player &&
-			socketRoom &&
-			player.id in socketRoom.sockets &&
-			game) {
-		player.socket.emit(
-			'_game_player', {
-				name: player.name,
-				deckSize: player.deck ? player.deck.length: null,
-				discard: player.discard ? player.discard.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-				inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-				hand: player.hand ? player.hand.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-				resource: player.resource ? player.resource : {},
-				turn: game.state === "init" ? true : player.phase > 0
-			},
-			...this.getAction(player, room));
+	var slot = this.getPlayIndex(user.id);
+	if (slot === -1) {
+		// player was not found
+		return false;
+	}
+
+	if (this.state === "INIT") {
+		// free up a player slot
+		this.players.splice(slot, 1);
+	} else {
+		// game is in progress, wait for someone to reconnect
+		var player = this.players[slot];
+		
+		player.id = null;
+		player.name = "(disconnected)";
 	}
 };
 
-Game.prototype.getPlayer = function(player) {
-	if (player) {
-		return {
-			name: player.name,
-			deckSize: player.deck ? player.deck.length : null,
-			discardTop: player.discard ? player.discard.slice(-1).map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-			inPlay: player.inPlay ? player.inPlay.map(function(card) { return {name: card.name, sel: card.selected}; }) : [],
-			hand: player.hand ? player.hand.map(function(card) { return {sel: card.selected}; }) : [],
-			resource: player.resource ? player.resource : {},
-			spot: player.spot,
-			turn: player.phase > 0
-		};
-	}
+Game.prototype.getPlayIndex = function(id) {
+	return this.players.map(function(player) {
+		return player.id;
+	}).indexOf(id);
 };
 
-Game.prototype.emitBoard = function(user, room) {
-	var game = this.rooms[room];
-	var socketRoom = this.io.sockets.adapter.rooms[room];
-	if (game && socketRoom) {
-		if (user) {
-			user.emit('_game_board', this.getGameBoard(game, user.id));
-		} else {
-			var connectedUsers = socketRoom.sockets;
-
-			Object.keys(connectedUsers).forEach(function(connectedUser) {
-				this.io.to(connectedUser).emit('_game_board', this.getGameBoard(game, connectedUser));
-			}, this);
-		}
+Game.prototype.takePlayerSlot = function(user, slot) {
+	if (!(slot in this.players)) {
+		return false;
+	} else if (!user) {
+		return false;
 	}
+	
+	var playerSlot = this.players[slot];
+	if (playerSlot.id !== null) {
+		// player slot is occupied
+		return false;
+	}
+	playerSlot.id = user.id;
+	playerSlot.name = user.name;
+	return true;
 };
 
-Game.prototype.getGameBoard = function(game, user_id) {
+Game.prototype.retrieveGameState = function(id) {
+	if (this.state !== "INIT") {
+		var activePlayer = this.players[this.turn[this.turn.length - 1]];
+		this.getControls(activePlayer);
+		this.getControls(this.players[this.turn[this.turn.length - 1]]);
+	}
+	
 	return {
-		piles: Object.keys(game.set.kingdom).map(function(cardName) {
-			var len = this[cardName].length;
-			return {
-				name: cardName,
-				amt: len,
-				sel: len ? this[cardName][len - 1].selected : false
-			};
-		}, game.set.kingdom),
-		players: game.players.filter(function(player) {
-			// do not emit self to player
-			return player && player.id !== user_id;
-		}).map(this.getPlayer).map(function(player) {
-			player.turn = game.state === "init" ? true : player.turn;
-			return player;
-		}),
-		trash: game.trash.map(function(card) {
-			return {
-				name: card.name,
-				sel: card.selected
-			};
+		players: this.players.map(function(player, index) {
+			var turn = this.state !== "INIT" &&
+			           this.turn[this.turn.length - 1] === player.seat;
+			var visible = id === player.id &&
+			              (this.state === "INIT" || turn);
+			var control = visible ? this.getControls(player) : null;
+											
+			var playerState = player.retrievePlayerState(id);
+			playerState.turn = turn;
+			
+			if (control) {
+				this.getControls(player);
+				playerState.control = control;
+			}
+			return playerState;
+		}, this),
+		piles: this.pilesWork,
+		trash: this.trash.map(function(c) {
+			return c.name;
 		})
 	};
 };
 
-Game.prototype.getAction = function(player, room) {
-	var game = this.rooms[room];
-	if (game) {
-		if (game.state === 'init') {
-			return ["start_game", this.start.bind(this, player, room)];
-		}
+Game.prototype.reconnect = function(user, slot) {
+	if (!user) {
+		return {
+			head: 'err',
+			body: 'invalid user'
+		};
+	} else if (this.getPlayIndex(user.id) !== -1) {
+		return {
+			head: 'err',
+			body: 'user is already playing'
+		};
+	}
+
+	var res = this.takePlayerSlot(user, slot);
+	if (res) {
+		return {
+			head: 'ok',
+			body: 'user is now playing'
+		};
+	}
+	return {
+		head: 'err',
+		body: 'could not take player slot'
+	};
+};
+
+Game.prototype.startGame = function(user) {
+	if (!user) {
+		return {
+			head: 'err',
+			body: 'invalid user'
+		};
+	} else if (this.getPlayIndex(user.id) === -1) {
+		return {
+			head: 'err',
+			body: 'only players may start game'
+		};
+	} else if (this.state !== "INIT") {
+		return {
+			head: 'err',
+			body: 'game is in progress'
+		};
+	}
+	
+	var len = this.players.length;
+	if (len < MIN_PLAYERS) {
+		return {
+			head: 'err',
+			body: 'game is played with two or more players'
+		};
+	}
+	
+	// flag game as in progress
+	this.state = "MAIN";
+	
+	// init piles
+	this.pilesWork = {};
+	var pilesName = Object.keys(this.pilesOrigin);
+	for (var i = 0; i < pilesName.length; i++) {
+		var pileName = pilesName[i];
+		// array containing pile size for two, three, and four players
+		var pileSize = this.pilesOrigin[pileName][len - MIN_PLAYERS];
 		
-		switch (player.phase) {
-			case 0:
-				// standby phase
-				break;
-			case 1:
-				return ["end_turn", this.end.bind(this, player, room)];
-			case 2:
-				return ["end_turn", this.end.bind(this, player, room)];
-			case 3:
-				return ["end_turn", this.end.bind(this, player, room)];
-			case 4:
-				return ["apply_action", this.applyAction.bind(this, player, room)];
-			case 5:
-				return ["apply_reaction", this.applyReaction.bind(this, player, room)];
-			case 6:
-				return ["apply_attack", this.applyAttack.bind(this, player, room)];
-			default:
-				// do nothing
+		this.pilesWork[pileName] = [];
+		for (var j = 0; j < pileSize; j++) {
+			this.pilesWork[pileName].push(new Card(pileName));
 		}
 	}
-	return [null, null];
+	
+	// init trash pile
+	this.trash = [];
+	
+	// get starting hand
+	var startHand = Object.keys(this.start);
+	var startLen = startHand.length;
+	
+	for (var i = 0; i < len; i++) {
+		var player = this.players[i];
+		
+		// assign player seats
+		player.seat = i;
+		
+		// initialize player variables
+		player.init();
+		
+		// distribute pile cards to player discards
+		for (var j = 0; j < startLen; j++) {
+			var startCard = startHand[j];
+			var startAmount = this.start[startCard];
+			this.moveCards(this.pilesWork[startCard], player.discard, startAmount); 
+		}
+
+		// player starts with five cards in hand
+		player.draw(TURN_DRAW_AMT);
+	}
+	
+	// designate the first turn
+	this.turn = [];
+	var firstTurn = getRandomInt(0, len);
+	var firstPlayer = this.players[firstTurn];
+	firstPlayer.start();
+	
+	this.turn.push(firstTurn);
+	
+	return {
+		head: 'ok',
+		body: 'game has started'
+	};
+};
+
+Game.prototype.moveCards = function(src, dest, amt) {
+	if (src && dest && src.length >= amt) {
+		for (var i = 0; i < amt; i++) {
+			dest.push(src.pop());
+		}
+	}
+};
+
+Game.prototype.getControls = function(player) {
+	if (this.state === "INIT") {
+		return ["Start"];
+	} else if (this.state === "MAIN" && player) {
+		var todo = this.getTodo(player);
+		return todo ? todo.cntrl : ["Action", "Buy", "Cleanup"];
+	}
+	
+	return [];
+};
+
+Game.prototype.setPhase = function(user, phase, end) {
+	if (!user || this.state !== "MAIN") {
+		return false;
+	}
+	
+	var userIndex = this.getPlayIndex(user.id);
+	var playIndex = this.turn[0];
+	if (userIndex !== playIndex ||
+	    this.turn.length > 1 ||
+    	phase < 0 ||
+			phase > 3) {
+		return false;
+	}
+	
+	var player = this.players[playIndex];
+	if (phase <= player.phase) {
+		return false;
+	}
+	
+	player.phase = phase;
+	if (player.phase === CLEANUP_PHASE) {
+		if (this.endCondition()) {
+			this.endGame(end);
+		} else {
+			// initiate cleanup sequence
+			player.cleanUp();
+			player.draw(TURN_DRAW_AMT);
+			
+			var turn = this.turn.pop();
+			var nextTurn = (turn + 1) % this.players.length;
+			var nextPlayer = this.players[nextTurn];
+			nextPlayer.start();
+			
+			this.turn.push(nextTurn);
+		}
+	}
+	
+	return true;
+};
+
+Game.prototype.endCondition = function() {
+	return this.state === "MAIN" && (!this.pilesWork.province.length || (Object.keys(this.pilesWork).filter(function(pile) { return !this.pilesWork[pile].length; }, this).length >= 3));
+};
+
+Game.prototype.endGame = function(end) {
+	end(this.players.map(function(player) {
+		return player.countScore();
+	}).sort(function(a, b) {
+		return b.score - a.score;
+	}));
+	this.state = "INIT";
+};
+
+Game.prototype.tapCard = function(user, src, index) {
+	if (!user || this.state !== "MAIN") {
+		return false;
+	}
+	
+	var userIndex = this.getPlayIndex(user.id);
+	var activeIndex = this.turn[this.turn.length - 1];
+	if (userIndex !== activeIndex) {
+		return false;
+	}
+	
+	var player = this.players[activeIndex];
+	var cards = this.getCards(src);
+	
+	if (player) {
+		var todo = this.getTodo(player);
+		if (todo) {
+			return this.handleTodo(todo, cards, index);
+		} else if (cards === player.hand) {
+			var ret = this.handlePlay(player, cards, index);
+			this.getTodo(player);
+			return ret;
+		} else if (cards in this.pilesWork) {
+			return this.handleBuy(player, cards, index);
+		}
+	}
+	
+	return false;
+};
+
+Game.prototype.getCards = function(src) {
+	if (src && src.length) {
+		var type = src.shift();
+		if (type === 'players') {
+			return this.getPlayerCards(src);
+		} else if (type === 'piles') {
+			return this.getPileCards(src);
+		} else if (type === 'trash' && !src.length) {
+			return this.trash;
+		}
+	}
+	
+	return null;
+};
+
+Game.prototype.getPlayerCards = function(src) {
+	if (src && src.length === 2) {
+		var player = src[0];
+		var cards = src[1];
+		if (player in this.players &&
+		   (cards === 'hand' ||
+				cards === 'discard' ||
+				cards === 'play' ||
+				cards === 'deck')) {
+		  return this.players[player][cards];
+		}
+	}
+	
+	return null;
+};
+
+Game.prototype.getPileCards = function(src) {
+	if (src && src.length === 1) {
+		var pile = src[0];
+		if (pile in this.pilesWork) {
+			return pile;
+		}
+	}
+	
+	return null;
+};
+
+Game.prototype.handleTodo = function(todo, cards, index) {
+	if (todo && todo.apply) {
+		todo.apply(cards, index);
+		
+		return true;
+	}
+	
+	return false;
+};
+
+Game.prototype.handlePlay = function(player, cards, index) {
+	if (player && cards === player.hand && index in cards) {
+		var card = cards[index];
+		var playType = player.tryPlay(card);
+		
+		if (playType && index in cards) {
+			var p = cards.splice(index, 1)[0];
+			player.play.push(p);
+			
+			// apply played card
+			var otherPlayers = this.getOtherPlayers(player);
+			var piles = this.pilesWork;
+			var trash = this.trash;
+			
+			var turn = this.turn;
+			var len = this.turn.length;
+			var gc = this.getTodo;
+			var callback = function(s) {
+				turn.splice(len, 0, s);
+			};
+			p.types[playType](player, otherPlayers, piles, trash, callback);
+			
+			return true;
+		}
+	}
+	
+	return false;
+};
+
+Game.prototype.handleBuy = function(player, cards, index) {
+	if (player && cards in this.pilesWork && index in this.pilesWork[cards]) {
+		var pile = this.pilesWork[cards];
+		var card = pile[index];
+		if (player.tryPay(card)) {
+			
+			// gain event
+			player.todo.push({
+				prep: function gain() {
+					this.card = {
+						pile: pile,
+						index: index
+					};
+					this.prepped = true;
+				},
+				resolve: function gain() {
+					if (this.card) {
+						var p = this.card.pile;
+						var i = this.card.index;
+						
+						if (p && i in p) {
+							// gain card
+							var c = p.splice(i, 1)[0];
+							player.discard.push(c);
+						}
+					}
+					
+					this.resolved = true;
+				},
+				prepped: false,
+				resolved: false,
+				cntrl: [],
+				todo: []
+			});
+			
+			return true;
+		}
+	}
+	
+	return false;
+};
+
+Game.prototype.getOtherPlayers = function(player) {
+	 return this.players.filter(function(p) {
+		 return p !== player;
+	 });
+};
+
+Game.prototype.tryControl = function(user, cntrl) {
+	if (!user || this.state !== "MAIN") {
+		return false;
+	}
+	
+	var userIndex = this.getPlayIndex(user.id);
+	var activeIndex = this.turn[this.turn.length - 1];
+	if (userIndex !== activeIndex) {
+		return false;
+	}
+	
+	var player = this.players[activeIndex];
+	var todo = this.getTodo(player);
+	if (todo && todo[cntrl]) {
+		todo[cntrl]();
+		return true;
+	}
+	return false;
+};
+
+Game.prototype.getTodo = function(node) {
+	if (node && node.todo) {
+		var todo = node.todo;
+		while (todo.length) {
+			var t = todo[0];
+			if (t.cntrl && t.cntrl.length) {
+				// wait on user input
+				return t;
+			}
+			
+			
+			if (!t.prepped && t.prep) {
+				// auto-complete default event
+				
+				t.prep();
+				if (this.handleReactions(t)) {
+					return t;
+				}
+			}
+			if (!t.resolved && t.resolve) {
+				t.resolve();
+				if (this.handleReactions(t)) {
+					return t;
+				}
+			}
+			
+			// dfs unresolved events
+			var res = this.getTodo(t);
+			if (res) {
+				// bubble up unresolved event
+				return res;
+			}
+			
+			if (t.resolved) {
+				// filter resolved events
+				var u = todo.splice(0, 1)[0];
+				
+				// take player todo as event node
+				var ret = false;
+				if (node.prep && node.resolve) {
+					ret = this.handleReactions(node);
+				}
+				
+				if (u.prep && (u.prep.name === 'react' || u.prep.name === 'attacked') &&
+				    u.resolve && (u.resolve.name === 'react' || u.resolve.name === 'attacked') &&
+						this.turn.length > 1) {
+					this.turn.pop();
+					
+				}
+				
+				if (ret) {
+					return t;
+				}
+			}
+		}
+	}
+	
+	return null;
+};
+
+Game.prototype.handleReactions = function(t) {
+	var found = false;
+
+	if (t && this.state === "MAIN") {
+		// game must be in main state
+		
+		var turnLen = this.turn.length;
+		var activeIndex = this.turn[turnLen - 1];
+		
+		var playerLen = this.players.length;
+		var wrapIndex = activeIndex + playerLen;
+		
+		for (var i = activeIndex; i < wrapIndex; i++) {
+			var playIndex = i % playerLen;
+			var player = this.players[playIndex];
+			
+			if (player.canReact(t)) {
+				this.turn.splice(turnLen, 0, playIndex);
+				
+				// react event
+				player.todo.unshift({
+					selected: [],
+					apply: function(cards, index) {
+						if (cards === player.hand ||
+						    cards === player.discard) {
+							if (index in cards) {
+								var card = cards[index];
+								if (card.canReact && card.canReact(player, cards, t)) {
+									var found = this.selected.indexOf(card);
+									if (found === -1 && !this.selected.length) {
+										// select
+										this.selected.push(card);
+									} else if (found !== -1) {
+										// deselect
+										this.selected.splice(found, 1);
+									}
+								}
+							}
+						}
+					},
+					react: function() {
+						var len = this.selected.length;
+						if (len === 1) {
+							this.selected.shift().types.reaction(player, t);
+							
+							if (!player.canReact(t)) {
+								this.cntrl = [];
+							}
+						} else if (len === 0) {
+							this.cntrl = [];
+						}
+					},
+					prep: function react() {
+						this.prepped = true;
+					},
+					resolve: function react() {
+						this.resolved = true;
+					},
+					prepped: true,
+					resolved: false,
+					cntrl: ['react'],
+					todo: []
+				});
+				
+				if (!found) {
+					found = true;
+				}
+			}
+		}
+		
+	}
+	
+	return found;
 };
 
 module.exports = Game;

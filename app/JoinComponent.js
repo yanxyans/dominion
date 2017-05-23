@@ -7,7 +7,7 @@ import TextField from 'material-ui/TextField';
 export default class JoinComponent extends React.Component {
 	state = {
 		open: false,
-		room: 'first_game'
+		room: 'First Game'
 	};
 
   handleOpen = () => {
@@ -15,11 +15,11 @@ export default class JoinComponent extends React.Component {
   };
 
   handleClose = () => {
-    this.setState({open: false, room: 'first_game'});
+    this.setState({open: false, room: 'First Game'});
   };
 	
 	handleJoin = () => {
-		this.props._joinGame(this.state.room);
+		this.props._joinRoom(this.state.room);
 		this.handleClose();
 	};
 	

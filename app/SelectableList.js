@@ -10,13 +10,13 @@ function wrapState(ComposedComponent) {
     };
 
     handleRequestChange = (event, room) => {
-			this.props._enterGame(room);
+			this.props._setRoom(room);
     };
 
     render() {
       return (
         <ComposedComponent
-          value={this.props.inRoom}
+          value={this.props.current}
           onChange={this.handleRequestChange}>
           {this.props.children}
         </ComposedComponent>
