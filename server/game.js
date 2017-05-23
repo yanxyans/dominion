@@ -521,7 +521,7 @@ Game.prototype.getTodo = function(node) {
 				}
 				
 				if (ret) {
-					return t;
+					return node;
 				}
 			}
 		}
