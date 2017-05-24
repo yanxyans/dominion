@@ -260,16 +260,17 @@ function mineAction(player, otherPlayers, piles, tr) {
 						tr.push(player.hand.splice(index, 1)[0]);
 						
 						// gain event
-						this.todo.push(gainEvent(piles, function(c) {
-							return c && 'treasure' in c.types && c.coin <= card.coin + 3;
-						}, function(pi) {
-							return !Object.keys(pi).filter( function(pa) {
+						var check = function(pi) {
+							return Object.keys(pi).filter( function(pa) {
 								return pi[pa].length && 'treasure' in pi[pa][0].types && pi[pa][0].coin <= card.coin + 3;
-							}).length;
-						},
-							player,
-							'hand'));
+							}).length > 0;
+						};
 						
+						if (check(piles)) {
+							this.todo.push(gainEvent(piles, function(c) {
+								return c && 'treasure' in c.types && c.coin <= card.coin + 3;
+							}, check, player, 'hand'));
+						}
 					}
 				}
 				
@@ -390,16 +391,17 @@ function remodelAction(player, op, piles, tr) {
 						tr.push(player.hand.splice(index, 1)[0]);
 						
 						// gain event
-						this.todo.push(gainEvent(piles, function(c) {
-							return c && c.coin <= card.coin + 2;
-						}, function(pi) {
-							return !Object.keys(pi).filter( function(pa) {
+						var check = function(pi) {
+							return Object.keys(pi).filter( function(pa) {
 								return pi[pa].length && pi[pa][0].coin <= card.coin + 2;
-							}).length;
-						},
-							player,
-							'discard'));
+							}).length > 0;
+						};
 						
+						if (check(piles)) {
+							this.todo.push(gainEvent(piles, function(c) {
+								return c && c.coin <= card.coin + 2;
+							}, check,	player, 'discard'));
+						}
 					}
 				}
 				
@@ -438,15 +440,16 @@ function woodcutterAction(player) {
 function workshopAction(player, op, piles) {
 	if (player) {
 		// gain event
-		player.todo.push(gainEvent(piles, function(c) {
-			return c && c.coin <= 4;
-		}, function(pi) {
-			return !Object.keys(pi).filter( function(pa) {
-				return pi[pa].length && pi[pa][0].coin <= 4;
-			}).length;
-		},
-			player,
-			'discard'));
+		var check = function(p) {
+			return Object.keys(p).filter(function(a) {
+			  return p[a].length && p[a][0].coin <= 4;
+		  }).length > 0;
+		};
+		if (check(piles)) {
+			player.todo.push(gainEvent(piles, function(c) {
+				return c && c.coin <= 4;
+			}, check, player, 'discard'));
+		}
 	}
 }
 
