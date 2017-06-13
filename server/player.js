@@ -136,12 +136,12 @@ Player.prototype.tryPlay = function(card) {
 	if (card) {
 		if (this.phase === ACTION_PHASE &&
 		    ACTION_PLAY in card.types &&
-				this.action) {
+			this.action) {
 			this.action--;
 			return ACTION_PLAY;
 		} else if (this.phase === BUY_PHASE &&
 		           TREASURE_PLAY in card.types &&
-							 !this.bought) {
+				   !this.bought) {
 			return TREASURE_PLAY;
 		}
 	}
@@ -152,8 +152,8 @@ Player.prototype.tryPay = function(card) {
 	if (this.phase === BUY_PHASE &&
 	    card &&
 	    card.coin <= this.coin &&
-			this.buy) {
-	  this.coin -= card.coin;
+		this.buy) {
+		this.coin -= card.coin;
 		this.buy--;
 
 		if (!this.bought) {
@@ -164,19 +164,11 @@ Player.prototype.tryPay = function(card) {
 	return false;
 };
 
-Player.prototype.canReact = function(ev) {
-	var handLen = this.hand.length;
-	for (var i = 0; i < handLen; i++) {
+Player.prototype.canReact = function(item) {
+	var len = this.hand.length;
+	for (var i = 0; i < len; i++) {
 		var card = this.hand[i];
-		if (card.canReact && card.canReact(this, this.hand, ev)) {
-			return true;
-		}
-	}
-	
-	var discardLen = this.discard.length;
-	for (var i = 0; i < discardLen; i++) {
-		var card = this.discard[i];
-		if (card.canReact && card.canReact(this, this.discard, ev)) {
+		if (card.canReact && card.canReact(this, item)) {
 			return true;
 		}
 	}

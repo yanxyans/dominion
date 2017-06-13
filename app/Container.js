@@ -80,9 +80,6 @@ class Container extends React.Component {
 		this.socket.on('_user_state', this._updateUserState);		
 		this.socket.on('_room_state', this._updateRoomState);
 		this.socket.on('_end_state', this._endState);
-		this._joinRoom("First Game");
-		this._reconnectRoom(0);
-		this._reconnectRoom(1);
 	}
 	
   render() {

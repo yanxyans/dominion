@@ -15,7 +15,9 @@ function Game(start, piles) {
 	
 	this.players = [];
 	this.state = "INIT";
-	this.turn = [];
+	
+	this.turn = -1;
+	this.todo = [];
 }
 
 Game.prototype.addPlayer = function(user) {
@@ -79,27 +81,12 @@ Game.prototype.takePlayerSlot = function(user, slot) {
 };
 
 Game.prototype.retrieveGameState = function(id) {
-	if (this.state !== "INIT") {
-		var activePlayer = this.players[this.turn[this.turn.length - 1]];
-		this.getControls(activePlayer);
-		this.getControls(this.players[this.turn[this.turn.length - 1]]);
-	}
-	
-	return {
+	var todo = this.getTodo(this.todo);
+	var ret = {
 		players: this.players.map(function(player, index) {
-			var turn = this.state !== "INIT" &&
-			           this.turn[this.turn.length - 1] === player.seat;
-			var visible = id === player.id &&
-			              (this.state === "INIT" || turn);
-			var control = visible ? this.getControls(player) : null;
-											
+			var visible = id === player.id;
 			var playerState = player.retrievePlayerState(id);
-			playerState.turn = turn;
-			
-			if (control) {
-				this.getControls(player);
-				playerState.control = control;
-			}
+			playerState.visible = visible;
 			return playerState;
 		}, this),
 		piles: this.pilesWork,
@@ -107,6 +94,14 @@ Game.prototype.retrieveGameState = function(id) {
 			return c.name;
 		})
 	};
+	
+	if (todo) {
+		todo.view(ret)
+	} else {
+		this.view(ret);
+	}
+	
+	return ret;
 };
 
 Game.prototype.reconnect = function(user, slot) {
@@ -206,12 +201,11 @@ Game.prototype.startGame = function(user) {
 	}
 	
 	// designate the first turn
-	this.turn = [];
 	var firstTurn = getRandomInt(0, len);
 	var firstPlayer = this.players[firstTurn];
 	firstPlayer.start();
 	
-	this.turn.push(firstTurn);
+	this.turn = firstTurn;
 	
 	return {
 		head: 'ok',
@@ -227,15 +221,21 @@ Game.prototype.moveCards = function(src, dest, amt) {
 	}
 };
 
-Game.prototype.getControls = function(player) {
-	if (this.state === "INIT") {
-		return ["Start"];
-	} else if (this.state === "MAIN" && player) {
-		var todo = this.getTodo(player);
-		return todo ? todo.cntrl : ["Action", "Buy", "Cleanup"];
+Game.prototype.view = function(ret) {
+	if (ret) {
+		for (var i = 0; i < ret.players.length; i++) {
+			var player = ret.players[i];
+			if (player.visible) {
+				if (this.state === "INIT") {
+					player.control = ["Start"];
+				} else if (this.state === "MAIN") {
+					if (this.turn === player.seat) {
+						player.control = ["Action", "Buy", "Cleanup"];
+					}
+				}
+			}
+		}
 	}
-	
-	return [];
 };
 
 Game.prototype.setPhase = function(user, phase, end) {
@@ -244,11 +244,11 @@ Game.prototype.setPhase = function(user, phase, end) {
 	}
 	
 	var userIndex = this.getPlayIndex(user.id);
-	var playIndex = this.turn[0];
+	var playIndex = this.turn;
 	if (userIndex !== playIndex ||
-	    this.turn.length > 1 ||
+	    this.todo.length ||
     	phase < 0 ||
-			phase > 3) {
+		phase > 3) {
 		return false;
 	}
 	
@@ -266,12 +266,11 @@ Game.prototype.setPhase = function(user, phase, end) {
 			player.cleanUp();
 			player.draw(TURN_DRAW_AMT);
 			
-			var turn = this.turn.pop();
-			var nextTurn = (turn + 1) % this.players.length;
+			var nextTurn = (this.turn + 1) % this.players.length;
 			var nextPlayer = this.players[nextTurn];
 			nextPlayer.start();
 			
-			this.turn.push(nextTurn);
+			this.turn = nextTurn;
 		}
 	}
 	
@@ -297,28 +296,32 @@ Game.prototype.tapCard = function(user, src, index) {
 	}
 	
 	var userIndex = this.getPlayIndex(user.id);
-	var activeIndex = this.turn[this.turn.length - 1];
-	if (userIndex !== activeIndex) {
-		return false;
-	}
-	
-	var player = this.players[activeIndex];
-	var cards = this.getCards(src);
-	
-	if (player) {
-		var todo = this.getTodo(player);
-		if (todo) {
-			return this.handleTodo(todo, cards, index);
-		} else if (cards === player.hand) {
-			var ret = this.handlePlay(player, cards, index);
-			this.getTodo(player);
-			return ret;
-		} else if (cards in this.pilesWork) {
-			return this.handleBuy(player, cards, index);
+	var todo = this.getTodo(this.todo);
+	if (todo) {
+		if (userIndex !== todo.turn()) {
+			return false;
+		}
+	} else {
+		if (userIndex !== this.turn) {
+			return false;
 		}
 	}
 	
-	return false;
+	var player = this.players[userIndex];
+	var cards = this.getCards(src);
+	
+	var ret = false;
+	if (player) {
+		if (todo) {
+			ret = this.handleTodo(todo, cards, index);
+		} else if (cards === player.hand) {
+			ret = this.handlePlay(player, cards, index);
+		} else if (cards in this.pilesWork) {
+			ret = this.handleBuy(player, cards, index);
+		}
+	}
+	
+	return ret;
 };
 
 Game.prototype.getCards = function(src) {
@@ -342,9 +345,9 @@ Game.prototype.getPlayerCards = function(src) {
 		var cards = src[1];
 		if (player in this.players &&
 		   (cards === 'hand' ||
-				cards === 'discard' ||
-				cards === 'play' ||
-				cards === 'deck')) {
+			cards === 'discard' ||
+			cards === 'play' ||
+			cards === 'deck')) {
 		  return this.players[player][cards];
 		}
 	}
@@ -366,7 +369,7 @@ Game.prototype.getPileCards = function(src) {
 Game.prototype.handleTodo = function(todo, cards, index) {
 	if (todo && todo.apply) {
 		todo.apply(cards, index);
-		
+		this.advanceTodo(this.todo);
 		return true;
 	}
 	
@@ -374,27 +377,18 @@ Game.prototype.handleTodo = function(todo, cards, index) {
 };
 
 Game.prototype.handlePlay = function(player, cards, index) {
-	if (player && cards === player.hand && index in cards) {
+	if (player && cards && cards === player.hand && index in cards) {
 		var card = cards[index];
 		var playType = player.tryPlay(card);
 		
-		if (playType && index in cards) {
-			var p = cards.splice(index, 1)[0];
-			player.play.push(p);
+		if (playType) {
+			cards.splice(index, 1);
+			player.play.push(card);
 			
 			// apply played card
-			var otherPlayers = this.getOtherPlayers(player);
-			var piles = this.pilesWork;
-			var trash = this.trash;
+			card.types[playType](player, this);
 			
-			var turn = this.turn;
-			var len = this.turn.length;
-			var gc = this.getTodo;
-			var callback = function(s) {
-				turn.splice(len, 0, s);
-			};
-			p.types[playType](player, otherPlayers, piles, trash, callback);
-			
+			this.advanceTodo(this.todo);
 			return true;
 		}
 	}
@@ -409,45 +403,15 @@ Game.prototype.handleBuy = function(player, cards, index) {
 		if (player.tryPay(card)) {
 			
 			// gain event
-			player.todo.push({
-				prep: function gain() {
-					this.card = {
-						pile: pile,
-						index: index
-					};
-					this.prepped = true;
-				},
-				resolve: function gain() {
-					if (this.card) {
-						var p = this.card.pile;
-						var i = this.card.index;
-						
-						if (p && i in p) {
-							// gain card
-							var c = p.splice(i, 1)[0];
-							player.discard.push(c);
-						}
-					}
-					
-					this.resolved = true;
-				},
-				prepped: false,
-				resolved: false,
-				cntrl: [],
-				todo: []
-			});
+			pile.splice(index, 1);
+			player.discard.push(card);
 			
+			this.advanceTodo(this.todo);
 			return true;
 		}
 	}
 	
 	return false;
-};
-
-Game.prototype.getOtherPlayers = function(player) {
-	 return this.players.filter(function(p) {
-		 return p !== player;
-	 });
 };
 
 Game.prototype.tryControl = function(user, cntrl) {
@@ -456,153 +420,154 @@ Game.prototype.tryControl = function(user, cntrl) {
 	}
 	
 	var userIndex = this.getPlayIndex(user.id);
-	var activeIndex = this.turn[this.turn.length - 1];
-	if (userIndex !== activeIndex) {
+	var todo = this.getTodo(this.todo);
+	if (!todo || userIndex !== todo.turn() || !todo.cont) {
 		return false;
 	}
 	
-	var player = this.players[activeIndex];
-	var todo = this.getTodo(player);
-	if (todo && todo[cntrl]) {
-		todo[cntrl]();
-		return true;
-	}
-	return false;
+	var ret = todo.cont(cntrl);
+	this.advanceTodo(this.todo);
+	return ret;
 };
 
-Game.prototype.getTodo = function(node) {
-	if (node && node.todo) {
-		var todo = node.todo;
-		while (todo.length) {
-			var t = todo[0];
-			if (t.cntrl && t.cntrl.length) {
-				// wait on user input
-				return t;
-			}
-			
-			
-			if (!t.prepped && t.prep) {
-				// auto-complete default event
-				
-				t.prep();
-				if (this.handleReactions(t)) {
-					return t;
-				}
-			}
-			if (!t.resolved && t.resolve) {
-				t.resolve();
-				if (this.handleReactions(t)) {
-					return t;
-				}
-			}
-			
-			// dfs unresolved events
-			var res = this.getTodo(t);
-			if (res) {
-				// bubble up unresolved event
-				return res;
-			}
-			
-			if (t.resolved) {
-				// filter resolved events
-				var u = todo.splice(0, 1)[0];
-				
-				// take player todo as event node
-				var ret = false;
-				if (node.prep && node.resolve) {
-					ret = this.handleReactions(node);
-				}
-				
-				if (u.prep && (u.prep.name === 'react' || u.prep.name === 'attacked') &&
-				    u.resolve && (u.resolve.name === 'react' || u.resolve.name === 'attacked') &&
-						this.turn.length > 1) {
-					this.turn.pop();
-					
-				}
-				
-				if (ret) {
-					return node;
-				}
-			}
+Game.prototype.advanceTodo = function(todo) {
+	while (todo.length) {
+		var item = todo[0];
+		var ret = this.advanceItem(item);
+		if (ret) {
+			todo.shift();
+		} else {
+			return false;
 		}
+	}
+	
+	return true;
+};
+
+Game.prototype.advanceItem = function(item) {
+	while (true) {
+		// break for redo, return true to complete / false to wait on input
+		var ret = this.advanceTodo(item.todo);
+		if (!ret) {
+			return false;
+		}
+		
+		switch (item.state) {
+			case "PRE":
+				if (!item.react.length) {
+					this.handleReactions(item);
+				}
+				
+				this.advanceReactions(item);
+				
+				if (item.react.length) {
+					return false;
+				}
+			case "MAIN":
+				item.state = "MAIN";
+				
+				if (item.main.length) {
+					var m = item.main[0];
+					if (!m.resolvable()) {
+						return false;
+					}
+					
+					item.main.shift();
+					m.resolve(item);
+					break;
+				}
+			case "POST":
+				item.state = "POST";
+				
+				if (!item.react.length) {
+					this.handleReactions(item);
+				}
+				
+				this.advanceReactions(item);
+				if (item.react.length) {
+					return false;
+				}
+				
+				if (item.trigger.length) {
+					var t = item.trigger[0];
+					if (!t.resolvable()) {
+						return false;
+					}
+					
+					item.trigger.shift();
+					t.resolve(item);
+					break;
+				}
+				
+				return true;
+		}
+	}
+};
+
+Game.prototype.getTodo = function(todo) {
+	var len = todo.length;
+	if (len) {
+		var res = todo[0];
+		var ret = this.getTodo(res.todo);
+		
+		return ret ? ret : res;
 	}
 	
 	return null;
 };
 
-Game.prototype.handleReactions = function(t) {
-	var found = false;
-
-	if (t && this.state === "MAIN") {
-		// game must be in main state
+Game.prototype.handleReactions = function(item) {
+	var turn = item.origin;
+	var len = this.players.length;
+	for (let i = 0; i < len; i++) {
 		
-		var turnLen = this.turn.length;
-		var activeIndex = this.turn[turnLen - 1];
-		
-		var playerLen = this.players.length;
-		var wrapIndex = activeIndex + playerLen;
-		
-		for (var i = activeIndex; i < wrapIndex; i++) {
-			var playIndex = i % playerLen;
-			var player = this.players[playIndex];
-			
-			if (player.canReact(t)) {
-				this.turn.splice(turnLen, 0, playIndex);
-				
-				// react event
-				player.todo.unshift({
-					selected: [],
-					apply: function(cards, index) {
-						if (cards === player.hand ||
-						    cards === player.discard) {
-							if (index in cards) {
-								var card = cards[index];
-								if (card.canReact && card.canReact(player, cards, t)) {
-									var found = this.selected.indexOf(card);
-									if (found === -1 && !this.selected.length) {
-										// select
-										this.selected.push(card);
-									} else if (found !== -1) {
-										// deselect
-										this.selected.splice(found, 1);
-									}
-								}
-							}
-						}
-					},
-					react: function() {
-						var len = this.selected.length;
-						if (len === 1) {
-							this.selected.shift().types.reaction(player, t);
-							
-							if (!player.canReact(t)) {
-								this.cntrl = [];
-							}
-						} else if (len === 0) {
-							this.cntrl = [];
-						}
-					},
-					prep: function react() {
-						this.prepped = true;
-					},
-					resolve: function react() {
-						this.resolved = true;
-					},
-					prepped: true,
-					resolved: false,
-					cntrl: ['react'],
-					todo: []
-				});
-				
-				if (!found) {
-					found = true;
+		let t = (turn + i) % len;
+		let player = this.players[t];
+		let func = function() {
+			return t;
+		};
+		item.react.push({
+			// react event
+			turn: func,
+			resolved: false,
+			usable: function(item) {
+				// can use on item
+				return player.canReact(item) && !this.resolved;
+			},
+			apply: function(cards, index) {
+				// use react card
+				if (cards === player.hand && index in cards) {
+					var card = cards[index];
+					if (card.canReact && card.canReact(player, item)) {
+						card.types.reaction(player, item);
+					}
+				}
+			},
+			cont: function(cntrl) {
+				if (cntrl === "finish" && !this.resolved) {
+					this.resolved = true;
+					return true;
+				}
+				return false;
+			},
+			view: function(disp) {
+				if (disp.players[t].visible) {
+					disp.players[t].control = ["finish"];
 				}
 			}
+		});
+	}
+};
+
+Game.prototype.advanceReactions = function(item) {
+	while (item.react.length) {
+		var r = item.react[0];
+		if (r.usable(item)) {
+			break;
 		}
 		
+		item.react.shift();
 	}
-	
-	return found;
 };
 
 module.exports = Game;
