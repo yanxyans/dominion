@@ -44,7 +44,7 @@ export default class JoinComponent extends React.Component {
 
     return (
       <div>
-				<ListItem primaryText='join_room' onTouchTap={this.handleOpen} />
+		<ListItem primaryText='join_room' onTouchTap={this.handleOpen} />
         <Dialog
           title='enter room name'
           actions={actions}

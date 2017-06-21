@@ -208,7 +208,7 @@ function militiaAction(player, game) {
 			game.todo.push(atk);
 		}
 	}
-};
+}
 
 function militiaAttack(player) {
 	return selectItem(player, ["discard"],

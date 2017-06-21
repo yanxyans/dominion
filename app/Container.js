@@ -7,15 +7,6 @@ import GameComponent from './GameComponent';
 
 injectTapEventPlugin();
 
-function getNumber(theNumber)
-{
-    if(theNumber > 0){
-        return "+" + theNumber;
-    }else{
-        return theNumber.toString();
-    }
-}
-
 class Container extends React.Component {
 	state = {
 		socket: null,
