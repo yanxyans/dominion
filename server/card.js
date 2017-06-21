@@ -11,7 +11,7 @@ var Item = require('./item');
 function incPlayerCoin(value) {
 	return function(player, game) {
 		if (player) {
-			player.coin += value;
+			game.coin += value;
 		}
 	};
 }
@@ -106,7 +106,7 @@ function discardItem(player, ref) {
 
 function cellarAction(player, game) {
 	if (player && game) {
-		player.action++;
+		game.action++;
 		
 		var drawItem = function(toDraw) {
 			return new Item([{
@@ -169,15 +169,15 @@ function cellarAction(player, game) {
 function marketAction(player, game) {
 	if (player) {
 		player.draw(1);
-		player.action++;
-		player.buy++;
-		player.coin++;
+		game.action++;
+		game.buy++;
+		game.coin++;
 	}
 }
 
 function militiaAction(player, game) {
 	if (player && game) {
-		player.coin += 2;
+		game.coin += 2;
 		
 		var militiaAttack = this.attack;
 		
@@ -462,14 +462,14 @@ function smithyAction(player, game) {
 function villageAction(player, game) {
 	if (player) {
 		player.draw(1);
-		player.action += 2;
+		game.action += 2;
 	}
 }
 
 function woodcutterAction(player, game) {
 	if (player) {
-		player.buy++;
-		player.coin += 2;
+		game.buy++;
+		game.coin += 2;
 	}
 }
 

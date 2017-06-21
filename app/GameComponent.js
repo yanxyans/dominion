@@ -25,9 +25,9 @@ export default class GameComponent extends React.Component {
 							<List>
 								<ListItem primaryText={player.name} secondaryText={
 									'deck=' + player.deck +
-									' action=' + player.action +
-									' buy=' + player.buy +
-									' coin=' + player.coin
+									('action' in player ? ' action=' + player.action : '') +
+									('buy' in player ? ' buy=' + player.buy : '') +
+									('coin' in player ? ' coin=' + player.coin : '')
 								} onTouchTap={this._reconnectRoom.bind(null, player.seat)} />
 							</List>
 							{player.control &&

@@ -1,10 +1,9 @@
 var shuffle = require('./util').shuffle;
 var findOne = require('./util').findOne;
+var moveCards = require('./util').moveCards;
 
 var ACTION_PHASE = 1;
 var BUY_PHASE = 2;
-var ACTION_PLAY = 'action';
-var TREASURE_PLAY = 'treasure';
 
 function Player(user) {
 	this.id = user.id;
@@ -17,25 +16,17 @@ function Player(user) {
 	this.discard = [];
 	this.hand = [];
 	this.play = [];
-	this.aside = [];
-	
-	// resource storage
-	this.action = 0;
-	this.buy = 0;
-	this.coin = 0;
-	
-	// action storage
-	this.todo = [];
 	
 	// start in standby phase
 	this.phase = 0;
 	
 	// used for state management, set at game start
 	this.seat = -1;
-	this.next = -1;
 	
 	// buy status
 	this.bought = false;
+	
+	this.points = 0;
 }
 
 Player.prototype.retrievePlayerState = function(id) {
@@ -48,10 +39,6 @@ Player.prototype.retrievePlayerState = function(id) {
 			this.discard.slice(this.discard.length - 1).map(this.getCardName.bind(null, true)),
 		hand: this.hand.map(this.getCardName.bind(null, visible)),
 		play: this.play.map(this.getCardName.bind(null, true)),
-		aside: this.aside.map(this.getCardName.bind(null, true)),
-		action: this.action,
-		buy: this.buy,
-		coin: this.coin,
 		phase: this.phase,
 		seat: this.seat
 	};
@@ -61,15 +48,15 @@ Player.prototype.getCardName = function(visible, card) {
 	return visible && card ? card.name : "";
 };
 
-Player.prototype.init = function() {
+Player.prototype.init = function(seat) {
 	this.emptyCards();
-	this.emptyResources();
-	
-	this.todo = [];
 	
 	this.phase = 0;
 	
+	this.seat = seat;
+	
 	this.bought = false;
+	
 	this.points = 0;
 };
 
@@ -78,34 +65,13 @@ Player.prototype.emptyCards = function() {
 	this.discard = [];
 	this.hand = [];
 	this.play = [];
-	this.aside = [];
-};
-
-Player.prototype.emptyResources = function() {
-	this.action = 0;
-	this.buy = 0;
-	this.coin = 0;
-};
-
-Player.prototype.start = function() {
-	this.action = 1;
-	this.buy = 1;
-	this.coin = 0;
-	
-	// action phase
-	this.phase = 1;
-	
-	// set buy status
-	this.bought = false;
 };
 
 Player.prototype.draw = function(amt) {
 	var deck_amt = this.deck.length;
 	var draw_amt = Math.min(amt, deck_amt);
 	
-	for (var i = 0; i < draw_amt; i++) {
-		this.hand.push(this.deck.pop());
-	}
+	moveCards(this.deck, this.hand, draw_amt);
 	
 	if (draw_amt < amt && this.discard.length) {
 		shuffle(this.discard);
@@ -116,52 +82,25 @@ Player.prototype.draw = function(amt) {
 };
 
 Player.prototype.cleanUp = function() {
-	this.emptyResources();
-	this.moveCards(this.hand, this.discard, this.hand.length);
-	this.moveCards(this.play, this.discard, this.play.length);
+	moveCards(this.hand, this.discard, this.hand.length);
+	moveCards(this.play, this.discard, this.play.length);
 	
 	// standby phase
 	this.phase = 0;
+	
+	this.bought = false;
 };
 
-Player.prototype.moveCards = function(src, dest, amt) {
-	if (src && dest && src.length >= amt) {
-		for (var i = 0; i < amt; i++) {
-			dest.push(src.pop());
-		}
-	}
+Player.prototype.canPlayAction = function(card) {
+	return card && this.phase === ACTION_PHASE;
 };
 
-Player.prototype.tryPlay = function(card) {
-	if (card) {
-		if (this.phase === ACTION_PHASE &&
-		    ACTION_PLAY in card.types &&
-			this.action) {
-			this.action--;
-			return ACTION_PLAY;
-		} else if (this.phase === BUY_PHASE &&
-		           TREASURE_PLAY in card.types &&
-				   !this.bought) {
-			return TREASURE_PLAY;
-		}
-	}
-	return null;
+Player.prototype.canPlayTreasure = function(card) {
+	return card && this.phase === BUY_PHASE && !this.bought;
 };
 
-Player.prototype.tryPay = function(card) {
-	if (this.phase === BUY_PHASE &&
-	    card &&
-	    card.coin <= this.coin &&
-		this.buy) {
-		this.coin -= card.coin;
-		this.buy--;
-
-		if (!this.bought) {
-			this.bought = true;
-		}
-		return true;
-	}
-	return false;
+Player.prototype.canBuy = function(card) {
+	return card && this.phase === BUY_PHASE;
 };
 
 Player.prototype.canReact = function(item) {
@@ -177,7 +116,6 @@ Player.prototype.canReact = function(item) {
 };
 
 Player.prototype.countScore = function() {
-	
 	this.getScoreIn(this.hand);
 	this.getScoreIn(this.play);
 	this.getScoreIn(this.deck);

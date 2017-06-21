@@ -29,5 +29,14 @@ module.exports = {
 		return arr.some(function (v) {
 			return haystack.indexOf(v) >= 0;
 		});
+	},
+	
+	moveCards: function(src, dest, amt) {
+		if (src && dest && src.length >= amt) {
+			for (var i = 0; i < amt; i++) {
+				dest.push(src.pop());
+			}
+		}
 	}
+	
 };

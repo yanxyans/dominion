@@ -1,11 +1,20 @@
 var Player = require('./player');
-var getRandomInt = require('./util').getRandomInt;
 var Card = require('./card');
+
+var getRandomInt = require('./util').getRandomInt;
+var moveCards = require('./util').moveCards;
 
 var MAX_PLAYERS = 4;
 var MIN_PLAYERS = 2;
+
 var TURN_DRAW_AMT = 5;
+
+var ACTION_PHASE = 1;
+var BUY_PHASE = 2;
 var CLEANUP_PHASE = 3;
+
+var ACTION_PLAY = 'action';
+var TREASURE_PLAY = 'treasure';
 
 function Game(start, piles) {
 	this.start = start;
@@ -18,6 +27,10 @@ function Game(start, piles) {
 	
 	this.turn = -1;
 	this.todo = [];
+	
+	this.action = 0;
+	this.buy = 0;
+	this.coin = 0;
 }
 
 Game.prototype.addPlayer = function(user) {
@@ -87,6 +100,12 @@ Game.prototype.retrieveGameState = function(id) {
 			var visible = id === player.id;
 			var playerState = player.retrievePlayerState(id);
 			playerState.visible = visible;
+			
+			if (playerState.seat === this.turn && this.turn !== -1) {
+				playerState.action = this.action;
+				playerState.buy = this.buy;
+				playerState.coin = this.coin;
+			}
 			return playerState;
 		}, this),
 		piles: this.pilesWork,
@@ -183,17 +202,14 @@ Game.prototype.startGame = function(user) {
 	for (var i = 0; i < len; i++) {
 		var player = this.players[i];
 		
-		// assign player seats
-		player.seat = i;
-		
 		// initialize player variables
-		player.init();
+		player.init(i);
 		
 		// distribute pile cards to player discards
 		for (var j = 0; j < startLen; j++) {
 			var startCard = startHand[j];
 			var startAmount = this.start[startCard];
-			this.moveCards(this.pilesWork[startCard], player.discard, startAmount); 
+			moveCards(this.pilesWork[startCard], player.discard, startAmount); 
 		}
 
 		// player starts with five cards in hand
@@ -203,8 +219,8 @@ Game.prototype.startGame = function(user) {
 	// designate the first turn
 	var firstTurn = getRandomInt(0, len);
 	var firstPlayer = this.players[firstTurn];
-	firstPlayer.start();
 	
+	this.resetResources(firstPlayer);
 	this.turn = firstTurn;
 	
 	return {
@@ -213,12 +229,14 @@ Game.prototype.startGame = function(user) {
 	};
 };
 
-Game.prototype.moveCards = function(src, dest, amt) {
-	if (src && dest && src.length >= amt) {
-		for (var i = 0; i < amt; i++) {
-			dest.push(src.pop());
-		}
-	}
+Game.prototype.resetResources = function(player) {
+	this.action = 1;
+	this.buy = 1;
+	this.coin = 0;
+	
+	player.phase = ACTION_PHASE;
+	
+	player.bought = false;
 };
 
 Game.prototype.view = function(ret) {
@@ -268,8 +286,8 @@ Game.prototype.setPhase = function(user, phase, end) {
 			
 			var nextTurn = (this.turn + 1) % this.players.length;
 			var nextPlayer = this.players[nextTurn];
-			nextPlayer.start();
 			
+			this.resetResources(nextPlayer);
 			this.turn = nextTurn;
 		}
 	}
@@ -379,35 +397,60 @@ Game.prototype.handleTodo = function(todo, cards, index) {
 Game.prototype.handlePlay = function(player, cards, index) {
 	if (player && cards && cards === player.hand && index in cards) {
 		var card = cards[index];
-		var playType = player.tryPlay(card);
 		
-		if (playType) {
-			cards.splice(index, 1);
-			player.play.push(card);
-			
-			// apply played card
-			card.types[playType](player, this);
-			
-			this.advanceTodo(this.todo);
-			return true;
+		if (card) {
+			if (ACTION_PLAY in card.types &&
+				player.canPlayAction(card) &&
+				this.action) {
+				this.action--;
+				this.playCard(player, cards.splice(index, 1)[0], ACTION_PLAY);
+				return true;
+			} else if (TREASURE_PLAY in card.types &&
+					   player.canPlayTreasure(card) &&
+					   !this.bought) {
+				this.playCard(player, cards.splice(index, 1)[0], TREASURE_PLAY);
+				return true;
+			}
 		}
 	}
 	
 	return false;
 };
 
+Game.prototype.playCard = function(player, card, playType) {
+	player.play.push(card);
+	
+	// apply
+	card.types[playType](player, this);
+	
+	this.advanceTodo(this.todo);
+};
+
 Game.prototype.handleBuy = function(player, cards, index) {
 	if (player && cards in this.pilesWork && index in this.pilesWork[cards]) {
 		var pile = this.pilesWork[cards];
 		var card = pile[index];
-		if (player.tryPay(card)) {
-			
-			// gain event
-			pile.splice(index, 1);
-			player.discard.push(card);
-			
-			this.advanceTodo(this.todo);
-			return true;
+		
+		if (card) {
+			if (player.canBuy(card) &&
+				card.coin <= this.coin &&
+				this.buy) {
+				
+				// purchase
+				this.coin -= card.coin;
+				this.buy--;
+				
+				if (!player.bought) {
+					player.bought = true;
+				}
+				
+				// gain event
+				pile.splice(index, 1);
+				player.discard.push(card);
+				
+				this.advanceTodo(this.todo);
+				return true;
+			}
 		}
 	}
 	
