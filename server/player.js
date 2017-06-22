@@ -40,7 +40,8 @@ Player.prototype.retrievePlayerState = function(id) {
 		hand: this.hand.map(this.getCardName.bind(null, visible)),
 		play: this.play.map(this.getCardName.bind(null, true)),
 		phase: this.phase,
-		seat: this.seat
+		seat: this.seat,
+		points: this.points
 	};
 };
 
@@ -115,25 +116,20 @@ Player.prototype.canReact = function(item) {
 	return false;
 };
 
-Player.prototype.countScore = function() {
-	this.getScoreIn(this.hand);
-	this.getScoreIn(this.play);
-	this.getScoreIn(this.deck);
-	this.getScoreIn(this.discard);
-
-	return {
-		name: this.name,
-		score: this.points
-	};
+Player.prototype.countScore = function(game) {
+	this.getScoreIn(this.hand, game);
+	this.getScoreIn(this.play, game);
+	this.getScoreIn(this.deck, game);
+	this.getScoreIn(this.discard, game);
 };
 
-Player.prototype.getScoreIn = function(stack) {
+Player.prototype.getScoreIn = function(stack, game) {
 	for (var i = 0; i < stack.length; i++) {
 		var card = stack[i];
 		if ('victory' in card.types) {
-			card.types.victory(this);
+			card.types.victory(this, game);
 		} else if ('curse' in card.types) {
-			card.types.curse(this);
+			card.types.curse(this, game);
 		}
 	}
 };

@@ -49,7 +49,6 @@ var FirstGame = {
 	}
 };
 room.newRoom(FirstGame.name, FirstGame.start, FirstGame.piles);
-room.newRoom("test", FirstGame.start, FirstGame.piles);
 
 // We point to our static assets
 app.use(express.static(publicPath));
@@ -132,13 +131,13 @@ io.on('connection', function(socket) {
 					game.startGame(user) && room.updateRoom(current);
 					break;
 				case "Action":
-					game.setPhase(user, ACTION_PHASE, room.updateEnd.bind(room, current)) && room.updateRoom(current);
+					game.setPhase(user, ACTION_PHASE) && room.updateRoom(current);
 					break;
 				case "Buy":
-					game.setPhase(user, BUY_PHASE, room.updateEnd.bind(room, current)) && room.updateRoom(current);
+					game.setPhase(user, BUY_PHASE) && room.updateRoom(current);
 					break;
 				case "Cleanup":
-					game.setPhase(user, CLEANUP_PHASE, room.updateEnd.bind(room, current)) && room.updateRoom(current);
+					game.setPhase(user, CLEANUP_PHASE) && room.updateRoom(current);
 					break;
 				default:
 					game.tryControl(user, cntrl) && room.updateRoom(current);

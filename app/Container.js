@@ -61,16 +61,12 @@ class Container extends React.Component {
 	_tapCard = (src, index) => {
 		this.socket.emit('_tap_card', src, index);
 	};
-	_endState = (data) => {
-		console.log(data);
-	};
 	
 	componentDidMount = () => {
 		this.socket = io();
 		this.socket.on('_init', this._init);
 		this.socket.on('_user_state', this._updateUserState);		
 		this.socket.on('_room_state', this._updateRoomState);
-		this.socket.on('_end_state', this._endState);
 	}
 	
   render() {

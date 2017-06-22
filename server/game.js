@@ -160,7 +160,7 @@ Game.prototype.startGame = function(user) {
 			head: 'err',
 			body: 'only players may start game'
 		};
-	} else if (this.state !== "INIT") {
+	} else if (this.state === "MAIN") {
 		return {
 			head: 'err',
 			body: 'game is in progress'
@@ -250,13 +250,15 @@ Game.prototype.view = function(ret) {
 					if (this.turn === player.seat) {
 						player.control = ["Action", "Buy", "Cleanup"];
 					}
+				} else if (this.state === "END") {
+					player.control = ["Start"];
 				}
 			}
 		}
 	}
 };
 
-Game.prototype.setPhase = function(user, phase, end) {
+Game.prototype.setPhase = function(user, phase) {
 	if (!user || this.state !== "MAIN") {
 		return false;
 	}
@@ -276,36 +278,34 @@ Game.prototype.setPhase = function(user, phase, end) {
 	}
 	
 	player.phase = phase;
-	if (player.phase === CLEANUP_PHASE) {
-		if (this.endCondition()) {
-			this.endGame(end);
-		} else {
-			// initiate cleanup sequence
-			player.cleanUp();
-			player.draw(TURN_DRAW_AMT);
+	if (phase === CLEANUP_PHASE) {
+		// cleanup sequence
+		player.cleanUp();
+		player.draw(TURN_DRAW_AMT);
+		
+		if (!this.pilesWork.province.length ||
+		   (Object.keys(this.pilesWork).filter(function(pile) {
+			   return !this[pile].length;
+		   }, this.pilesWork).length >= 3)) {
+			// game end
 			
-			var nextTurn = (this.turn + 1) % this.players.length;
-			var nextPlayer = this.players[nextTurn];
+			var len = this.players.length;
+			for (var i = 0; i < len; i++) {
+				player = this.players[i];
+				player.countScore(this);
+			}
 			
-			this.resetResources(nextPlayer);
-			this.turn = nextTurn;
+			this.state = "END";
 		}
+		
+		var nextTurn = (this.turn + 1) % this.players.length;
+		var nextPlayer = this.players[nextTurn];
+		
+		this.resetResources(nextPlayer);
+		this.turn = nextTurn;
 	}
 	
 	return true;
-};
-
-Game.prototype.endCondition = function() {
-	return this.state === "MAIN" && (!this.pilesWork.province.length || (Object.keys(this.pilesWork).filter(function(pile) { return !this.pilesWork[pile].length; }, this).length >= 3));
-};
-
-Game.prototype.endGame = function(end) {
-	end(this.players.map(function(player) {
-		return player.countScore();
-	}).sort(function(a, b) {
-		return b.score - a.score;
-	}));
-	this.state = "INIT";
 };
 
 Game.prototype.tapCard = function(user, src, index) {

@@ -25,6 +25,7 @@ export default class GameComponent extends React.Component {
 							<List>
 								<ListItem primaryText={player.name} secondaryText={
 									'deck=' + player.deck +
+									' points=' + player.points +
 									('action' in player ? ' action=' + player.action : '') +
 									('buy' in player ? ' buy=' + player.buy : '') +
 									('coin' in player ? ' coin=' + player.coin : '')

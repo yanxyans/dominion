@@ -177,13 +177,4 @@ Room.prototype.toggleUserType = function(name, user) {
 	};
 };
 
-Room.prototype.updateEnd = function(name, data) {
-	var room = this.rooms[name];
-	if (!room) {
-		return false;
-	}
-	
-	this.io.sockets.in(name).emit('_end_state', data);
-};
-
 module.exports = Room;
