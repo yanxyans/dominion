@@ -36,7 +36,7 @@ function Game(start, piles) {
 Game.prototype.addPlayer = function(user) {
 	if (this.players.length >= MAX_PLAYERS) {
 		return false;
-	} else if (this.state !== "INIT") {
+	} else if (this.state === "MAIN") {
 		return false;
 	} else if (!user) {
 		return false;
@@ -58,7 +58,7 @@ Game.prototype.removePlayer = function(user) {
 		return false;
 	}
 
-	if (this.state === "INIT") {
+	if (this.state !== "MAIN") {
 		// free up a player slot
 		this.players.splice(slot, 1);
 	} else {
@@ -115,7 +115,10 @@ Game.prototype.retrieveGameState = function(id) {
 	};
 	
 	if (todo) {
-		todo.view(ret)
+		var item = todo.getItem();
+		if (item && item.view) {
+			item.view(ret);
+		}
 	} else {
 		this.view(ret);
 	}
@@ -316,7 +319,8 @@ Game.prototype.tapCard = function(user, src, index) {
 	var userIndex = this.getPlayIndex(user.id);
 	var todo = this.getTodo(this.todo);
 	if (todo) {
-		if (userIndex !== todo.turn()) {
+		var item = todo.getItem();
+		if (userIndex !== item.turn) {
 			return false;
 		}
 	} else {
@@ -329,7 +333,7 @@ Game.prototype.tapCard = function(user, src, index) {
 	var cards = this.getCards(src);
 	
 	var ret = false;
-	if (player) {
+	if (player && cards) {
 		if (todo) {
 			ret = this.handleTodo(todo, cards, index);
 		} else if (cards === player.hand) {
@@ -385,10 +389,13 @@ Game.prototype.getPileCards = function(src) {
 };
 
 Game.prototype.handleTodo = function(todo, cards, index) {
-	if (todo && todo.apply) {
-		todo.apply(cards, index);
-		this.advanceTodo(this.todo);
-		return true;
+	if (todo) {
+		var item = todo.getItem();
+		if (item && item.apply) {
+			item.apply(cards, index);
+			this.advanceTodo(this.todo);
+			return true;
+		}
 	}
 	
 	return false;
@@ -464,12 +471,20 @@ Game.prototype.tryControl = function(user, cntrl) {
 	
 	var userIndex = this.getPlayIndex(user.id);
 	var todo = this.getTodo(this.todo);
-	if (!todo || userIndex !== todo.turn() || !todo.cont) {
+	if (!todo) {
 		return false;
 	}
 	
-	var ret = todo.cont(cntrl);
-	this.advanceTodo(this.todo);
+	var item = todo.getItem();
+	if (userIndex !== item.turn || item.controls.indexOf(cntrl) === -1) {
+		return false;
+	}
+	
+	var ret = item[cntrl]();
+	if (ret) {
+		this.advanceTodo(this.todo);
+	}
+	
 	return ret;
 };
 
@@ -511,7 +526,7 @@ Game.prototype.advanceItem = function(item) {
 				
 				if (item.main.length) {
 					var m = item.main[0];
-					if (!m.resolvable()) {
+					if (!m.resolvable) {
 						return false;
 					}
 					
@@ -533,7 +548,7 @@ Game.prototype.advanceItem = function(item) {
 				
 				if (item.trigger.length) {
 					var t = item.trigger[0];
-					if (!t.resolvable()) {
+					if (!t.resolvable) {
 						return false;
 					}
 					
@@ -566,12 +581,9 @@ Game.prototype.handleReactions = function(item) {
 		
 		let t = (turn + i) % len;
 		let player = this.players[t];
-		let func = function() {
-			return t;
-		};
 		item.react.push({
 			// react event
-			turn: func,
+			turn: t,
 			resolved: false,
 			usable: function(item) {
 				// can use on item
@@ -586,8 +598,9 @@ Game.prototype.handleReactions = function(item) {
 					}
 				}
 			},
-			cont: function(cntrl) {
-				if (cntrl === "finish" && !this.resolved) {
+			controls: ["Finish"],
+			Finish: function() {
+				if (!this.resolved) {
 					this.resolved = true;
 					return true;
 				}
@@ -595,7 +608,7 @@ Game.prototype.handleReactions = function(item) {
 			},
 			view: function(disp) {
 				if (disp.players[t].visible) {
-					disp.players[t].control = ["finish"];
+					disp.players[t].control = ["Finish"];
 				}
 			}
 		});

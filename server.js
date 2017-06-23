@@ -27,7 +27,8 @@ var FirstGame = {
 	name: 'First Game',
 	start: {
 		estate: 3,
-		copper: 7
+		copper: 7,
+		cellar: 1
 	},
 	piles: {
 		copper: [60, 60, 60],
