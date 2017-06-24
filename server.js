@@ -27,11 +27,7 @@ var FirstGame = {
 	name: 'First Game',
 	start: {
 		copper: 7,
-		estate: 3,
-		market: 1,
-		moat: 1,
-		smithy: 1,
-		village: 1
+		estate: 3
 	},
 	piles: {
 		copper: [60, 60, 60],

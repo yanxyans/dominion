@@ -244,22 +244,22 @@ function militiaAction(player, game) {
 	if (player && game) {
 		game.coin += 2;
 		
-		let attacker = player.seat;
-		let len = game.players.length;
+		var attacker = player.seat;
+		var len = game.players.length;
 		for (let i = 1; i < len; i++) {
 			let toAttack = {};
 			let index = (attacker + i) % len;
 			toAttack[index] = game.players[index];
 			
-			let attackTask = new Task(attacker,
+			var attackTask = new Task(attacker,
 				function(item) {
-					let attacked = toAttack[index];
+					var attacked = toAttack[index];
 					if (attacked && attacked.hand.length > 3) {
 						item.todo.push(militiaAttack(attacked));
 					}
 				}, true);
 			
-			let attackItem = new Item([attackTask], [], "attack", attacker);
+			var attackItem = new Item([attackTask], [], "attack", attacker);
 			attackItem.targets = toAttack;
 			
 			game.todo.push(attackItem);

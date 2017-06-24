@@ -3,6 +3,7 @@ var Card = require('./card');
 
 var getRandomInt = require('./util').getRandomInt;
 var moveCards = require('./util').moveCards;
+var Task = require('./task');
 
 var MAX_PLAYERS = 4;
 var MIN_PLAYERS = 2;
@@ -138,7 +139,7 @@ Game.prototype.reconnect = function(user, slot) {
 			body: 'user is already playing'
 		};
 	}
-
+	
 	var res = this.takePlayerSlot(user, slot);
 	if (res) {
 		return {
@@ -214,7 +215,7 @@ Game.prototype.startGame = function(user) {
 			var startAmount = this.start[startCard];
 			moveCards(this.pilesWork[startCard], player.discard, startAmount); 
 		}
-
+		
 		// player starts with five cards in hand
 		player.draw(TURN_DRAW_AMT);
 	}
@@ -575,21 +576,26 @@ Game.prototype.getTodo = function(todo) {
 };
 
 Game.prototype.handleReactions = function(item) {
-	var turn = item.origin;
+	var origin = item.origin;
 	var len = this.players.length;
 	for (let i = 0; i < len; i++) {
 		
-		let t = (turn + i) % len;
-		let player = this.players[t];
-		item.react.push({
-			// react event
-			turn: t,
-			resolved: false,
-			usable: function(item) {
-				// can use on item
-				return player.canReact(item) && !this.resolved;
+		let turn = (origin + i) % len;
+		let player = this.players[turn];
+		
+		var reactTask = new Task(turn, undefined, false,
+			function(item) {
+				return player.canReact(item) && !this.resolvable;
 			},
-			apply: function(cards, index) {
+			function(ret) {
+				if (ret && ret.players) {
+					var retp = ret.players[turn];
+					if (retp && retp.visible) {
+						retp.control = ["Finish"];
+					}
+				}
+			},
+			function(cards, index) {
 				// use react card
 				if (cards === player.hand && index in cards) {
 					var card = cards[index];
@@ -598,27 +604,21 @@ Game.prototype.handleReactions = function(item) {
 					}
 				}
 			},
-			controls: ["Finish"],
-			Finish: function() {
-				if (!this.resolved) {
-					this.resolved = true;
+			{
+				Finish: function() {
+					this.resolvable = true;
 					return true;
 				}
-				return false;
-			},
-			view: function(disp) {
-				if (disp.players[t].visible) {
-					disp.players[t].control = ["Finish"];
-				}
-			}
-		});
+			});
+		
+		item.react.push(reactTask);
 	}
 };
 
 Game.prototype.advanceReactions = function(item) {
 	while (item.react.length) {
 		var r = item.react[0];
-		if (r.usable(item)) {
+		if (r.valid(item)) {
 			break;
 		}
 		
