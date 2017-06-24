@@ -26,8 +26,12 @@ var room = new Room(io);
 var FirstGame = {
 	name: 'First Game',
 	start: {
-		mine: 1,
-		copper: 4
+		copper: 7,
+		estate: 3,
+		market: 1,
+		moat: 1,
+		smithy: 1,
+		village: 1
 	},
 	piles: {
 		copper: [60, 60, 60],

@@ -1,9 +1,9 @@
-function Task(turn, resolve, valid, resolvable, view, apply, controls) {
+function Task(turn, resolve, resolvable, valid, view, apply, controls) {
 	this.turn = turn;
 	
 	this.resolve = resolve;
-	this.valid = valid;
 	this.resolvable = resolvable;
+	this.valid = valid;
 	
 	this.view = view;
 	this.apply = apply;
