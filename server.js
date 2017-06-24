@@ -24,29 +24,29 @@ var Room = require(roomPath);
 var User = require(userPath);
 var room = new Room(io);
 var FirstGame = {
-	name: 'First Game',
-	start: {
-		copper: 7,
-		estate: 3
-	},
-	piles: {
-		copper: [60, 60, 60],
-		silver: [40, 40, 40],
-		gold: [30, 30, 30],
-		estate: [14, 21, 24],
-		duchy: [8, 12, 12],
-		province: [8, 12, 12],
-		cellar: [10, 10, 10],
-		market: [10, 10, 10],
-		militia: [10, 10, 10],
-		mine: [10, 10, 10],
-		moat: [10, 10, 10],
-		remodel: [10, 10, 10],
-		smithy: [10, 10, 10],
-		village: [10, 10, 10],
-		woodcutter: [10, 10, 10],
-		workshop: [10, 10, 10]
-	}
+    name: 'First Game',
+    start: {
+        copper: 7,
+        estate: 3
+    },
+    piles: {
+        copper: [60, 60, 60],
+        silver: [40, 40, 40],
+        gold: [30, 30, 30],
+        estate: [14, 21, 24],
+        duchy: [8, 12, 12],
+        province: [8, 12, 12],
+        cellar: [10, 10, 10],
+        market: [10, 10, 10],
+        militia: [10, 10, 10],
+        mine: [10, 10, 10],
+        moat: [10, 10, 10],
+        remodel: [10, 10, 10],
+        smithy: [10, 10, 10],
+        village: [10, 10, 10],
+        woodcutter: [10, 10, 10],
+        workshop: [10, 10, 10]
+    }
 };
 room.newRoom(FirstGame.name, FirstGame.start, FirstGame.piles);
 
@@ -83,71 +83,81 @@ server.listen(port, function () {
 });
 
 io.on('connection', function(socket) {
-	var user = new User(socket);
-	var game = null;
-	var current = null;
-	socket.emit('_init', user.name);
-	
-	socket.on('_set_name', function(name) {
-		var res = user.setName(name);
-	});
-	
-	socket.on('_join_room', function(name) {
-		var res = room.joinUser(name, user);
-		if (res.head === 'ok') {
-			game = room.getGame(user.current);
-			current = user.current;
-		}
-	});
-	socket.on('_set_room', function(name) {
-		var res = user.joinRoom(name);
-		if (res) {
-			room.updateRoom(user.current);
-			game = room.getGame(user.current);
-			current = user.current;
-		}
-	});
-	
-	socket.on('_recon_room', function(slot) {
-		if (game && current) {
-			var res = game.reconnect(user, slot);
-			if (res.head === 'ok') {
-				room.toggleUserType(current, user);
-				room.updateRoom(current);
-			}
-		}
-	});
-	
-	socket.on('disconnect', function() {
-		user.disconnect(room);
-	});
-	
-	// game routines
-	
-	socket.on('_send_control', function(cntrl) {
-		if (game && current) {
-			switch (cntrl) {
-				case "Start":
-					game.startGame(user) && room.updateRoom(current);
-					break;
-				case "Action":
-					game.setPhase(user, ACTION_PHASE) && room.updateRoom(current);
-					break;
-				case "Buy":
-					game.setPhase(user, BUY_PHASE) && room.updateRoom(current);
-					break;
-				case "Cleanup":
-					game.setPhase(user, CLEANUP_PHASE) && room.updateRoom(current);
-					break;
-				default:
-					game.tryControl(user, cntrl) && room.updateRoom(current);
-			}
-		}
-	});
-	
-	socket.on('_tap_card', function(src, index) {
-		if (game && current) {
-			game.tapCard(user, src, index) && room.updateRoom(current);
-		}
-	});
+    
+    var user = new User(socket);
+    
+    var game = null;
+    var current = null;
+    
+    socket.emit('_init', user.name);
+    
+    socket.on('_set_name', function(name) {
+        var res = user.setName(name);
+    });
+    
+    socket.on('_join_room', function(name) {
+        var res = room.joinUser(name, user);
+        if (res.head === 'ok') {
+            game = room.getGame(user.current);
+            current = user.current;
+        }
+    });
+    
+    socket.on('_set_room', function(name) {
+        var res = user.joinRoom(name);
+        if (res) {
+            room.updateRoom(user.current);
+            game = room.getGame(user.current);
+            current = user.current;
+        }
+    });
+    
+    socket.on('_recon_room', function(slot) {
+        if (game && current) {
+            var res = game.reconnect(user, slot);
+            if (res.head === 'ok') {
+                room.toggleUserType(current, user);
+                room.updateRoom(current);
+            }
+        }
+    });
+    
+    socket.on('disconnect', function() {
+        user.disconnect(room);
+    });
+    
+    // game routines
+    
+    socket.on('_send_control', function(cntrl) {
+        if (game && current) {
+            var res = false;
+            switch (cntrl) {
+                case "Start":
+                    res = game.startGame(user);
+                    break;
+                case "Action":
+                    res = game.setPhase(user, ACTION_PHASE);
+                    break;
+                case "Buy":
+                    res = game.setPhase(user, BUY_PHASE);
+                    break;
+                case "Cleanup":
+                    res = game.setPhase(user, CLEANUP_PHASE);
+                    break;
+                default:
+                    res = game.tryControl(user, cntrl);
+            }
+            
+            if (res) {
+                room.updateRoom(current);
+            }
+        }
+    });
+    
+    socket.on('_tap_card', function(src, index) {
+        if (game && current) {
+            game.tapCard(user, src, index) && room.updateRoom(current);
+        }
+    });
+    
 });

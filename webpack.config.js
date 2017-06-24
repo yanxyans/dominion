@@ -43,24 +43,24 @@ var config = {
       test: /\.js$/,
       loader: 'babel',
       exclude: [nodeModulesPath],
-			query: {
-				presets: ['es2015', 'stage-0', 'react']
-			}
+            query: {
+                presets: ['es2015', 'stage-0', 'react']
+            }
     },
-		
-		// Let us also add the style-loader and css-loader, which you can
+        
+        // Let us also add the style-loader and css-loader, which you can
     // expand with less-loader etc.
     {
       test: /\.css$/,
       loader: 'style!css'
     }
-		
+        
     ]
   },
-	
-	resolve : {
-		extensions: ['', '.js', '.jsx']
-	},
+    
+    resolve : {
+        extensions: ['', '.js', '.jsx']
+    },
 
   // We have to manually add the Hot Replacement plugin when running
   // from Node

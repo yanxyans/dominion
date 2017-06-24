@@ -18,26 +18,26 @@ var config = {
       test: /\.js$/,
       loader: 'babel',
       exclude: [nodeModulesPath],
-			query: {
-				presets: ['es2015', 'stage-0', 'react']
-			}
+            query: {
+                presets: ['es2015', 'stage-0', 'react']
+            }
     },{
       test: /\.css$/,
       loader: 'style!css'
     }]
   },
-	resolve : {
-		extensions: ['', '.js', '.jsx']
-	},
-	
-	plugins: [
-		new Webpack.DefinePlugin({
-			'process.env': {
-				NODE_ENV: JSON.stringify('production')
-			}
-		}),
-		new Webpack.optimize.UglifyJsPlugin()
-	]
+    resolve : {
+        extensions: ['', '.js', '.jsx']
+    },
+    
+    plugins: [
+        new Webpack.DefinePlugin({
+            'process.env': {
+                NODE_ENV: JSON.stringify('production')
+            }
+        }),
+        new Webpack.optimize.UglifyJsPlugin()
+    ]
 };
 
 module.exports = config;
