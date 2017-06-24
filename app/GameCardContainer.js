@@ -31,7 +31,7 @@ export default class GameCardContainer extends React.Component {
 		return (
 			<div id={this.props.type}>
 				<Subheader onTouchTap={this.toggleLast}
-									 style={this.state.toggle ? styles.toggleOn : styles.toggleOff}
+                           style={this.state.toggle ? styles.toggleOn : styles.toggleOff}
 				>
 					{this.props.type}
 				</Subheader>
@@ -39,8 +39,8 @@ export default class GameCardContainer extends React.Component {
 					{this.props.cards.map(function(card, index) {
 						return (!this.state.toggle || (index === this.props.cards.length - 1)) &&
 							<GameCard key={index}
-												name={card} amt={-1}
-												onTouchTap={this.props._tapCard.bind(null, ['players', this.props.seat, this.props.type], index)} />;
+                                      name={card} amt={-1}
+                                      onTouchTap={this.props._tapCard.bind(null, ['players', this.props.seat, this.props.type], index)} />;
 					}, this)}
 				</div>
 			</div>

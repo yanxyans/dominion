@@ -55,7 +55,7 @@ export default class GameComponent extends React.Component {
 					{this.props.trash.length !== 0 && <MobileTearSheet>
 						<div id='trash' style={styles.wrapper}>
 							{this.props.trash.map(function(tr, index) {
-								return <GameCard name={tr} key={index}
+								return <GameCard name={tr} key={index} amt={-1}
 								                 onTouchTap={this._tapCard.bind(null, ['trash'], index)} />;
 							}, this.props)}
 						</div>

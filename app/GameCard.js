@@ -26,7 +26,7 @@ const GameCard = (props) => (
 			overlay={props.amt === -1 ? null :
 				<CardTitle title={props.amt}
 				           style={styles.t}
-									 titleStyle={styles.title} />
+                           titleStyle={styles.title} />
 			}
 		>
 			<img src={props.name ? '/asset/cards/' + props.name + '.jpg' : '/asset/cards/blank.jpg'} />
