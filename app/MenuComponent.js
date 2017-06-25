@@ -49,7 +49,8 @@ export default class MenuComponent extends React.Component {
                         {Object.keys(this.props.rooms).map(function(room, index) {
                             var room = this[index];
                             return <ListItem key={index}
-                                             primaryText={room}/>;
+                                             primaryText={room}
+                                             value={room}/>;
                         }, this.props.rooms)}
                     </RoomList>
                     

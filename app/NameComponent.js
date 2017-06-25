@@ -15,7 +15,6 @@ export default class NameComponent extends React.Component {
     _handleOpen = () => {
         this.setState({open: true});
     }
-    
     _handleClose = () => {
         this.setState({open: false, name: ''});
     }
@@ -44,7 +43,7 @@ export default class NameComponent extends React.Component {
             <div>
                 <ListItem primaryText={this.props.name}
                           onTouchTap={this._handleOpen}/>
-                <Dialog title='enter new display name'
+                <Dialog title='enter new name'
                         actions={actions}
                         modal={false}
                         open={this.state.open}
