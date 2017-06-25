@@ -24,7 +24,7 @@ var Room = require(roomPath);
 var User = require(userPath);
 var room = new Room(io);
 var FirstGame = {
-    name: 'First Game',
+    name: 'first game',
     start: {
         copper: 7,
         estate: 3

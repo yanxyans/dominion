@@ -132,7 +132,7 @@ Room.prototype.retrieveRoomState = function(room, id) {
 		users: Object.keys(room.users).map(function(uid) {
 			return {
 				name: this[uid].name,
-				type: this[uid].type
+				type: this[uid].type.toLowerCase()
 			};
 		}, room.users),
 		players: gameState.players,

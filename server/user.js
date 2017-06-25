@@ -1,8 +1,7 @@
 function User(socket) {
 	this.socket = socket;
 	this.id = socket.id;
-	// generate a random name
-	this.name = socket.id.substring(0, 7);
+	this.name = "set name";
 	
 	this.rooms = {};
 	this.current = null;

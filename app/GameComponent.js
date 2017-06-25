@@ -29,7 +29,7 @@ export default class GameComponent extends React.Component {
 									('action' in player ? ' action=' + player.action : '') +
 									('buy' in player ? ' buy=' + player.buy : '') +
 									('coin' in player ? ' coin=' + player.coin : '')
-								} onTouchTap={this._reconnectRoom.bind(null, player.seat)} />
+								} onTouchTap={this._reconRoom.bind(null, player.seat)} />
 							</List>
 							{player.control &&
 							 <ControlComponent controls={player.control}
