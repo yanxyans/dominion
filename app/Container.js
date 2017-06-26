@@ -31,7 +31,7 @@ class Container extends React.Component {
 		users: [],
 		players: [],
 		piles: {},
-		trash: []
+		trash: null
 	}
 	
 	_init = (name) => {

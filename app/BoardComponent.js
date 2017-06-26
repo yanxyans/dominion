@@ -15,9 +15,11 @@ export default class BoardComponent extends React.Component {
                                       _tapCard={this._tapCard.bind(null, ['piles', pile])}
                                       open={false}/>;
                     }, this.props)}
+                    
+                    {this.props.trash &&
                     <Stack data={this.props.trash}
                            _tapCard={this.props._tapCard.bind(null, ['trash'])}
-                           open={false}/>
+                           open={false}/>}
                 </Paper>
             </FullWidthSection>
         );
