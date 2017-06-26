@@ -30,6 +30,15 @@ export default class Stack extends React.Component {
         this.setState({open: !this.state.open});
     }
     
+    _getIndex = (index) => {
+        var stack = this.state.open ? styles.unstacked : styles.stacked;
+        return Object.assign(
+            {},
+            {zIndex:index},
+            stack
+        );
+    }
+    
     render() {
         var data = this.props.data;
         var click = data.length ? this.props._tapCard.bind(null, data.length - 1) : null;
@@ -43,8 +52,7 @@ export default class Stack extends React.Component {
                     {this.props.data.slice(this.state.open ? null : -5).map(function(item, index) {
                         return <img key={index}
                                     src={'/asset/cards/' + (item.name ? item.name : 'back') + '.jpg'}
-                                    style={{zIndex:index}}
-                                    style={this.state.open ? styles.unstacked : styles.stacked}
+                                    style={this._getIndex(index)}
                                     onTouchTap={this.state.open ? this.props._tapCard.bind(null, index) : null}/>;
                     }, this)}
                 </div>
