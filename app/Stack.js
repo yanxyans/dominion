@@ -38,7 +38,8 @@ export default class Stack extends React.Component {
         
         return (
             <div id='wrap'>
-                <IconButton onTouchTap={this._handleToggle}>
+                <IconButton onTouchTap={this._handleToggle}
+                            tooltip={this.props.tooltip}>
                     {this.state.open ? <ActionRemove/> : <ActionAdd/>}
                 </IconButton>
                 <div onTouchTap={this.state.open ? null : click} id='stack'>

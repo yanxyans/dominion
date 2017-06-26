@@ -21,7 +21,7 @@ function Game(start, piles) {
     this.start = start;
     this.pilesOrigin = piles;
     this.pilesWork = {};
-    this.trash = [];
+    this.trash = null;
     
     this.players = [];
     this.state = "INIT";

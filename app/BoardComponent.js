@@ -12,12 +12,14 @@ export default class BoardComponent extends React.Component {
                     {Object.keys(this.props.piles).map(function(pile, index) {
                         return <Stack key={index}
                                       data={this.piles[pile]}
+                                      tooltip='pile'
                                       _tapCard={this._tapCard.bind(null, ['piles', pile])}
                                       open={false}/>;
                     }, this.props)}
                     
                     {this.props.trash &&
                     <Stack data={this.props.trash}
+                           tooltip='trash'
                            _tapCard={this.props._tapCard.bind(null, ['trash'])}
                            open={false}/>}
                 </Paper>

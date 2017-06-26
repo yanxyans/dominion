@@ -39,18 +39,18 @@ export default class PlayerComponent extends React.Component {
                                       _sendControl={_sendControl}/>
                 </div>}
                 
-                discard
                 <Stack data={player.discard}
+                       tooltip='discard'
                        _tapCard={_tapCard.bind(null, source.slice().concat('discard'))}
                        open={true}/>
-                       
-                hand
+                
                 <Stack data={player.hand}
+                       tooltip='hand'
                        _tapCard={_tapCard.bind(null, source.slice().concat('hand'))}
                        open={true}/>
-                       
-                play
+                
                 <Stack data={player.play}
+                       tooltip='play'
                        _tapCard={_tapCard.bind(null, source.slice().concat('play'))}
                        open={true}/>
                        
