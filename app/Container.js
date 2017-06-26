@@ -10,6 +10,8 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MenuComponent from './MenuComponent';
 import GameComponent from './GameComponent';
 
+import Paper from 'material-ui/Paper';
+
 injectTapEventPlugin();
 
 const socket = io();
@@ -78,7 +80,7 @@ class Container extends React.Component {
     render() {
         return (
             <MuiThemeProvider muiTheme={getMuiTheme(darkBaseTheme)}>
-                <div id='container'>
+                <Paper id='container'>
                     <MenuComponent name={this.state.name}
                                    rooms={this.state.rooms}
                                    current={this.state.current}
@@ -92,7 +94,7 @@ class Container extends React.Component {
                                    _reconRoom={this._reconRoom}
                                    _sendControl={this._sendControl}
                                    _tapCard={this._tapCard}/>
-                </div>
+                </Paper>
             </MuiThemeProvider>
         );
     }

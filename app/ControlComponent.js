@@ -1,35 +1,36 @@
 import React from 'react';
 import {
-  Step,
-  Stepper,
-  StepButton,
+    Step,
+    Stepper,
+    StepButton
 } from 'material-ui/Stepper';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
 
 /**
- * Non-linear steppers allow users to enter a multi-step flow at any point.
- *
- * This example is similar to the regular horizontal stepper, except steps are no longer
- * automatically set to `disabled={true}` based on the `activeStep` prop.
- *
- * We've used the `<StepButton>` here to demonstrate clickable step labels.
+ * A basic vertical non-linear implementation
  */
-export default class ControlComponent extends React.Component {
+class ControlComponent extends React.Component {
+  
+    render() {
+        
+        return (
+            <div>
+                <Stepper activeStep={this.props.phase}
+                        linear={false}
+                        orientation="horizontal"
+                >
+                    {this.props.control.map(function(step, index) {
+                        return (
+                            <Step key={index}>
+                                <StepButton onTouchTap={this.bind(null, step)}>
+                                    {step}
+                                </StepButton>
+                            </Step>
+                        );
+                    }, this.props._sendControl)}
+                </Stepper>
+            </div>
+        );
+    }
+}
 
-  render() {
-    return (
-      <div style={{width: '100%', maxWidth: 700, margin: 'auto'}}>
-        <Stepper linear={false}>
-					{this.props.controls.map(function(control, index) {
-						return <Step key={index}>
-							<StepButton onClick={() => this._sendControl(control)}>
-								{control}
-							</StepButton>
-						</Step>;
-					}, this.props)}
-        </Stepper>
-      </div>
-    );
-  }
-};
+export default ControlComponent;

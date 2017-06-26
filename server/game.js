@@ -156,9 +156,7 @@ Game.prototype.retrieveGameState = function(id) {
             return playerState;
         }, this),
         piles: this.pilesWork,
-        trash: this.trash.map(function(c) {
-            return c.name;
-        })
+        trash: this.trash
     };
     
     if (todo) {

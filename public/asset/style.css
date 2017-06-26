@@ -1,28 +1,30 @@
-#container, #game, #players, #gameBoard, #menu {
-	display: flex;
+#board, #stack, #player, #players {
+    display: flex;
 }
 
-#container {
-	flex-flow: row nowrap;
-	justify-content: flex-start;
+#board {
+    flex-flow: row wrap;
+    justify-content: center;
+    flex: 0 1 auto;
 }
 
-#menu, #game {
-	flex-flow: column nowrap;
+#stack {
+    flex-flow: row nowrap;
+    max-width: 300px;
+    overflow: auto;
 }
 
-#menu {
-	flex: 1 1 0;
+#player {
+    flex-flow: column nowrap;
+    align-items: center;
+    flex: 1 0 auto;
 }
 
-#game {
-	flex: 4 1 0;
+#players {
+    justify-content: space-around;
 }
 
-#players, #gameBoard {
-	flex: 1 1 0;
-}
-
-#root {
-	font-family: 'Roboto', sans-serif;
+#wrap {
+    display: flex;
+    align-items: center;
 }

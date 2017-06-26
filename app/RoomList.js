@@ -1,12 +1,13 @@
 import React from 'react';
 import { List, ListItem, makeSelectable } from 'material-ui/List';
+import PropTypes from 'prop-types';
 
 let RoomList = makeSelectable(List);
 
 function wrapState(ComposedComponent) {
     return class RoomList extends React.Component {
         static propTypes = {
-            children: React.PropTypes.node.isRequired
+            children: PropTypes.node.isRequired
         }
 
         _handleRequestChange = (event, room) => {

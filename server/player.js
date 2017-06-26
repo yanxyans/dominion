@@ -46,7 +46,7 @@ Player.prototype.retrievePlayerState = function(id) {
 };
 
 Player.prototype.getCardName = function(visible, card) {
-    return visible && card ? card.name : "";
+    return visible && card ? card : "";
 };
 
 Player.prototype.init = function(seat) {
