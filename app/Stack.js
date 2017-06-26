@@ -7,16 +7,6 @@ import IconButton from 'material-ui/IconButton';
 import ActionAdd from 'material-ui/svg-icons/content/add';
 import ActionRemove from 'material-ui/svg-icons/content/remove';
 
-const styles = {
-    stacked: {
-        maxHeight: '100px',
-        marginRight: '-50px'
-    },
-    unstacked: {
-        maxHeight: '100px'
-    }
-};
-
 export default class Stack extends React.Component {
     constructor(props) {
         super(props);
@@ -30,17 +20,20 @@ export default class Stack extends React.Component {
         this.setState({open: !this.state.open});
     }
     
-    _getIndex = (index) => {
-        var stack = this.state.open ? styles.unstacked : styles.stacked;
+    _getIndex = (index, isLast) => {
+        var margin = this.state.open ? {margin:'5px'} : {marginRight:(isLast ? '0px':'-60px')};
         return Object.assign(
             {},
-            {zIndex:index},
-            stack
+            {zIndex:index, maxHeight:'100px'},
+            margin
         );
     }
     
     render() {
         var data = this.props.data;
+        var display = data.slice(this.state.open ? null : -5);
+        var len = display.length;
+        
         var click = data.length ? this.props._tapCard.bind(null, data.length - 1) : null;
         
         return (
@@ -49,10 +42,10 @@ export default class Stack extends React.Component {
                     {this.state.open ? <ActionRemove/> : <ActionAdd/>}
                 </IconButton>
                 <div onTouchTap={this.state.open ? null : click} id='stack'>
-                    {this.props.data.slice(this.state.open ? null : -5).map(function(item, index) {
+                    {display.map(function(item, index) {
                         return <img key={index}
                                     src={'/asset/cards/' + (item.name ? item.name : 'back') + '.jpg'}
-                                    style={this._getIndex(index)}
+                                    style={this._getIndex(index, index === len - 1)}
                                     onTouchTap={this.state.open ? this.props._tapCard.bind(null, index) : null}/>;
                     }, this)}
                 </div>
