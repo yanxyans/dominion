@@ -25,7 +25,7 @@ export default class GameComponent extends React.Component {
     
     render() {
         return (
-            <div id='game'>
+            <FullWidthSection id='game'>
                 <BoardComponent piles={this.props.piles}
                                 trash={this.props.trash}
                                 _tapCard={this.props._tapCard}
@@ -58,7 +58,7 @@ export default class GameComponent extends React.Component {
                     {this.state.card && this.props.help && <div><img src={'/asset/cards/' + this.state.card + '.jpg'}/></div>}
                     
                 </Paper>
-            </div>
+            </FullWidthSection>
         );
     }
 }
