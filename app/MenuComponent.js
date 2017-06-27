@@ -10,7 +10,9 @@ import NameComponent from './NameComponent';
 import JoinComponent from './JoinComponent';
 
 import Drawer from 'material-ui/Drawer';
-import RaisedButton from 'material-ui/RaisedButton';
+
+import IconButton from 'material-ui/IconButton';
+import ActionMenu from 'material-ui/svg-icons/navigation/menu';
 
 export default class MenuComponent extends React.Component {
     constructor(props) {
@@ -27,10 +29,9 @@ export default class MenuComponent extends React.Component {
     render() {
         return (
             <div>
-                <RaisedButton
-                    label="Open Menu"
-                    onTouchTap={this._handleToggle}
-                />
+                <IconButton onTouchTap={this._handleToggle}>
+                    <ActionMenu/>
+                </IconButton>
                 <Drawer
                     docked={false}
                     open={this.state.open}
@@ -40,6 +41,7 @@ export default class MenuComponent extends React.Component {
                         <NameComponent name={this.props.name}
                                        _setName={this.props._setName}/>
                         <JoinComponent _joinRoom={this.props._joinRoom}/>
+                        <ListItem primaryText='toggle magnify' onTouchTap={this.props._toggleHelp}/>
                     </List>
                     
                     <Divider/>

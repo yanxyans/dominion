@@ -23,6 +23,8 @@ class Container extends React.Component {
 		socket.on('_init', this._init);
 		socket.on('_user_state', this._updateUserState);		
 		socket.on('_room_state', this._updateRoomState);
+        
+        this._joinRoom('first game');
     }
 	state = {
 		name: '',
@@ -31,7 +33,8 @@ class Container extends React.Component {
 		users: [],
 		players: [],
 		piles: {},
-		trash: null
+		trash: null,
+        help: false
 	}
 	
 	_init = (name) => {
@@ -76,21 +79,26 @@ class Container extends React.Component {
 	_tapCard = (src, index) => {
 		socket.emit('_tap_card', src, index);
 	}
+    _toggleHelp = () => {
+        this.setState({help: !this.state.help});
+    }
     
     render() {
         return (
             <MuiThemeProvider muiTheme={getMuiTheme(darkBaseTheme)}>
-                <Paper id='container'>
+                <Paper id='container' zDepth={1}>
                     <MenuComponent name={this.state.name}
                                    rooms={this.state.rooms}
                                    current={this.state.current}
                                    users={this.state.users}
                                    _setName={this._setName}
                                    _joinRoom={this._joinRoom}
-                                   _setRoom={this._setRoom}/>
+                                   _setRoom={this._setRoom}
+                                   _toggleHelp={this._toggleHelp}/>
                     <GameComponent players={this.state.players}
                                    piles={this.state.piles}
                                    trash={this.state.trash}
+                                   help={this.state.help}
                                    _reconRoom={this._reconRoom}
                                    _sendControl={this._sendControl}
                                    _tapCard={this._tapCard}/>

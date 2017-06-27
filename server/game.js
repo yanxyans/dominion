@@ -67,7 +67,7 @@ Game.prototype.removePlayer = function(user) {
         var player = this.players[slot];
         
         player.id = null;
-        player.name = "(disconnected)";
+        player.name = "click to reconnect";
     }
     return true;
 };
@@ -125,7 +125,7 @@ Game.prototype.view = function(ret) {
     if (ret) {
         for (var i = 0; i < ret.players.length; i++) {
             var player = ret.players[i];
-            if (player.visible) {
+
                 if (this.state === "INIT") {
                     player.control = ["Start"];
                 } else if (this.state === "MAIN") {
@@ -135,7 +135,7 @@ Game.prototype.view = function(ret) {
                 } else if (this.state === "END") {
                     player.control = ["Start"];
                 }
-            }
+
         }
     }
 };
@@ -153,6 +153,10 @@ Game.prototype.retrieveGameState = function(id) {
                 playerState.buy = this.buy;
                 playerState.coin = this.coin;
             }
+            
+            var turn = todo ? todo.getItem().turn : this.turn;
+            playerState.turn = turn === player.seat;
+            
             return playerState;
         }, this),
         piles: this.pilesWork,
@@ -574,7 +578,7 @@ Game.prototype.handleReactions = function(item) {
             function(ret) {
                 if (ret && ret.players) {
                     var retp = ret.players[turn];
-                    if (retp && retp.visible) {
+                    if (retp) {
                         retp.control = ["Finish"];
                     }
                 }

@@ -33,15 +33,19 @@ Player.prototype.retrievePlayerState = function(id) {
     var visible = id === this.id;
     return {
         name: this.name,
-        deck: this.deck.length,
-        discard: visible ?
-            this.discard.map(this.getCardName.bind(null, true)) :
-            this.discard.slice(this.discard.length - 1).map(this.getCardName.bind(null, true)),
+        deck: this.deck.map(function(card) {
+            return "";
+        }),
+        discard: this.discard.map(function(card, index) {
+            var show = visible ? true : index === this.discard.length - 1;
+            return this.getCardName(show, card);
+        }, this),
         hand: this.hand.map(this.getCardName.bind(null, visible)),
         play: this.play.map(this.getCardName.bind(null, true)),
         phase: this.phase,
         seat: this.seat,
-        points: this.points
+        points: this.points,
+        disc: this.id === null
     };
 };
 

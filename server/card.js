@@ -46,10 +46,7 @@ function selectItem(main, trigger, type, turn, valid, selectable, controls, sele
         valid(), valid,
         function(ret) {
             var playerView = ret.players[turn];
-            var visible = playerView.visible;
-            if (visible) {
-                playerView.control = Object.keys(controls);
-            }
+            playerView.control = Object.keys(controls);
         },
         function(cards, index) {
             var card = selectable(cards, index, selected);
@@ -61,9 +58,13 @@ function selectItem(main, trigger, type, turn, valid, selectable, controls, sele
             if (found === -1) {
                 // select
                 selected.push(card);
+                
+                card.selected = true;
             } else {
                 // deselect
                 selected.splice(found, 1);
+                
+                delete card.selected;
             }
         },
         controls);
@@ -121,6 +122,8 @@ function gainItem(player, game, valid, selectable, selected, dest) {
         {
             Gain: function() {
                 if (selected.length === 1) {
+                    delete selected[0].selected;
+                    
                     this.resolvable = true;
                     return true;
                 }
@@ -209,6 +212,11 @@ function cellarAction(player, game) {
             },
             {
                 Discard: function() {
+                    var len = selected.length;
+                    for (var i = 0; i < len; i++) {
+                        delete selected[i].selected;
+                    }
+                    
                     this.resolvable = true;
                     return true;
                 }
@@ -290,7 +298,12 @@ function militiaAttack(player) {
         },
         {
             Discard: function() {
-                if (player.hand.length - selected.length === 3) {
+                var len = selected.length;
+                if (player.hand.length - len === 3) {
+                    for (var i = 0; i < len; i++) {
+                        delete selected[i].selected;
+                    }
+                    
                     this.resolvable = true;
                     return true;
                 }
@@ -409,6 +422,11 @@ function mineAction(player, game) {
             },
             {
                 Trash: function() {
+                    var len = selected.length;
+                    for (var i = 0; i < len; i++) {
+                        delete selected[i].selected;
+                    }
+                    
                     this.resolvable = true;
                     return true;
                 }
@@ -484,6 +502,8 @@ function remodelAction(player, game) {
             {
                 Trash: function() {
                     if (selected.length === 1) {
+                        delete selected[0].selected;
+                        
                         this.resolvable = true;
                         return true;
                     }
