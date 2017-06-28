@@ -43,14 +43,11 @@ Game.prototype.addPlayer = function(user) {
         return false;
     }
     
-    var len = this.players.length;
-    for (var i = len - 1; i > -1; i--) {
-        if (this.players[i].id === null) {
-            this.players.splice(i, 1);
-        }
-    }
-    len = this.players.length;
+    this.players = this.players.filter(function(player) {
+        return player.id !== null;
+    });
     
+    var len = this.players.length;
     if (len >= MAX_PLAYERS) {
         return false;
     }
@@ -207,14 +204,11 @@ Game.prototype.startGame = function(user) {
         return false;
     }
     
-    var len = this.players.length;
-    for (var i = len - 1; i > -1; i--) {
-        if (this.players[i].id === null) {
-            this.players.splice(i, 1);
-        }
-    }
-    len = this.players.length;
+    this.players = this.players.filter(function(player) {
+        return player.id !== null;
+    });
     
+    var len = this.players.length;
     if (len < MIN_PLAYERS) {
         return true;
     }
