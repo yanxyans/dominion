@@ -184,4 +184,41 @@ Room.prototype.toggleUserType = function(name, user) {
 	};
 };
 
+Room.prototype.updateUser = function(user) {
+    if (user) {
+        var userRooms = user.rooms;
+        var id = user.id;
+        var name = user.name;
+        Object.keys(userRooms).forEach(function(userRoom) {
+            if (userRoom in this.rooms) {
+                var room = this.rooms[userRoom];
+                
+                if (room) {
+                    var users = room.users;
+                    var players = room.game.players;
+                    
+                    var update = false;
+                    if (id in users) {
+                        users[id].name = name;
+                        update = true;
+                    }
+                    
+                    players = players.filter(function(player) {
+                        return player.id === id;
+                    });
+                    if (players.length === 1) {
+                        players[0].name = name;
+                        update = true;
+                    }
+                    
+                    if (update) {
+                        this.updateRoom(userRoom);
+                    }
+                }
+            }
+        }, this);
+        
+    }
+};
+
 module.exports = Room;

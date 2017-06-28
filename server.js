@@ -93,6 +93,9 @@ io.on('connection', function(socket) {
     
     socket.on('_set_name', function(name) {
         var res = user.setName(name);
+        if (res.head === 'ok') {
+            room.updateUser(user);
+        }
     });
     
     socket.on('_join_room', function(name) {
