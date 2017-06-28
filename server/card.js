@@ -331,12 +331,15 @@ function moatAction(player, game) {
     }
 }
 
-function moatReaction(player, item) {
+function moatReaction(player, item, callback) {
     if (item && player) {
         var targets = item.targets;
         var index = player.seat;
         if (targets && targets[index]) {
             delete targets[index];
+            
+            var name = player.name;
+            callback(name + ' reveals a moat from hand');
         }
     }
 }

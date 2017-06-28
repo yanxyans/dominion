@@ -27,6 +27,8 @@ function Player(user) {
     this.bought = false;
     
     this.points = 0;
+    
+    this.counted = false;
 }
 
 Player.prototype.retrievePlayerState = function(id) {
@@ -45,7 +47,8 @@ Player.prototype.retrievePlayerState = function(id) {
         phase: this.phase,
         seat: this.seat,
         points: this.points,
-        disc: this.id === null
+        disc: this.id === null,
+        counted: this.counted
     };
 };
 
@@ -63,6 +66,8 @@ Player.prototype.init = function(seat) {
     this.bought = false;
     
     this.points = 0;
+    
+    this.counted = false;
 };
 
 Player.prototype.emptyCards = function() {
@@ -125,6 +130,8 @@ Player.prototype.countScore = function(game) {
     this.getScoreIn(this.play, game);
     this.getScoreIn(this.deck, game);
     this.getScoreIn(this.discard, game);
+    
+    this.counted = true;
 };
 
 Player.prototype.getScoreIn = function(stack, game) {

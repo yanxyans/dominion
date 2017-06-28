@@ -1,7 +1,7 @@
 function User(socket) {
 	this.socket = socket;
 	this.id = socket.id;
-	this.name = "set name";
+	this.name = "click to rename";
 	
 	this.rooms = {};
 	this.current = null;
@@ -96,7 +96,8 @@ User.prototype.updateUser = function(emptyView) {
 			users: [],
 			players: [],
 			piles: {},
-			trash: null
+			trash: null,
+            state: null
 		});
 	}
 };

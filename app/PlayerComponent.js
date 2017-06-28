@@ -13,9 +13,15 @@ import IconAction from 'material-ui/svg-icons/editor/format-shapes';
 import IconBuy from 'material-ui/svg-icons/editor/format-bold';
 import IconCoin from 'material-ui/svg-icons/action/copyright';
 
+import IconOne from 'material-ui/svg-icons/image/looks-one';
+import IconTwo from 'material-ui/svg-icons/image/looks-two';
+import IconThree from 'material-ui/svg-icons/image/looks-3';
+import IconFour from 'material-ui/svg-icons/image/looks-4';
+
 import { yellowA700 } from 'material-ui/styles/colors';
 
 export default class PlayerComponent extends React.Component {
+    
     render() {
         var player = this.props.player;
         var source = ['players', player.seat];
@@ -35,20 +41,24 @@ export default class PlayerComponent extends React.Component {
         var turn = player.turn;
         
         var isPlayer = visible ? yellowA700 : null;
-        var isTurn = turn ? {border: '3px solid ' + yellowA700, transition: '.3s'} : {transition: '.3s'};
+        var isTurn = turn || this.props.gameState === "INIT" || this.props.gameState === "END" ? {transition: '.3s'} : {opacity: '0.35', transition: '.3s'};
 
         return (
-            <Paper id='player' style={isTurn} zDepth={this.props.raised ? 2 : 1}>
-                <div id='detail'>
+            <Paper id='player' style={isTurn} zDepth={turn ? 2 : 0}>
+                <Paper id='detail' zDepth={2}>
+                    <div>
                     <IconButton tooltip={player.name}
                                 style={{zIndex:1001}}
                                 onTouchTap={_reconRoom}>
                         {disc ? <IconDisconnect/> : <IconName color={isPlayer}/>}
                     </IconButton>
-                    <IconButton tooltip={player.points + ' point(s)'}
+                    {this.props.gameState === "END" && player.counted && <IconButton tooltip={player.points + ' point(s)'}
                                 style={{zIndex:1001}}>
-                        <IconPoints/>
-                    </IconButton>
+                                    {this.props.index === 0 ? <IconOne /> : null}
+                                        {this.props.index === 1 ? <IconTwo /> : null}
+                                            {this.props.index === 2 ? <IconThree /> : null}
+                                                {this.props.index === 3 ? <IconFour /> : null}
+                    </IconButton>}
                     
                     {'action' in player &&
                     <IconButton tooltip={player.action + ' action(s)'}
@@ -65,13 +75,16 @@ export default class PlayerComponent extends React.Component {
                                 style={{zIndex:1000}}>
                         <IconCoin/>
                     </IconButton>}
+                    </div>
                     
+                    <div>
                     {player.control &&
                     <ControlComponent control={player.control}
                                       phase={phase}
                                       _sendControl={_sendControl}
                                       visible={visible}/>}
-                </div>
+                    </div>
+                </Paper>
                 
                 <div id='detail2'>
                     <div id='mat'>

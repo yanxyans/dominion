@@ -12,15 +12,21 @@ Room.prototype.newRoom = function(name, start, piles) {
 			body: 'room is taken'
 		};
 	}
+    
+    var callback = this.emitMessage.bind(this, name);
 	
 	this.rooms[name] = {
-		game: new Game(start, piles),
+		game: new Game(start, piles, callback),
 		users: {}
 	};
 	return {
 		head: 'ok',
 		body: 'room is created'
 	};
+};
+
+Room.prototype.emitMessage = function(room, message) {
+    this.io.sockets.in(room).emit('_react_message', message);
 };
 
 Room.prototype.roomHasUser = function(room, user) {
@@ -137,7 +143,8 @@ Room.prototype.retrieveRoomState = function(room, id) {
 		}, room.users),
 		players: gameState.players,
 		piles: gameState.piles,
-		trash: gameState.trash
+		trash: gameState.trash,
+        state: gameState.state
 	};
 };
 

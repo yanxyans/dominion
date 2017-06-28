@@ -17,7 +17,7 @@ var CLEANUP_PHASE = 3;
 var ACTION_PLAY = 'action';
 var TREASURE_PLAY = 'treasure';
 
-function Game(start, piles) {
+function Game(start, piles, callback) {
     this.start = start;
     this.pilesOrigin = piles;
     this.pilesWork = {};
@@ -32,14 +32,26 @@ function Game(start, piles) {
     this.action = 0;
     this.buy = 0;
     this.coin = 0;
+    
+    this.callback = callback;
 }
 
 Game.prototype.addPlayer = function(user) {
-    if (this.players.length >= MAX_PLAYERS) {
-        return false;
-    } else if (this.state === "MAIN") {
+    if (this.state === "MAIN") {
         return false;
     } else if (!user) {
+        return false;
+    }
+    
+    var len = this.players.length;
+    for (var i = len - 1; i > -1; i--) {
+        if (this.players[i].id === null) {
+            this.players.splice(i, 1);
+        }
+    }
+    len = this.players.length;
+    
+    if (len >= MAX_PLAYERS) {
         return false;
     }
     
@@ -58,7 +70,7 @@ Game.prototype.removePlayer = function(user) {
         // player was not found
         return false;
     }
-
+    
     if (this.state !== "MAIN") {
         // free up a player slot
         this.players.splice(slot, 1);
@@ -125,14 +137,14 @@ Game.prototype.view = function(ret) {
     if (ret) {
         for (var i = 0; i < ret.players.length; i++) {
             var player = ret.players[i];
-
-                if (this.state === "INIT") {
+            
+                if (this.state === "INIT" && player.visible) {
                     player.control = ["Start"];
                 } else if (this.state === "MAIN") {
                     if (this.turn === player.seat) {
                         player.control = ["Action", "Buy", "Cleanup"];
                     }
-                } else if (this.state === "END") {
+                } else if (this.state === "END" && player.visible) {
                     player.control = ["Start"];
                 }
 
@@ -155,12 +167,13 @@ Game.prototype.retrieveGameState = function(id) {
             }
             
             var turn = todo ? todo.getItem().turn : this.turn;
-            playerState.turn = turn === player.seat;
+            playerState.turn = turn === player.seat && turn !== -1;
             
             return playerState;
         }, this),
         piles: this.pilesWork,
-        trash: this.trash
+        trash: this.trash,
+        state: this.state
     };
     
     if (todo) {
@@ -195,8 +208,15 @@ Game.prototype.startGame = function(user) {
     }
     
     var len = this.players.length;
+    for (var i = len - 1; i > -1; i--) {
+        if (this.players[i].id === null) {
+            this.players.splice(i, 1);
+        }
+    }
+    len = this.players.length;
+    
     if (len < MIN_PLAYERS) {
-        return false;
+        return true;
     }
     
     // flag game as in progress
@@ -288,13 +308,19 @@ Game.prototype.setPhase = function(user, phase) {
             }
             
             this.state = "END";
+            
+            this.action = 0;
+            this.buy = 0;
+            this.coin = 0;
+            this.turn = -1;
+        } else {
+        
+            var nextTurn = (this.turn + 1) % this.players.length;
+            var nextPlayer = this.players[nextTurn];
+            
+            this.resetResources(nextPlayer);
+            this.turn = nextTurn;
         }
-        
-        var nextTurn = (this.turn + 1) % this.players.length;
-        var nextPlayer = this.players[nextTurn];
-        
-        this.resetResources(nextPlayer);
-        this.turn = nextTurn;
     }
     
     return true;
@@ -566,6 +592,7 @@ Game.prototype.getTodo = function(todo) {
 Game.prototype.handleReactions = function(item) {
     var origin = item.origin;
     var len = this.players.length;
+    var callback = this.callback;
     for (let i = 0; i < len; i++) {
         
         let turn = (origin + i) % len;
@@ -588,7 +615,7 @@ Game.prototype.handleReactions = function(item) {
                 if (cards === player.hand && index in cards) {
                     var card = cards[index];
                     if (card.canReact && card.canReact(player, item)) {
-                        card.types.reaction(player, item);
+                        card.types.reaction(player, item, callback);
                     }
                 }
             },

@@ -11,6 +11,7 @@ import MenuComponent from './MenuComponent';
 import GameComponent from './GameComponent';
 
 import Paper from 'material-ui/Paper';
+import Snackbar from 'material-ui/Snackbar';
 
 injectTapEventPlugin();
 
@@ -23,8 +24,8 @@ class Container extends React.Component {
 		socket.on('_init', this._init);
 		socket.on('_user_state', this._updateUserState);		
 		socket.on('_room_state', this._updateRoomState);
+        socket.on('_react_message', this._reactMessage);
         
-        this._joinRoom('first game');
     }
 	state = {
 		name: '',
@@ -34,8 +35,15 @@ class Container extends React.Component {
 		players: [],
 		piles: {},
 		trash: null,
-        help: false
+        help: false,
+        gameState: null,
+        messageOpen: false,
+        messageContent: ''
 	}
+    
+    _reactMessage = (msg) => {
+        this.setState({messageOpen: true, messageContent: msg});
+    }
 	
 	_init = (name) => {
 		this.setState({name: name});
@@ -55,7 +63,8 @@ class Container extends React.Component {
 				users: roomState.users,
 				players: roomState.players,
 				piles: roomState.piles,
-				trash: roomState.trash
+				trash: roomState.trash,
+                gameState: roomState.state
 			});
 		}
 	}
@@ -83,10 +92,17 @@ class Container extends React.Component {
         this.setState({help: !this.state.help});
     }
     
+  handleRequestClose = () => {
+    this.setState({
+      messageOpen: false,
+      messageContent: ''
+    })
+  }
+    
     render() {
         return (
             <MuiThemeProvider muiTheme={getMuiTheme(darkBaseTheme)}>
-                <Paper id='container' zDepth={1}>
+                <div id='container'>
                     <MenuComponent name={this.state.name}
                                    rooms={this.state.rooms}
                                    current={this.state.current}
@@ -95,14 +111,22 @@ class Container extends React.Component {
                                    _joinRoom={this._joinRoom}
                                    _setRoom={this._setRoom}
                                    _toggleHelp={this._toggleHelp}/>
+                    {this.state.gameState &&
                     <GameComponent players={this.state.players}
                                    piles={this.state.piles}
                                    trash={this.state.trash}
                                    help={this.state.help}
                                    _reconRoom={this._reconRoom}
                                    _sendControl={this._sendControl}
-                                   _tapCard={this._tapCard}/>
-                </Paper>
+                                   _tapCard={this._tapCard}
+                    gameState={this.state.gameState}/>}
+                    <Snackbar
+                      open={this.state.messageOpen}
+                      message={this.state.messageContent}
+                      autoHideDuration={4000}
+                      onRequestClose={this.handleRequestClose}
+                    />
+                </div>
             </MuiThemeProvider>
         );
     }
