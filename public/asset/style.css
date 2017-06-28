@@ -69,8 +69,14 @@ a {
 
 #detail {
     flex-flow: row nowrap;
-    justify-content: space-around;
+    justify-content: flex-start;
     align-items: center;
+}
+
+#buttons {
+    display: flex;
+    flex: 0 1 50%;
+    justify-content: center;
 }
 
 #detail2 {

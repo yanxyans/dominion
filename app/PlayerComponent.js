@@ -46,7 +46,7 @@ export default class PlayerComponent extends React.Component {
         return (
             <Paper id='player' style={isTurn} zDepth={turn ? 2 : 0}>
                 <Paper id='detail' zDepth={2}>
-                    <div>
+                    <div id='buttons'>
                     <IconButton tooltip={player.name}
                                 style={{zIndex:1001}}
                                 onTouchTap={_reconRoom}>
@@ -77,7 +77,7 @@ export default class PlayerComponent extends React.Component {
                     </IconButton>}
                     </div>
                     
-                    <div>
+                    <div id='buttons'>
                     {player.control &&
                     <ControlComponent control={player.control}
                                       phase={phase}
