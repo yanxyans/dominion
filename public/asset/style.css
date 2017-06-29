@@ -1,4 +1,5 @@
-#game, #players, #board, #info, .title, .content, .wrap, .stack, .player, .links, .buttons, .controls {
+#game, #players, #board, #info,
+.title, .content, .wrap, .stack, .player, .links, .buttons, .controls {
     display: flex;
 }
 
