@@ -25,8 +25,6 @@ class Container extends React.Component {
         socket.on('_user_state', this._updateUserState);        
         socket.on('_room_state', this._updateRoomState);
         socket.on('_react_message', this._reactMessage);
-        
-        this._joinRoom('first game');
     }
     state = {
         name: '',
