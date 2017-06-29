@@ -14,11 +14,6 @@
     flex-flow: column nowrap;
 }
 
-.buttons, .controls {
-    flex: 1 0 50%;
-    justify-content: center;
-}
-
 .title {
     justify-content: center;
     align-items: center;
@@ -51,6 +46,11 @@
 .links {
     flex-flow: column nowrap;
     justify-content: space-around;
+}
+
+.buttons, .controls {
+    flex: 1 0 50%;
+    justify-content: center;
 }
 
 .full {
