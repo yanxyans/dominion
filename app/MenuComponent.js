@@ -28,7 +28,7 @@ export default class MenuComponent extends React.Component {
     
     render() {
         return (
-            <div>
+            <div id='menu'>
                 <IconButton onTouchTap={this._handleToggle}>
                     <ActionMenu/>
                 </IconButton>

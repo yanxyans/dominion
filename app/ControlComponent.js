@@ -4,17 +4,11 @@ import {
     Stepper,
     StepButton
 } from 'material-ui/Stepper';
-import ChevronRightIcon from 'material-ui/svg-icons/navigation/chevron-right';
+
+import PrimaryIcon from 'material-ui/svg-icons/navigation/chevron-right';
+import SecondaryIcon from 'material-ui/svg-icons/action/code';
 
 import { yellowA700, white } from 'material-ui/styles/colors';
-import IconCoin from 'material-ui/svg-icons/action/copyright';
-import code from 'material-ui/svg-icons/action/code';
-
-const StepIcon = ({ label, color = yellowA700}) => (
-    <div style={{ position: 'relative' }}>
-      <div style={{ color: white, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', textAlign: 'center', lineHeight: '24px' }}>{label}</div>
-    </div>
-);
 
 /**
  * A basic vertical non-linear implementation
@@ -22,31 +16,36 @@ const StepIcon = ({ label, color = yellowA700}) => (
 class ControlComponent extends React.Component {
   
     render() {
+        var phase = this.props.phase;
+        var visible = this.props.visible;
+        
+        var send = this.props._sendControl;
         
         return (
-            <div>
-                <Stepper activeStep={this.props.phase}
-                        linear={false}
-                        orientation="horizontal"
-                        connector={this.phase !== null ? <ChevronRightIcon /> : <code />}
+            <div className='controls'>
+                <Stepper activeStep={phase}
+                         linear={false}
+                         orientation='horizontal'
+                         connector={phase !== null ? <PrimaryIcon/> : <SecondaryIcon/>}
                 >
                     {this.props.control.map(function(step, index) {
-                        var isDisabled = (this.phase !== null) && (index <= this.phase);
-                        var cur = (this.phase !== null) && (index === this.phase);
+                        var isDisabled = !visible || (phase !== null && index <= phase);
+                        var isActive = phase !== null && index === phase;
+                        
                         return (
-                            <Step key={index} >
-                                <StepButton onTouchTap={this._sendControl.bind(null, step)}
+                            <Step key={index}>
+                                <StepButton onTouchTap={send.bind(null, step)}
                                             disabled={isDisabled}
                                             icon={null}
-                                            className={isDisabled || !this.visible ? null : 'hvr-buzz-out'}
+                                            className={!isDisabled && 'hvr-buzz-out'}
                                 >
-                                    <div style={{color: cur ? yellowA700 : white }}>
-                                    {step}
-                                    </div>
+                                    <span style={{color: isActive ? yellowA700 : white}}>
+                                        {step}
+                                    </span>
                                 </StepButton>
                             </Step>
                         );
-                    }, this.props)}
+                    })}
                 </Stepper>
             </div>
         );

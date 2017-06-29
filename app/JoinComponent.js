@@ -7,10 +7,10 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 
 export default class JoinComponent extends React.Component {
-	state = {
-		open: false,
-		room: 'first game'
-	}
+    state = {
+        open: false,
+        room: 'first game'
+    }
 
     _handleOpen = () => {
         this.setState({open: true});
@@ -18,14 +18,14 @@ export default class JoinComponent extends React.Component {
     _handleClose = () => {
         this.setState({open: false, room: 'first game'});
     }
-	_handleJoin = () => {
-		this.props._joinRoom(this.state.room);
-		this._handleClose();
-	}
-	
-	_handleKey = (e) => {
-		this.setState({room: e.target.value});
-	}
+    _handleJoin = () => {
+        this.props._joinRoom(this.state.room);
+        this._handleClose();
+    }
+    
+    _handleKey = (e) => {
+        this.setState({room: e.target.value});
+    }
 
     render() {
         const actions = [
@@ -48,7 +48,7 @@ export default class JoinComponent extends React.Component {
                         modal={false}
                         open={this.state.open}
                         onRequestClose={this._handleClose}>
-					<TextField id='room'
+                    <TextField id='room'
                                value={this.state.room}
                                onChange={this._handleKey}/>
                 </Dialog>

@@ -1,10 +1,10 @@
 import React from 'react';
 
+import Paper from 'material-ui/Paper';
 import IconButton from 'material-ui/IconButton';
+
 import ActionAdd from 'material-ui/svg-icons/content/add';
 import ActionRemove from 'material-ui/svg-icons/content/remove';
-
-import Paper from 'material-ui/Paper';
 
 
 export default class Stack extends React.Component {
@@ -21,46 +21,54 @@ export default class Stack extends React.Component {
     }
     
     _getIndex = (index, isLast, selected) => {
-        var margin = this.state.open ? null : {marginRight:(isLast ? '0px':'-50px')};
-        var isSelected = selected ? {opacity:0.3} : null;
+        var isStacked = !this.state.open && !isLast ?
+            {marginRight:'-50px'} :
+            null;
+        var isSelected = selected ?
+            {opacity:0.35} :
+            null;
         
         return Object.assign(
             {},
             {zIndex:index, maxHeight:'100px', transition:'.3s'},
-            margin,
+            isStacked,
             isSelected
         );
     }
     
     render() {
         var data = this.props.data;
-        var olen = data.length;
-        var display = data.slice(this.state.open ? null : -5);
-        var len = display.length;
+        var display = this.state.open ? data : data.slice(-5);
         
-        var click = data.length ? this.props._tapCard.bind(null, data.length - 1) : null;
+        var len = display.length;
+        var start = this.state.open ? 0 : data.length - len;
+        
+        var tap = this.props._tapCard;
+        var over = this.props._handleMouseOver;
+        var out = this.props._handleMouseOut;
         
         return (
-            <Paper id='wrap' zDepth={2}>
+            <Paper className='wrap' zDepth={2}>
                 <IconButton onTouchTap={this._handleToggle}
                             tooltip={this.props.tooltip}
                             style={{zIndex:1000}}>
                     {this.state.open ? <ActionRemove/> : <ActionAdd/>}
                 </IconButton>
-                <div id='stack'>
+                <div className='stack'>
                     {display.map(function(item, index) {
                         var name = item.name;
                         var source = '/asset/cards/' + (name ? name : 'back') + '.jpg';
-                        return <div key={index} className='hvr-grow-shadow'>
-                                <img 
-                                    src={source}
-                                    style={this._getIndex(index, index === len - 1, item.selected)}
-                                    onTouchTap={this.props._tapCard.bind(null, this.state.open ? index : olen - len + index)}
-                                    
-                                    onMouseOver={this.props._handleMouseOver.bind(this, name)}
-                                    onMouseOut={this.props._handleMouseOut}/>
+                        var isLast = index === len - 1;
+                        
+                        return <div key={index}
+                                    className='hvr-grow-shadow'>
+                                   <img src={source}
+                                        style={this(index, isLast, item.selected)}
+                                        onTouchTap={tap.bind(null, start + index)}
+                                        onMouseOver={over.bind(null, name)}
+                                        onMouseOut={out}/>
                                </div>
-                    }, this)}
+                    }, this._getIndex)}
                 </div>
             </Paper>
         );

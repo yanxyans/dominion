@@ -37,15 +37,15 @@ var FirstGame = {
         duchy: [8, 12, 12],
         province: [8, 12, 12],
         cellar: [10, 10, 10],
-        market: [10, 10, 10],
-        militia: [10, 10, 10],
-        mine: [10, 10, 10],
-        moat: [10, 10, 10],
-        remodel: [10, 10, 10],
-        smithy: [10, 10, 10],
         village: [10, 10, 10],
+        workshop: [10, 10, 10],
+        remodel: [10, 10, 10],
+        market: [10, 10, 10],
+        moat: [10, 10, 10],
         woodcutter: [10, 10, 10],
-        workshop: [10, 10, 10]
+        militia: [10, 10, 10],
+        smithy: [10, 10, 10],
+        mine: [10, 10, 10]
     }
 };
 room.newRoom(FirstGame.name, FirstGame.start, FirstGame.piles);

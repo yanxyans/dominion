@@ -15,12 +15,12 @@ class FullWidthSection extends Component {
         style: PropTypes.object,
         useContent: PropTypes.bool,
         width: PropTypes.number.isRequired,
-    };
+    }
 
     static defaultProps = {
         useContent: false,
         contentType: 'div',
-    };
+    }
 
     getStyles() {
         return {

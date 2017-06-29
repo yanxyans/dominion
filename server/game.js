@@ -140,6 +140,7 @@ Game.prototype.view = function(ret) {
                 } else if (this.state === "MAIN") {
                     if (this.turn === player.seat) {
                         player.control = ["Action", "Buy", "Cleanup"];
+                        player.main = true;
                     }
                 } else if (this.state === "END" && player.visible) {
                     player.control = ["Start"];

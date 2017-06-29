@@ -7,10 +7,10 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 
 export default class NameComponent extends React.Component {
-	state = {
-		open: false,
-		name: ''
-	}
+    state = {
+        open: false,
+        name: ''
+    }
     
     _handleOpen = () => {
         this.setState({open: true});
@@ -18,14 +18,14 @@ export default class NameComponent extends React.Component {
     _handleClose = () => {
         this.setState({open: false, name: ''});
     }
-	_handleSubmit = () => {
-		this.props._setName(this.state.name);
-		this._handleClose();
-	}
-	
-	_handleKey = (e) => {
-		this.setState({name: e.target.value});
-	}
+    _handleSubmit = () => {
+        this.props._setName(this.state.name);
+        this._handleClose();
+    }
+    
+    _handleKey = (e) => {
+        this.setState({name: e.target.value});
+    }
     
     render() {
         const actions = [
