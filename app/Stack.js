@@ -3,8 +3,8 @@ import React from 'react';
 import Paper from 'material-ui/Paper';
 import IconButton from 'material-ui/IconButton';
 
-import ActionAdd from 'material-ui/svg-icons/content/add';
-import ActionRemove from 'material-ui/svg-icons/content/remove';
+import IconAdd from 'material-ui/svg-icons/content/add';
+import IconRemove from 'material-ui/svg-icons/content/remove';
 
 
 export default class Stack extends React.Component {
@@ -52,7 +52,7 @@ export default class Stack extends React.Component {
                 <IconButton onTouchTap={this._handleToggle}
                             tooltip={this.props.tooltip}
                             style={{zIndex:1000}}>
-                    {this.state.open ? <ActionRemove/> : <ActionAdd/>}
+                    {this.state.open ? <IconRemove/> : <IconAdd/>}
                 </IconButton>
                 <div className='stack'>
                     {display.map(function(item, index) {
