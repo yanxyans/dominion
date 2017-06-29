@@ -10,16 +10,13 @@ import IconName from 'material-ui/svg-icons/action/face';
 import IconDisconnect from 'material-ui/svg-icons/alert/warning';
 
 import IconPoints from 'material-ui/svg-icons/action/grade'
-import IconAction from 'material-ui/svg-icons/editor/format-shapes';
-import IconBuy from 'material-ui/svg-icons/editor/format-bold';
-import IconCoin from 'material-ui/svg-icons/action/copyright';
 
 import IconOne from 'material-ui/svg-icons/image/looks-one';
 import IconTwo from 'material-ui/svg-icons/image/looks-two';
 import IconThree from 'material-ui/svg-icons/image/looks-3';
 import IconFour from 'material-ui/svg-icons/image/looks-4';
 
-import { yellowA700 } from 'material-ui/styles/colors';
+import { yellowA700, white } from 'material-ui/styles/colors';
 
 const styles = {
     active: {
@@ -67,18 +64,18 @@ export default class PlayerComponent extends React.Component {
                         
                         {player.action !== undefined &&
                         <IconButton tooltip={player.action + ' action(s)'}
-                                    style={{zIndex:1000}}>
-                            <IconAction/>
+                                    style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
+                            {player.action}
                         </IconButton>}
                         {player.buy !== undefined &&
-                        <IconButton tooltip={player.buy + ' action(s)'}
-                                    style={{zIndex:1000}}>
-                            <IconBuy/>
+                        <IconButton tooltip={player.buy + ' buy(s)'}
+                                    style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
+                            {player.buy}
                         </IconButton>}
                         {player.coin !== undefined &&
-                        <IconButton tooltip={player.coin + ' action(s)'}
-                                    style={{zIndex:1000}}>
-                            <IconCoin/>
+                        <IconButton tooltip={player.coin + ' coin(s)'}
+                                    style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
+                            {player.coin}
                         </IconButton>}
                     </div>
                     
