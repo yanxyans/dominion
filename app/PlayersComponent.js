@@ -23,11 +23,11 @@ export default class PlayersComponent extends React.Component {
             
         return (
             <Paper id='players' zDepth={2}>
-                <Paper className='title'>
+                <Paper className='title' zDepth={2}>
                     <h1> players </h1>
                 </Paper>
                 
-                <Paper className='content'>
+                <div className='content'>
                     {sortedPlayers.map(function(player, index) {
                         player.turn = player.turn || gameState !== 'MAIN';
                         return <PlayerComponent key={index}
@@ -38,7 +38,7 @@ export default class PlayersComponent extends React.Component {
                                                 _handleMouseOver={this._handleMouseOver}
                                                 _handleMouseOut={this._handleMouseOut}/>;
                     }, this.props)}
-                </Paper>
+                </div>
             </Paper>
         );
     }

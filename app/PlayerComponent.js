@@ -86,7 +86,7 @@ export default class PlayerComponent extends React.Component {
                                       _sendControl={this.props._sendControl}/>}
                 </Paper>
                 
-                <Paper className='content' zDepth={1}>
+                <div className='content'>
                     <Stack data={player.discard}
                            tooltip='discard'
                            _tapCard={tap.bind(null, source.concat('discard'))}
@@ -112,7 +112,7 @@ export default class PlayerComponent extends React.Component {
                            open={true}
                            _handleMouseOver={over}
                            _handleMouseOut={out}/>
-                </Paper>
+                </div>
             </div>
         );
     }

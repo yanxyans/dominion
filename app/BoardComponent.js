@@ -10,7 +10,7 @@ export default class BoardComponent extends React.Component {
                 <Paper className='title' zDepth={2}>
                     <h1> piles </h1>
                 </Paper>
-                <Paper className='content'>
+                <div className='content'>
                     {Object.keys(this.props.piles).map(function(pile, index) {
                         return <Stack key={index}
                                       data={this.piles[pile]}
@@ -27,7 +27,7 @@ export default class BoardComponent extends React.Component {
                            open={false}
                            _handleMouseOver={this.props._handleMouseOver}
                            _handleMouseOut={this.props._handleMouseOut}/>}
-                </Paper>
+                </div>
             </Paper>
         );
     }
