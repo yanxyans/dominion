@@ -89,7 +89,7 @@ function trashItem(player, game, selected) {
             }
         }, true);
     
-    return new Item([trash], [], "trash", turn);
+    return new Item([trash], [], 'trash', turn);
 }
 
 function gainItem(player, game, valid, selectable, selected, dest) {
@@ -118,7 +118,7 @@ function gainItem(player, game, valid, selectable, selected, dest) {
             }
         }, true);
     
-    return selectItem([gain], [], "gain", turn, valid, selectable,
+    return selectItem([gain], [], 'gain', turn, valid, selectable,
         {
             Gain: function() {
                 if (selected.length === 1) {
@@ -184,7 +184,7 @@ function cellarAction(player, game) {
             function(item) {
                 if (selected.length) {
                     var discard = discardTask(player, selected);
-                    var discardItem = new Item([discard], [], "discard", turn);
+                    var discardItem = new Item([discard], [], 'discard', turn);
                     
                     item.todo.push(discardItem);
                 }
@@ -193,13 +193,13 @@ function cellarAction(player, game) {
             function(item) {
                 if (selected.length) {
                     var draw = drawTask(player, selected.length);
-                    var drawItem = new Item([draw], [], "draw", turn);
+                    var drawItem = new Item([draw], [], 'draw', turn);
                     
                     item.todo.push(drawItem);
                 }
             }, true);
             
-        var playItem = selectItem([discardTk, drawTk], [], "play", turn,
+        var playItem = selectItem([discardTk, drawTk], [], 'play', turn,
             function() {
                 return player.hand.length < 1;
             },
@@ -234,12 +234,12 @@ function marketAction(player, game) {
         var drawTk = new Task(turn,
             function(item) {
                 var draw = drawTask(player, 1);
-                var drawItem = new Item([draw], [], "draw", turn);
+                var drawItem = new Item([draw], [], 'draw', turn);
                 
                 item.todo.push(drawItem);
             }, true);
         
-        var playItem = new Item([drawTk], [], "play", turn);
+        var playItem = new Item([drawTk], [], 'play', turn);
         
         game.todo.push(playItem);
         game.action++;
@@ -267,7 +267,7 @@ function militiaAction(player, game) {
                     }
                 }, true);
             
-            var attackItem = new Item([attackTask], [], "attack", attacker);
+            var attackItem = new Item([attackTask], [], 'attack', attacker);
             attackItem.targets = toAttack;
             
             game.todo.push(attackItem);
@@ -281,7 +281,7 @@ function militiaAttack(player) {
     
     var discardTk = discardTask(player, selected);
     
-    return selectItem([discardTk], [], "discard", turn,
+    return selectItem([discardTk], [], 'discard', turn,
         function() {
             return player.hand.length < 4;
         },
@@ -320,12 +320,12 @@ function moatAction(player, game) {
         var drawTk = new Task(turn,
             function(item) {
                 var draw = drawTask(player, 2);
-                var drawItem = new Item([draw], [], "draw", turn);
+                var drawItem = new Item([draw], [], 'draw', turn);
                 
                 item.todo.push(drawItem);
             }, true);
         
-        var playItem = new Item([drawTk], [], "play", turn);
+        var playItem = new Item([drawTk], [], 'play', turn);
         
         game.todo.push(playItem);
     }
@@ -351,7 +351,7 @@ function moatReact(player, item) {
         var targets = item.targets;
         var index = player.seat
         
-        return type === "attack" && state === "PRE" && targets && index in targets;
+        return type === 'attack' && state === 'PRE' && targets && index in targets;
     }
     return false;
 }
@@ -405,7 +405,7 @@ function mineAction(player, game) {
                 }
             }, true);
         
-        var playItem = selectItem([trashTask, gainTask], [], "play", turn,
+        var playItem = selectItem([trashTask, gainTask], [], 'play', turn,
             function() {
                 return player.hand.filter(function(card) {
                     return 'treasure' in card.types;
@@ -487,7 +487,7 @@ function remodelAction(player, game) {
                 }
             }, true);
         
-        var playItem = selectItem([trashTask, gainTask], [], "play", turn,
+        var playItem = selectItem([trashTask, gainTask], [], 'play', turn,
             function() {
                 return player.hand.length < 1;
             },
@@ -527,12 +527,12 @@ function smithyAction(player, game) {
         var drawTk = new Task(turn,
             function(item) {
                 var draw = drawTask(player, 3);
-                var drawItem = new Item([draw], [], "draw", turn);
+                var drawItem = new Item([draw], [], 'draw', turn);
                 
                 item.todo.push(drawItem);
             }, true);
         
-        var playItem = new Item([drawTk], [], "play", turn);
+        var playItem = new Item([drawTk], [], 'play', turn);
         
         game.todo.push(playItem);
     }
@@ -545,12 +545,12 @@ function villageAction(player, game) {
         var drawTk = new Task(turn,
             function(item) {
                 var draw = drawTask(player, 1);
-                var drawItem = new Item([draw], [], "draw", turn);
+                var drawItem = new Item([draw], [], 'draw', turn);
                 
                 item.todo.push(drawItem);
             }, true);
         
-        var playItem = new Item([drawTk], [], "play", turn);
+        var playItem = new Item([drawTk], [], 'play', turn);
         
         game.todo.push(playItem);
         game.action += 2;
@@ -595,7 +595,7 @@ function workshopAction(player, game) {
                 }
             }, true);
         
-        var playItem = new Item([gainTask], [], "play", turn);
+        var playItem = new Item([gainTask], [], 'play', turn);
         
         game.todo.push(playItem);
     }

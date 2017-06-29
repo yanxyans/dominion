@@ -36,7 +36,7 @@ Player.prototype.retrievePlayerState = function(id) {
     return {
         name: this.name,
         deck: this.deck.map(function(card) {
-            return "";
+            return '';
         }),
         discard: this.discard.map(function(card, index) {
             var show = visible ? true : index === this.discard.length - 1;
@@ -53,7 +53,15 @@ Player.prototype.retrievePlayerState = function(id) {
 };
 
 Player.prototype.getCardName = function(visible, card) {
-    return visible && card ? card : "";
+    var ret = {};
+    if (card) {
+        ret.coin = card.coin;
+        ret.name = visible ? card.name : '';
+        ret.types = card.types;
+        ret.selected = card.selected;
+    }
+        
+    return ret;
 };
 
 Player.prototype.init = function(seat) {

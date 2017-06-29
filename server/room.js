@@ -54,7 +54,7 @@ Room.prototype.joinUser = function(name, user) {
 	
 	// user will be joined to room as player, if possible
 	var res = room.game.addPlayer(user);
-	var joinType = res ? "PLAYER" : "SPECTATOR";
+	var joinType = res ? 'PLAYER' : 'SPECTATOR';
 	room.users[user.id] = {
 		name: user.name,
 		type: joinType
@@ -99,7 +99,7 @@ Room.prototype.leaveUser = function(name, user) {
 	user.removeRoom(name);
 	
 	// if user was a player, also free up a player slot
-	if (joinType === "PLAYER") {
+	if (joinType === 'PLAYER') {
 		room.game.removePlayer(user);
 	}
 	
@@ -177,7 +177,7 @@ Room.prototype.toggleUserType = function(name, user) {
 	}
 
 	var prevType = room.users[user.id].type;
-	room.users[user.id].type = prevType === "SPECTATOR" ? "PLAYER" : "SPECTATOR";
+	room.users[user.id].type = prevType === 'SPECTATOR' ? 'PLAYER' : 'SPECTATOR';
 	return {
 		head: 'ok',
 		body: 'toggled user type'
