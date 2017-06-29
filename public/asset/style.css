@@ -17,6 +17,7 @@
 .title {
     justify-content: center;
     align-items: center;
+    padding: 5px;
 }
 
 .content {
@@ -51,6 +52,11 @@
 .buttons, .controls {
     flex: 1 0 50%;
     justify-content: center;
+}
+
+.controls > div {
+    flex-wrap: wrap;
+    justify-content: center !important;
 }
 
 .full {
