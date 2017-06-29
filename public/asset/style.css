@@ -204,7 +204,7 @@ body {
     font-style: normal;
 }
 
-[class^="muidocs-icon-"], [class*=" muidocs-icon-"] {
+[class^='muidocs-icon-'], [class*=' muidocs-icon-'] {
     font-family: 'material-ui-icons';
     speak: none;
     font-style: normal;
@@ -219,5 +219,5 @@ body {
 }
 
 .muidocs-icon-custom-github:before {
-    content: "\e625";
+    content: '\e625';
 }

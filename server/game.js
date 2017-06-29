@@ -24,7 +24,7 @@ function Game(start, piles, callback) {
     this.trash = null;
     
     this.players = [];
-    this.state = "INIT";
+    this.state = 'INIT';
     
     this.turn = -1;
     this.todo = [];
@@ -37,7 +37,7 @@ function Game(start, piles, callback) {
 }
 
 Game.prototype.addPlayer = function(user) {
-    if (this.state === "MAIN") {
+    if (this.state === 'MAIN') {
         return false;
     } else if (!user) {
         return false;
@@ -68,7 +68,7 @@ Game.prototype.removePlayer = function(user) {
         return false;
     }
     
-    if (this.state !== "MAIN") {
+    if (this.state !== 'MAIN') {
         // free up a player slot
         this.players.splice(slot, 1);
     } else {
@@ -76,7 +76,7 @@ Game.prototype.removePlayer = function(user) {
         var player = this.players[slot];
         
         player.id = null;
-        player.name = "click to reconnect";
+        player.name = 'click to reconnect';
     }
     return true;
 };
@@ -135,15 +135,15 @@ Game.prototype.view = function(ret) {
         for (var i = 0; i < ret.players.length; i++) {
             var player = ret.players[i];
             
-                if (this.state === "INIT" && player.visible) {
-                    player.control = ["Start"];
-                } else if (this.state === "MAIN") {
+                if (this.state === 'INIT' && player.visible) {
+                    player.control = ['Start'];
+                } else if (this.state === 'MAIN') {
                     if (this.turn === player.seat) {
-                        player.control = ["Action", "Buy", "Cleanup"];
+                        player.control = ['Action', 'Buy', 'Cleanup'];
                         player.main = true;
                     }
-                } else if (this.state === "END" && player.visible) {
-                    player.control = ["Start"];
+                } else if (this.state === 'END' && player.visible) {
+                    player.control = ['Start'];
                 }
 
         }
@@ -201,7 +201,7 @@ Game.prototype.startGame = function(user) {
         return false;
     } else if (this.getPlayIndex(user.id) === -1) {
         return false;
-    } else if (this.state === "MAIN") {
+    } else if (this.state === 'MAIN') {
         return false;
     }
     
@@ -215,7 +215,7 @@ Game.prototype.startGame = function(user) {
     }
     
     // flag game as in progress
-    this.state = "MAIN";
+    this.state = 'MAIN';
     
     // init piles
     this.pilesWork = {};
@@ -266,7 +266,7 @@ Game.prototype.startGame = function(user) {
 };
 
 Game.prototype.setPhase = function(user, phase) {
-    if (!user || this.state !== "MAIN") {
+    if (!user || this.state !== 'MAIN') {
         return false;
     }
     
@@ -302,7 +302,7 @@ Game.prototype.setPhase = function(user, phase) {
                 player.countScore(this);
             }
             
-            this.state = "END";
+            this.state = 'END';
             
             this.action = 0;
             this.buy = 0;
@@ -322,7 +322,7 @@ Game.prototype.setPhase = function(user, phase) {
 };
 
 Game.prototype.tapCard = function(user, src, index) {
-    if (!user || this.state !== "MAIN") {
+    if (!user || this.state !== 'MAIN') {
         return false;
     }
     
@@ -475,7 +475,7 @@ Game.prototype.handleBuy = function(player, cards, index) {
 };
 
 Game.prototype.tryControl = function(user, cntrl) {
-    if (!user || this.state !== "MAIN") {
+    if (!user || this.state !== 'MAIN') {
         return false;
     }
     
@@ -521,7 +521,7 @@ Game.prototype.advanceItem = function(item) {
         }
         
         switch (item.state) {
-            case "PRE":
+            case 'PRE':
                 if (!item.react.length) {
                     this.handleReactions(item);
                 }
@@ -531,8 +531,8 @@ Game.prototype.advanceItem = function(item) {
                 if (item.react.length) {
                     return false;
                 }
-            case "MAIN":
-                item.state = "MAIN";
+            case 'MAIN':
+                item.state = 'MAIN';
                 
                 if (item.main.length) {
                     var m = item.main[0];
@@ -544,8 +544,8 @@ Game.prototype.advanceItem = function(item) {
                     m.resolve(item);
                     break;
                 }
-            case "POST":
-                item.state = "POST";
+            case 'POST':
+                item.state = 'POST';
                 
                 if (!item.react.length) {
                     this.handleReactions(item);
@@ -601,7 +601,7 @@ Game.prototype.handleReactions = function(item) {
                 if (ret && ret.players) {
                     var retp = ret.players[turn];
                     if (retp) {
-                        retp.control = ["Finish"];
+                        retp.control = ['Finish'];
                     }
                 }
             },
