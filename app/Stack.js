@@ -48,7 +48,7 @@ export default class Stack extends React.Component {
         var out = this.props._handleMouseOut;
         
         return (
-            <Paper className='wrap' zDepth={2}>
+            <Paper className='wrap' zDepth={1}>
                 <IconButton onTouchTap={this._handleToggle}
                             tooltip={this.props.tooltip}
                             style={{zIndex:1000}}>

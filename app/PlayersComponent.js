@@ -23,7 +23,7 @@ export default class PlayersComponent extends React.Component {
             
         return (
             <Paper id='players' zDepth={2}>
-                <Paper className='title' zDepth={2}>
+                <Paper className='title' zDepth={1}>
                     <h1> players </h1>
                 </Paper>
                 

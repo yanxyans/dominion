@@ -13,6 +13,7 @@
 
 #players, #board, #info {
     flex-flow: column nowrap;
+    margin: 5px;
 }
 
 .title {

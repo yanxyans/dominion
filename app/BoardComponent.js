@@ -7,7 +7,7 @@ export default class BoardComponent extends React.Component {
     render() {
         return (
             <Paper id='board' zDepth={2}>
-                <Paper className='title' zDepth={2}>
+                <Paper className='title' zDepth={1}>
                     <h1> piles </h1>
                 </Paper>
                 <div className='content'>

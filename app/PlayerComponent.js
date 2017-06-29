@@ -43,7 +43,7 @@ export default class PlayerComponent extends React.Component {
         return (
             <div className='player'
                  style={player.turn ? styles.active : styles.inactive}>
-                <Paper className='title' zDepth={2}>
+                <Paper className='title' zDepth={1}>
                     <div className='buttons'>
                         <IconButton tooltip={player.name}
                                     style={{zIndex:1000}}

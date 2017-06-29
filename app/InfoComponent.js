@@ -24,11 +24,11 @@ export default class InfoComponent extends React.Component {
     render() {
         return (
             <Paper id='info' zDepth={2}>
-                <Paper className='title' zDepth={2}>
+                <Paper className='title' zDepth={1}>
                     <h1> dominion </h1>
                 </Paper>
                 
-                <Paper className='content full' zDepth={2}>
+                <Paper className='content full' zDepth={1}>
                     {this.props.help && this.props.card &&
                     <div className='links'>
                         <img src={'asset/cards/' + this.props.card + '.jpg'}/>
