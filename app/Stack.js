@@ -40,8 +40,9 @@ export default class Stack extends React.Component {
         var data = this.props.data;
         var display = this.state.open ? data : data.slice(-5);
         
+        var size = data.length;
         var len = display.length;
-        var start = this.state.open ? 0 : data.length - len;
+        var start = this.state.open ? 0 : size - len;
         
         var tap = this.props._tapCard;
         var over = this.props._handleMouseOver;
@@ -50,7 +51,7 @@ export default class Stack extends React.Component {
         return (
             <Paper className='wrap' zDepth={1}>
                 <IconButton onTouchTap={this._handleToggle}
-                            tooltip={this.props.tooltip}
+                            tooltip={this.props.tooltip + ' (' + size + ')'}
                             style={{zIndex:1000}}>
                     {this.state.open ? <IconRemove/> : <IconAdd/>}
                 </IconButton>
