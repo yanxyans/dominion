@@ -14,9 +14,6 @@ export default class PlayersComponent extends React.Component {
                 return player.counted;
             }).sort(function(playerA, playerB) {
                 return playerB.points - playerA.points;
-            }).map(function(player, index) {
-                player.index = index;
-                return player;
             }).concat(players.filter(function(player) {
                 return !player.counted;
             }));

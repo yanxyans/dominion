@@ -302,6 +302,26 @@ Game.prototype.setPhase = function(user, phase) {
                 player.countScore(this);
             }
             
+            var ranking = {};
+            var sortedByPoints = this.players.map(function(player) {
+                return {
+                    id: player.id,
+                    points: player.points
+                };
+            }).sort(function(playerA, playerB) {
+                return playerB.points - playerA.points;
+            }).forEach(function(player, index) {
+                ranking[player.id] = index;
+            });
+            
+            for (var i = 0; i < len; i++) {
+                player = this.players[i];
+                
+                if (player.id in ranking) {
+                    player.ranking = ranking[player.id];
+                }
+            }            
+            
             this.state = 'END';
             
             this.action = 0;

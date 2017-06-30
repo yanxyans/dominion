@@ -54,13 +54,13 @@ export default class PlayerComponent extends React.Component {
                                 <IconName color={visible ? yellowA700 : null}/>}
                         </IconButton>
                         
-                        {player.index !== undefined &&
+                        {player.ranking !== -1 &&
                         <IconButton tooltip={player.points + ' points(s)'}
                                     style={{zIndex:1000}}>
-                            {player.index === 0 && <IconOne/>}
-                            {player.index === 1 && <IconTwo/>}
-                            {player.index === 2 && <IconThree/>}
-                            {player.index === 3 && <IconFour/>}
+                            {player.ranking === 0 && <IconOne/>}
+                            {player.ranking === 1 && <IconTwo/>}
+                            {player.ranking === 2 && <IconThree/>}
+                            {player.ranking === 3 && <IconFour/>}
                         </IconButton>}
                         
                         {player.action !== undefined &&

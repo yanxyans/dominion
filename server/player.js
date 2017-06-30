@@ -29,6 +29,8 @@ function Player(user) {
     this.points = 0;
     
     this.counted = false;
+    
+    this.ranking = -1;
 }
 
 Player.prototype.retrievePlayerState = function(id) {
@@ -48,7 +50,8 @@ Player.prototype.retrievePlayerState = function(id) {
         seat: this.seat,
         points: this.points,
         disc: this.id === null,
-        counted: this.counted
+        counted: this.counted,
+        ranking: this.ranking
     };
 };
 
@@ -76,6 +79,8 @@ Player.prototype.init = function(seat) {
     this.points = 0;
     
     this.counted = false;
+    
+    this.ranking = -1;
 };
 
 Player.prototype.emptyCards = function() {
