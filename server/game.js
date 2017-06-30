@@ -155,7 +155,7 @@ Game.prototype.retrieveGameState = function(id) {
     var ret = {
         players: this.players.map(function(player, index) {
             var visible = id === player.id;
-            var playerState = player.retrievePlayerState(id);
+            var playerState = player.retrievePlayerState(id, this.state);
             playerState.visible = visible;
             
             if (playerState.seat === this.turn && this.turn !== -1) {
