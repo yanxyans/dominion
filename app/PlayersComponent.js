@@ -32,6 +32,9 @@ export default class PlayersComponent extends React.Component {
                         player.turn = player.turn || gameState !== 'MAIN';
                         return <PlayerComponent key={index}
                                                 player={player}
+                                                hasContent={gameState === 'MAIN' ||
+                                                           (gameState === 'END' &&
+                                                            player.counted)}
                                                 _reconRoom={this._reconRoom.bind(null, player.seat)}
                                                 _sendControl={this._sendControl}
                                                 _tapCard={this._tapCard}

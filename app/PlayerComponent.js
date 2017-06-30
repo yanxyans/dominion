@@ -33,8 +33,9 @@ export default class PlayerComponent extends React.Component {
     render() {
         var player = this.props.player;
         var source = ['players', player.seat];
-        
         var visible = player.visible;
+        
+        var hasContent = this.props.hasContent;
         
         var tap = this.props._tapCard;
         var over = this.props._handleMouseOver;
@@ -86,6 +87,7 @@ export default class PlayerComponent extends React.Component {
                                       _sendControl={this.props._sendControl}/>}
                 </Paper>
                 
+                {hasContent &&
                 <div className='content'>
                     <Stack data={player.discard}
                            tooltip='discard'
@@ -112,7 +114,7 @@ export default class PlayerComponent extends React.Component {
                            open={true}
                            _handleMouseOver={over}
                            _handleMouseOut={out}/>
-                </div>
+                </div>}
             </div>
         );
     }
