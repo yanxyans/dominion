@@ -4,7 +4,7 @@
 }
 
 #players, #board {
-    flex: 1 0 40%;
+    flex: 1 0 35%;
 }
 
 #info {
@@ -35,7 +35,7 @@
 }
 
 .stack {
-    max-width: 290px;
+    max-width: 270px;
     padding: 5px;
     margin: 5px;
     overflow: auto;
