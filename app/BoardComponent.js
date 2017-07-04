@@ -18,7 +18,8 @@ export default class BoardComponent extends React.Component {
                                       _tapCard={this._tapCard.bind(null, ['piles', pile])}
                                       open={false}
                                       _handleMouseOver={this._handleMouseOver}
-                                      _handleMouseOut={this._handleMouseOut}/>;
+                                      _handleMouseOut={this._handleMouseOut}
+                                      show={true}/>;
                     }, this.props)}
                     {this.props.trash &&
                     <Stack data={this.props.trash}
@@ -26,7 +27,8 @@ export default class BoardComponent extends React.Component {
                            _tapCard={this.props._tapCard.bind(null, ['trash'])}
                            open={false}
                            _handleMouseOver={this.props._handleMouseOver}
-                           _handleMouseOut={this.props._handleMouseOut}/>}
+                           _handleMouseOut={this.props._handleMouseOut}
+                           show={true}/>}
                 </div>
             </Paper>
         );

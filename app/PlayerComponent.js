@@ -19,12 +19,10 @@ import IconFour from 'material-ui/svg-icons/image/looks-4';
 import { yellowA700, white } from 'material-ui/styles/colors';
 
 const styles = {
-    active: {
-        transition: '.3s'
-    },
-    inactive: {
-        opacity: '0.35',
-        transition: '.3s'
+    icon: {
+        fontSize: '20px',
+        color: white,
+        width: 'auto'
     }
 }
 
@@ -42,12 +40,10 @@ export default class PlayerComponent extends React.Component {
         var out = this.props._handleMouseOut;
 
         return (
-            <div className='player'
-                 style={player.turn ? styles.active : styles.inactive}>
+            <div className={player.turn ? 'player' : 'player inactive'}>
                 <Paper className='title' zDepth={1}>
                     <div className='buttons'>
                         <IconButton tooltip={player.name}
-                                    style={{zIndex:1000}}
                                     onTouchTap={this.props._reconRoom}>
                             {player.disc ?
                                 <IconDisconnect/> :
@@ -55,8 +51,7 @@ export default class PlayerComponent extends React.Component {
                         </IconButton>
                         
                         {player.ranking !== -1 &&
-                        <IconButton tooltip={player.points + (player.points === 1 ? ' point' : ' points')}
-                                    style={{zIndex:1000}}>
+                        <IconButton tooltip={player.points + (player.points === 1 ? ' point' : ' points')}>
                             {player.ranking === 0 && <IconOne/>}
                             {player.ranking === 1 && <IconTwo/>}
                             {player.ranking === 2 && <IconThree/>}
@@ -65,17 +60,17 @@ export default class PlayerComponent extends React.Component {
                         
                         {player.action !== undefined &&
                         <IconButton tooltip={player.action + (player.action === 1 ? ' action' : ' actions')}
-                                    style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
+                                    style={styles.icon}>
                             {player.action + 'A'}
                         </IconButton>}
                         {player.buy !== undefined &&
                         <IconButton tooltip={player.buy + (player.buy === 1 ? ' buy' : ' buys')}
-                                    style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
+                                    style={styles.icon}>
                             {player.buy + 'B'}
                         </IconButton>}
                         {player.coin !== undefined &&
                         <IconButton tooltip={player.coin + (player.coin === 1 ? ' coin' : ' coins')}
-                                    style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
+                                    style={styles.icon}>
                             {player.coin + 'C'}
                         </IconButton>}
                     </div>
@@ -94,26 +89,30 @@ export default class PlayerComponent extends React.Component {
                            _tapCard={tap.bind(null, source.concat('discard'))}
                            open={false}
                            _handleMouseOver={over}
-                           _handleMouseOut={out}/>
+                           _handleMouseOut={out}
+                           show={player.turn}/>
                     <Stack data={player.play}
                            tooltip='play'
                            _tapCard={tap.bind(null, source.concat('play'))}
                            open={true}
                            _handleMouseOver={over}
-                           _handleMouseOut={out}/>
+                           _handleMouseOut={out}
+                           show={player.turn}/>
 
                     <Stack data={player.deck}
                            tooltip='deck'
                            _tapCard={tap.bind(null, source.concat('deck'))}
                            open={false}
                            _handleMouseOver={over}
-                           _handleMouseOut={out}/>
+                           _handleMouseOut={out}
+                           show={player.turn}/>
                     <Stack data={player.hand}
                            tooltip='hand'
                            _tapCard={tap.bind(null, source.concat('hand'))}
                            open={true}
                            _handleMouseOver={over}
-                           _handleMouseOut={out}/>
+                           _handleMouseOut={out}
+                           show={player.turn}/>
                 </div>}
             </div>
         );
