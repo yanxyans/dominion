@@ -66,17 +66,17 @@ export default class PlayerComponent extends React.Component {
                         {player.action !== undefined &&
                         <IconButton tooltip={player.action + ' action(s)'}
                                     style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
-                            {player.action}
+                            {player.action + 'A'}
                         </IconButton>}
                         {player.buy !== undefined &&
                         <IconButton tooltip={player.buy + ' buy(s)'}
                                     style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
-                            {player.buy}
+                            {player.buy + 'B'}
                         </IconButton>}
                         {player.coin !== undefined &&
                         <IconButton tooltip={player.coin + ' coin(s)'}
                                     style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
-                            {player.coin}
+                            {player.coin + 'C'}
                         </IconButton>}
                     </div>
                     

@@ -54,13 +54,8 @@
 }
 
 .buttons, .controls {
-    flex: 1 0 50%;
+    flex: 1 0 auto;
     justify-content: center;
-}
-
-.controls > div {
-    flex-wrap: wrap;
-    justify-content: center !important;
 }
 
 .full {
