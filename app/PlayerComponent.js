@@ -55,7 +55,7 @@ export default class PlayerComponent extends React.Component {
                         </IconButton>
                         
                         {player.ranking !== -1 &&
-                        <IconButton tooltip={player.points + ' points(s)'}
+                        <IconButton tooltip={player.points + (player.points === 1 ? ' point' : ' points')}
                                     style={{zIndex:1000}}>
                             {player.ranking === 0 && <IconOne/>}
                             {player.ranking === 1 && <IconTwo/>}
@@ -64,17 +64,17 @@ export default class PlayerComponent extends React.Component {
                         </IconButton>}
                         
                         {player.action !== undefined &&
-                        <IconButton tooltip={player.action + ' action(s)'}
+                        <IconButton tooltip={player.action + (player.action === 1 ? ' action' : ' actions')}
                                     style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
                             {player.action + 'A'}
                         </IconButton>}
                         {player.buy !== undefined &&
-                        <IconButton tooltip={player.buy + ' buy(s)'}
+                        <IconButton tooltip={player.buy + (player.buy === 1 ? ' buy' : ' buys')}
                                     style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
                             {player.buy + 'B'}
                         </IconButton>}
                         {player.coin !== undefined &&
-                        <IconButton tooltip={player.coin + ' coin(s)'}
+                        <IconButton tooltip={player.coin + (player.coin === 1 ? ' coin' : ' coins')}
                                     style={{zIndex:1000, fontSize:'20px', color:white, width:'auto'}}>
                             {player.coin + 'C'}
                         </IconButton>}
