@@ -39,7 +39,7 @@ Player.prototype.retrievePlayerState = function(id, state) {
         name: this.name,
         deck: this.deck.map(this.getCardName.bind(null, state === 'END')),
         discard: this.discard.map(function(card, index) {
-            var show = visible ? true : index === this.discard.length - 1;
+            var show = visible ? true : index === 0;
             return this.getCardName(show, card);
         }, this),
         hand: this.hand.map(this.getCardName.bind(null, visible)),

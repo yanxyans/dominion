@@ -39,6 +39,7 @@
     padding: 5px;
     margin: 5px;
     overflow: auto;
+    direction: rtl;
 }
 
 .player {
@@ -86,7 +87,7 @@ body {
   box-shadow: 0 10px 10px -10px rgba(0, 0, 0, 0.5);
   -webkit-transform: scale(1.1);
   transform: scale(1.1);
-  z-index: 1000;
+  z-index: 1000 !important;
 }
 
 /* Buzz Out */

@@ -227,7 +227,7 @@ Game.prototype.startGame = function(user) {
         
         this.pilesWork[pileName] = [];
         for (var j = 0; j < pileSize; j++) {
-            this.pilesWork[pileName].push(new Card(pileName));
+            this.pilesWork[pileName].unshift(new Card(pileName));
         }
     }
     
@@ -455,7 +455,7 @@ Game.prototype.handlePlay = function(player, cards, index) {
 };
 
 Game.prototype.playCard = function(player, card, playType) {
-    player.play.push(card);
+    player.play.unshift(card);
     
     // apply
     card.types[playType](player, this);
@@ -483,7 +483,7 @@ Game.prototype.handleBuy = function(player, cards, index) {
                 
                 // gain event
                 pile.splice(index, 1);
-                player.discard.push(card);
+                player.discard.unshift(card);
                 
                 this.advanceTodo(this.todo);
                 return true;

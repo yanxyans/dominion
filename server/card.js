@@ -84,7 +84,7 @@ function trashItem(player, game, selected) {
                 
                 if (index !== -1) {
                     player.hand.splice(index, 1);
-                    game.trash.push(card);
+                    game.trash.unshift(card);
                 }
             }
         }, true);
@@ -112,7 +112,7 @@ function gainItem(player, game, valid, selectable, selected, dest) {
                     var index = pile.indexOf(card);
                     if (index !== -1) {
                         pile.splice(index, 1);
-                        dest.push(card);
+                        dest.unshift(card);
                     }
                 }
             }
@@ -148,7 +148,7 @@ function discardTask(player, selected) {
                 
                 if (index !== -1) {
                     player.hand.splice(index, 1);
-                    player.discard.push(card);
+                    player.discard.unshift(card);
                 }
             }
         }, true);
