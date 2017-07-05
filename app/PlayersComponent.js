@@ -4,7 +4,15 @@ import PlayerComponent from './PlayerComponent';
 
 import Paper from 'material-ui/Paper';
 
-import { greenA700 } from 'material-ui/styles/colors';
+import { amberA700, greenA700, white } from 'material-ui/styles/colors';
+
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+
+const styles = {
+    appBar: {
+        backgroundColor: greenA700
+    },
+};
 
 export default class PlayersComponent extends React.Component {
     render() {
@@ -22,9 +30,11 @@ export default class PlayersComponent extends React.Component {
             
         return (
             <Paper id='players' zDepth={2}>
-                <Paper className='title' zDepth={1} style={{backgroundColor:greenA700}}>
-                    <h1> players </h1>
-                </Paper>
+                <Toolbar style={styles.appBar}>
+                    <ToolbarGroup>
+                        <ToolbarTitle text="players" style={{color:white}}/>
+                    </ToolbarGroup>
+                </Toolbar>
                 
                 <div className='content'>
                     {sortedPlayers.map(function(player, index) {

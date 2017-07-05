@@ -811,8 +811,8 @@ function getCardAttributes(name) {
             return {
                 coin: 4,
                 types: {
-                    attack: militiaAttack,
-                    action: militiaAction
+                    action: militiaAction,
+                    attack: militiaAttack
                 }
             };
         case 'mine':

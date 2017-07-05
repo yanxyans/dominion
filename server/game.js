@@ -76,7 +76,7 @@ Game.prototype.removePlayer = function(user) {
         var player = this.players[slot];
         
         player.id = null;
-        player.name = 'click to reconnect';
+        player.name = 'reconnect here';
     }
     return true;
 };
@@ -152,6 +152,23 @@ Game.prototype.view = function(ret) {
 
 Game.prototype.retrieveGameState = function(id) {
     var todo = this.getTodo(this.todo);
+    var piles = {};
+    Object.keys(this.pilesWork).forEach(function(key) {
+        var pile = this.pilesWork[key];
+        
+        var ret = [];
+        for (var i = 0; i < pile.length; i++) {
+            var card = pile[i];
+            
+            ret.push({
+                name: card.name,
+                coin: card.coin,
+                types: Object.keys(card.types)
+            });
+        }
+        piles[key] = ret;
+    }, this);
+    
     var ret = {
         players: this.players.map(function(player, index) {
             var visible = id === player.id;
@@ -169,7 +186,7 @@ Game.prototype.retrieveGameState = function(id) {
             
             return playerState;
         }, this),
-        piles: this.pilesWork,
+        piles: piles,
         trash: this.trash,
         state: this.state
     };

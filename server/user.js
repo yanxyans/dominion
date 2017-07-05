@@ -1,7 +1,7 @@
 function User(socket) {
 	this.socket = socket;
 	this.id = socket.id;
-	this.name = 'rename yourself';
+	this.name = 'name yourself';
 	
 	this.rooms = {};
 	this.current = null;
