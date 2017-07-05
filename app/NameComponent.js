@@ -35,7 +35,7 @@ export default class NameComponent extends React.Component {
                         primary={false}
                         onTouchTap={this._handleClose}
             />,
-            <FlatButton label='Set'
+            <FlatButton label='Name'
                         primary={true}
                         keyboardFocused={true}
                         onTouchTap={this._handleSubmit}

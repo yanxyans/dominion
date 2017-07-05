@@ -43,7 +43,7 @@
 
 .stack {
     max-width: 255px;
-    padding: 5px;
+    padding: 5px 5px 6px 5px;
     margin: 5px;
     overflow: auto;
     direction: rtl;

@@ -122,7 +122,9 @@ class Container extends React.Component {
                     <Snackbar open={this.state.messageOpen}
                               message={this.state.messageContent}
                               autoHideDuration={4000}
-                              onRequestClose={this.handleRequestClose}/>
+                              onRequestClose={this.handleRequestClose}
+                              action='Ok'
+                              onActionTouchTap={this.handleRequestClose}/>
                 </div>
             </MuiThemeProvider>
         );
