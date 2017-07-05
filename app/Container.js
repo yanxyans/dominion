@@ -34,7 +34,7 @@ class Container extends React.Component {
         players: [],
         piles: {},
         trash: null,
-        help: false,
+        help: true,
         gameState: null,
         messageOpen: false,
         messageContent: ''

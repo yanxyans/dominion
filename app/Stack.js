@@ -19,8 +19,13 @@ export default class Stack extends React.Component {
         super(props);
         
         this.state = {
-            open: props.open
+            open: props.open,
+            show: props.show
         };
+    }
+    
+    componentDidMount() {
+        this.setState({open: this.props.open});
     }
     
     _handleToggle = () => {
@@ -29,7 +34,7 @@ export default class Stack extends React.Component {
     
     _getIndex = (index, isLast, selected) => {
         var isStacked = !this.state.open && !isLast ?
-            {marginRight:'-55px'} :
+            {marginRight:'-50px'} :
             null;
         var isSelected = selected ?
             {opacity:0.35} :
@@ -56,7 +61,7 @@ export default class Stack extends React.Component {
         var show = this.props.show;
         
         return (
-            <Paper className='wrap' zDepth={1}>
+            <Paper className={'wrap ' + this.props.tooltip} zDepth={1}>
                 <IconButton onTouchTap={this._handleToggle}
                             tooltip={this.props.tooltip + ' (' + size + ')'}>
                     {this.state.open ? <IconRemove/> : <IconAdd/>}
@@ -75,20 +80,20 @@ export default class Stack extends React.Component {
                         return <img key={index}
                                     src={source}
                                     className='hvr-grow-shadow'
-                                    style={this(len - 1 - index, isLast, item.selected)}
+                                    style={this._getIndex(len - 1 - index, isLast, item.selected)}
                                     onTouchTap={tap.bind(null, index)}
                                     onMouseOver={over.bind(null, name)}
                                     onMouseOut={out}
-                                    data-for={show ? guid : null}
-                                    data-tip/>;
-                    }, this._getIndex)}
-                    {show && display.map(function(item, index) {
+                                    data-for={guid}
+                                    data-tip=''/>;
+                    }, this)}
+                    {display.map(function(item, index) {
                         return <ReactTooltip id={item.guid}
                                              key={index}
                                              effect='solid'
                                              type='light'>
-                                   <img src={item.source}
-                                        style={{maxHeight:'400px'}}/>
+                                    {show && <img src={item.source}
+                                                  style={{maxHeight:'400px'}}/>}
                                </ReactTooltip>;
                     })}
                 </div>

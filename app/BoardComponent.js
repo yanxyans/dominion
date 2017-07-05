@@ -5,6 +5,8 @@ import Stack from './Stack';
 
 export default class BoardComponent extends React.Component {
     render() {
+        var help = this.props.help;
+        
         return (
             <Paper id='board' zDepth={2}>
                 <Paper className='title' zDepth={1}>
@@ -19,7 +21,7 @@ export default class BoardComponent extends React.Component {
                                       open={false}
                                       _handleMouseOver={this._handleMouseOver}
                                       _handleMouseOut={this._handleMouseOut}
-                                      show={true}/>;
+                                      show={help}/>;
                     }, this.props)}
                     {this.props.trash &&
                     <Stack data={this.props.trash}
@@ -28,7 +30,7 @@ export default class BoardComponent extends React.Component {
                            open={false}
                            _handleMouseOver={this.props._handleMouseOver}
                            _handleMouseOut={this.props._handleMouseOut}
-                           show={true}/>}
+                           show={help}/>}
                 </div>
             </Paper>
         );

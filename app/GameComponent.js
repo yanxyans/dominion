@@ -27,15 +27,15 @@ export default class GameComponent extends React.Component {
                                   _sendControl={this.props._sendControl}
                                   _tapCard={this.props._tapCard}
                                   _handleMouseOver={this._handleMouseOver}
-                                  _handleMouseOut={this._handleMouseOut}/>
+                                  _handleMouseOut={this._handleMouseOut}
+                                  help={this.props.help}/>
                 {this.props.gameState !== 'INIT' &&
                 <BoardComponent piles={this.props.piles}
                                 trash={this.props.trash}
                                 _tapCard={this.props._tapCard}
                                 _handleMouseOver={this._handleMouseOver}
-                                _handleMouseOut={this._handleMouseOut}/>}
-                <InfoComponent help={this.props.help}
-                               card={this.state.card}/>
+                                _handleMouseOut={this._handleMouseOut}
+                                help={this.props.help}/>}
             </FullWidthSection>
         );
     }

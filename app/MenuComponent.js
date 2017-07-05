@@ -14,6 +14,29 @@ import Drawer from 'material-ui/Drawer';
 import IconButton from 'material-ui/IconButton';
 import ActionMenu from 'material-ui/svg-icons/navigation/menu';
 
+import AppBar from 'material-ui/AppBar';
+
+import { yellowA700 } from 'material-ui/styles/colors';
+
+import IconPublic from 'material-ui/svg-icons/social/public';
+
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+
+import FontIcon from 'material-ui/FontIcon';
+
+import IconBooks from 'material-ui/svg-icons/av/library-books';
+import IconEmail from 'material-ui/svg-icons/communication/email';
+import IconMenu from 'material-ui/svg-icons/navigation/menu';
+
+const styles = {
+    appBar: {
+        backgroundColor: yellowA700
+    },
+    appBarIcons: {
+        backgroundColor: '#303030'
+    }
+};
+
 export default class MenuComponent extends React.Component {
     constructor(props) {
         super(props);
@@ -29,9 +52,35 @@ export default class MenuComponent extends React.Component {
     render() {
         return (
             <div id='menu'>
-                <IconButton onTouchTap={this._handleToggle}>
-                    <ActionMenu/>
-                </IconButton>
+                <Toolbar>
+                    <ToolbarGroup>
+                        <IconButton tooltip='menu'
+                                    onTouchTap={this._handleToggle}>
+                            <IconMenu/>
+                        </IconButton>
+                    </ToolbarGroup>
+                    <ToolbarGroup>
+                        <IconButton tooltip='source'
+                                    onTouchTap={() => window.open('https://github.com/yanxyans/dominion')}>
+                            <FontIcon className='muidocs-icon-custom-github'/>
+                        </IconButton>
+                        <ToolbarSeparator />
+                        <IconButton tooltip='official'
+                                    onTouchTap={() => window.open('https://dominion.games')}>
+                            <IconPublic/>
+                        </IconButton>
+                        <ToolbarSeparator />
+                        <IconButton tooltip='wiki'
+                                    onTouchTap={() => window.open('http://wiki.dominionstrategy.com/index.php/Gameplay')}>
+                            <IconBooks/>
+                        </IconButton>
+                        <ToolbarSeparator />
+                        <IconButton tooltip='contact'
+                                    href='mailto:fssyan@gmail.com'>
+                            <IconEmail/>
+                        </IconButton>
+                    </ToolbarGroup>
+                </Toolbar>
                 <Drawer
                     docked={false}
                     open={this.state.open}

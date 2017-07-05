@@ -3,12 +3,12 @@
     display: flex;
 }
 
-#players, #board {
-    flex: 1 0 35%;
+#players {
+    flex: 1 0 40%;
 }
 
-#info {
-    flex: 1 0 20%;
+#board {
+    flex: 0 1 auto;
 }
 
 #players, #board, #info {
@@ -28,10 +28,17 @@
 }
 
 .wrap {
-    flex: 1 0 50%;
     align-items: center;
     min-height: 141px;
     justify-content: center;
+}
+
+.discard, .play, .deck, .hand {
+    flex: 1 0 50%;
+}
+
+.pile, .trash {
+    flex: 1 0 33%;
 }
 
 .stack {

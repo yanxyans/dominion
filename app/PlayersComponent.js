@@ -36,7 +36,8 @@ export default class PlayersComponent extends React.Component {
                                                 _sendControl={this._sendControl}
                                                 _tapCard={this._tapCard}
                                                 _handleMouseOver={this._handleMouseOver}
-                                                _handleMouseOut={this._handleMouseOut}/>;
+                                                _handleMouseOut={this._handleMouseOut}
+                                                help={this.help}/>;
                     }, this.props)}
                 </div>
             </Paper>

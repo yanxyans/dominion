@@ -38,6 +38,9 @@ export default class PlayerComponent extends React.Component {
         var tap = this.props._tapCard;
         var over = this.props._handleMouseOver;
         var out = this.props._handleMouseOut;
+        
+        var helper = this.props.help;
+        var help = helper && player.turn;
 
         return (
             <div className={player.turn ? 'player' : 'player inactive'}>
@@ -90,14 +93,14 @@ export default class PlayerComponent extends React.Component {
                            open={false}
                            _handleMouseOver={over}
                            _handleMouseOut={out}
-                           show={player.turn}/>
+                           show={help}/>
                     <Stack data={player.play}
                            tooltip='play'
                            _tapCard={tap.bind(null, source.concat('play'))}
                            open={true}
                            _handleMouseOver={over}
                            _handleMouseOut={out}
-                           show={player.turn}/>
+                           show={help}/>
 
                     <Stack data={player.deck}
                            tooltip='deck'
@@ -105,14 +108,14 @@ export default class PlayerComponent extends React.Component {
                            open={false}
                            _handleMouseOver={over}
                            _handleMouseOut={out}
-                           show={player.turn}/>
+                           show={help}/>
                     <Stack data={player.hand}
                            tooltip='hand'
                            _tapCard={tap.bind(null, source.concat('hand'))}
                            open={true}
                            _handleMouseOver={over}
                            _handleMouseOut={out}
-                           show={player.turn}/>
+                           show={help}/>
                 </div>}
             </div>
         );
