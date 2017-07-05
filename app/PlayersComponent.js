@@ -4,6 +4,8 @@ import PlayerComponent from './PlayerComponent';
 
 import Paper from 'material-ui/Paper';
 
+import { greenA700 } from 'material-ui/styles/colors';
+
 export default class PlayersComponent extends React.Component {
     render() {
         var players = this.props.players;
@@ -20,7 +22,7 @@ export default class PlayersComponent extends React.Component {
             
         return (
             <Paper id='players' zDepth={2}>
-                <Paper className='title' zDepth={1}>
+                <Paper className='title' zDepth={1} style={{backgroundColor:greenA700}}>
                     <h1> players </h1>
                 </Paper>
                 

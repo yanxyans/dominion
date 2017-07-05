@@ -32,19 +32,23 @@ export default class Stack extends React.Component {
         this.setState({open: !this.state.open});
     }
     
-    _getIndex = (index, isLast, selected) => {
+    _getIndex = (index, isLast, selected, selectable) => {
         var isStacked = !this.state.open && !isLast ?
             {marginRight:'-50px'} :
-            null;
+            {margin:'1px'};
         var isSelected = selected ?
             {opacity:0.35} :
+            null;
+        var isSelectable = selectable ?
+            {boxShadow:'0px 0px 1px 1px #FFAB00'} :
             null;
         
         return Object.assign(
             {},
             {zIndex:index, maxHeight:'100px', transition:'.3s'},
             isStacked,
-            isSelected
+            isSelected,
+            isSelectable
         );
     }
     
@@ -80,7 +84,7 @@ export default class Stack extends React.Component {
                         return <img key={index}
                                     src={source}
                                     className='hvr-grow-shadow'
-                                    style={this._getIndex(len - 1 - index, isLast, item.selected)}
+                                    style={this._getIndex(len - 1 - index, isLast, item.selected, item.selectable)}
                                     onTouchTap={tap.bind(null, index)}
                                     onMouseOver={over.bind(null, name)}
                                     onMouseOut={out}

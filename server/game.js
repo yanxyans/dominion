@@ -178,6 +178,30 @@ Game.prototype.retrieveGameState = function(id) {
         var item = todo.getItem();
         if (item && item.view) {
             item.view(ret);
+            
+            var res = {
+                players: this.players.map(function(player, index) {
+                    var visible = id === player.id;
+                    var playerState = player.retrievePlayerState(id, this.state);
+                    playerState.visible = visible;
+                    
+                    if (playerState.seat === this.turn && this.turn !== -1) {
+                        playerState.action = this.action;
+                        playerState.buy = this.buy;
+                        playerState.coin = this.coin;
+                    }
+                    
+                    var turn = todo ? todo.getItem().turn : this.turn;
+                    playerState.turn = turn === player.seat && turn !== -1;
+                    
+                    return playerState;
+                }, this),
+                piles: this.pilesWork,
+                trash: this.trash,
+                state: this.state
+            };
+            item.view(res);
+            return res;
         }
     } else {
         this.view(ret);
@@ -622,6 +646,15 @@ Game.prototype.handleReactions = function(item) {
                     var retp = ret.players[turn];
                     if (retp) {
                         retp.control = ['Finish'];
+                        
+                        for (var j = 0; j < player.hand.length; j++) {
+                            var card = player.hand[j];
+                            if (card.canReact &&
+                                card.canReact(player, item) &&
+                                !card.selectable) {
+                                card.selectable = true;
+                            }
+                        }
                     }
                 }
             },
@@ -631,11 +664,21 @@ Game.prototype.handleReactions = function(item) {
                     var card = cards[index];
                     if (card.canReact && card.canReact(player, item)) {
                         card.types.reaction(player, item, callback);
+                        
+                        if (card.selectable) {
+                            delete card.selectable;
+                        }
                     }
                 }
             },
             {
                 Finish: function() {
+                    for (var i = 0; i < player.hand.length; i++) {
+                        var card = player.hand[i];
+                        if (card.selectable) {
+                            delete card.selectable;
+                        }
+                    }
                     this.resolvable = true;
                     return true;
                 }

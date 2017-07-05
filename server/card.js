@@ -37,7 +37,7 @@ function decPlayerPoints(points) {
 
 // item factory
 
-function selectItem(main, trigger, type, turn, valid, selectable, controls, selected) {
+function selectItem(main, trigger, type, turn, valid, selectable, controls, selected, toSelect) {
     
     var selectTask = new Task(turn,
         function(item) {
@@ -47,6 +47,8 @@ function selectItem(main, trigger, type, turn, valid, selectable, controls, sele
         function(ret) {
             var playerView = ret.players[turn];
             playerView.control = Object.keys(controls);
+            
+            toSelect(ret);
         },
         function(cards, index) {
             var card = selectable(cards, index, selected);
@@ -92,7 +94,7 @@ function trashItem(player, game, selected) {
     return new Item([trash], [], 'trash', turn);
 }
 
-function gainItem(player, game, valid, selectable, selected, dest) {
+function gainItem(player, game, valid, selectable, selected, dest, toSelect) {
     var turn = player.seat;
     
     var gain = new Task(turn,
@@ -131,7 +133,7 @@ function gainItem(player, game, valid, selectable, selected, dest) {
                 return false;
             }
         },
-        selected);
+        selected, toSelect);
 }
 
 // task factory
@@ -212,6 +214,13 @@ function cellarAction(player, game) {
             },
             {
                 Discard: function() {
+                    for (var i = 0; i < player.hand.length; i++) {
+                        var card = player.hand[i];
+                        if (card.selectable) {
+                            delete card.selectable;
+                        }
+                    }
+                    
                     var len = selected.length;
                     for (var i = 0; i < len; i++) {
                         delete selected[i].selected;
@@ -221,7 +230,18 @@ function cellarAction(player, game) {
                     return true;
                 }
             },
-            selected);
+            selected,
+            function(ret) {
+                var hand = player.hand;
+                for (var i = 0; i < hand.length; i++) {
+                    var card = hand[i];
+                    if (card.selected && card.selectable) {
+                        delete card.selectable;
+                    } else if (!card.selectable) {
+                        card.selectable = true;
+                    }
+                }
+            });
             
         game.todo.push(playItem);
     }
@@ -310,7 +330,20 @@ function militiaAttack(player) {
                 return false;
             }
         },
-        selected);
+        selected,
+        function(ret) {
+            var hand = player.hand;
+            var rem = hand.length - selected.length;
+            for (var i = 0; i < hand.length; i++) {
+                var card = hand[i];
+                if (rem === 3 &&
+                    card.selectable) {
+                    delete card.selectable;
+                } else if (rem > 3 && !card.selectable) {
+                    card.selectable = true;
+                }
+            }
+        });
 }
 
 function moatAction(player, game) {
@@ -401,7 +434,37 @@ function mineAction(player, game) {
                             }
                             
                             return null;
-                        }, gained, player.hand));
+                        }, gained, player.hand,
+                        function(ret) {
+                            var oldCard = selected[0];
+                            var piles = game.pilesWork;
+                            var names = Object.keys(piles).filter(function(name) {
+                                var pile = piles[name];
+                                if (pile.length > 0) {
+                                    var newCard = pile[0];
+                                    return 'treasure' in newCard.types &&
+                                           newCard.coin <= oldCard.coin + 3;
+                                }
+                                return false;
+                            });
+                            
+                            var gainLen = gained.length;
+                            for (var i = 0; i < names.length; i++) {
+                                var name = names[i];
+                                var pile = piles[name];
+                                
+                                for (var j = 0; j < pile.length; j++) {
+                                    var card = pile[j];
+                                    if (gainLen === 1 &&
+                                        card.selectable) {
+                                        delete card.selectable;
+                                    } else if (gainLen === 0 &&
+                                               !card.selectable) {
+                                        card.selectable = true;
+                                    }
+                                }
+                            }
+                        }));
                 }
             }, true);
         
@@ -425,6 +488,13 @@ function mineAction(player, game) {
             },
             {
                 Trash: function() {
+                    for (var i = 0; i < player.hand.length; i++) {
+                        var card = player.hand[i];
+                        if (card.selectable) {
+                            delete card.selectable;
+                        }
+                    }
+                    
                     var len = selected.length;
                     for (var i = 0; i < len; i++) {
                         delete selected[i].selected;
@@ -434,7 +504,22 @@ function mineAction(player, game) {
                     return true;
                 }
             },
-            selected);
+            selected,
+            function(ret) {
+                var hand = player.hand;
+                var sel = selected.length;
+                for (var i = 0; i < hand.length; i++) {
+                    var card = hand[i];
+                    if (sel === 1 &&
+                        card.selectable) {
+                        delete card.selectable;
+                    } else if (sel === 0 &&
+                               'treasure' in card.types &&
+                               !card.selectable) {
+                        card.selectable = true;
+                    }
+                }
+            });
         
         game.todo.push(playItem);
     }
@@ -483,7 +568,37 @@ function remodelAction(player, game) {
                             }
                             
                             return null;
-                        }, gained, player.discard));
+                        }, gained, player.discard,
+                        function(ret) {
+                            var oldCard = selected[0];
+                            var piles = game.pilesWork;
+                            
+                            var names = Object.keys(piles).filter(function(name) {
+                                var pile = piles[name];
+                                if (pile.length > 0) {
+                                    var newCard = pile[0];
+                                    return newCard.coin <= oldCard.coin + 2;
+                                }
+                                return false;
+                            });
+                            
+                            var gainLen = gained.length;
+                            for (var i = 0; i < names.length; i++) {
+                                var name = names[i];
+                                var pile = piles[name];
+                                
+                                for (var j = 0; j < pile.length; j++) {
+                                    var card = pile[j];
+                                    if (gainLen === 1 &&
+                                        card.selectable) {
+                                        delete card.selectable;
+                                    } else if (gainLen === 0 &&
+                                               !card.selectable) {
+                                        card.selectable = true;
+                                    }
+                                }
+                            }
+                        }));
                 }
             }, true);
         
@@ -514,7 +629,21 @@ function remodelAction(player, game) {
                     return false;
                 }
             },
-            selected);
+            selected,
+            function(ret) {
+                var hand = player.hand;
+                var sel = selected.length;
+                for (var i = 0; i < hand.length; i++) {
+                    var card = hand[i];
+                    if (sel === 1 &&
+                        card.selectable) {
+                        delete card.selectable;
+                    } else if (sel === 0 &&
+                               !card.selectable) {
+                        card.selectable = true;
+                    }
+                }
+            });
         
         game.todo.push(playItem);
     }
@@ -586,7 +715,33 @@ function workshopAction(player, game) {
                 }
                 
                 return null;
-            }, selected, player.discard);
+            }, selected, player.discard,
+            function(ret) {
+                var sel = selected.length;
+                var piles = game.pilesWork;
+                
+                var names = Object.keys(piles).filter(function(name) {
+                    var pile = piles[name];
+                    if (pile.length > 0) {
+                        return pile[0].coin <= 4;
+                    }
+                    return false;
+                });
+                
+                for (var i = 0; i < names.length; i++) {
+                    var name = names[i];
+                    var pile = piles[name];
+                    
+                    for (var j = 0; j < pile.length; j++) {
+                        var card = pile[j];
+                        if (sel === 1 && card.selectable) {
+                            delete card.selectable;
+                        } else if (sel === 0 && !card.selectable) {
+                            card.selectable = true;
+                        }
+                    }
+                }
+            });
             
         var gainTask = new Task(turn,
             function(item) {

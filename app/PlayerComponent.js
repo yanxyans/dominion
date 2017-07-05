@@ -16,7 +16,7 @@ import IconTwo from 'material-ui/svg-icons/image/looks-two';
 import IconThree from 'material-ui/svg-icons/image/looks-3';
 import IconFour from 'material-ui/svg-icons/image/looks-4';
 
-import { yellowA700, white } from 'material-ui/styles/colors';
+import { amberA700, white, purpleA700, greenA700 } from 'material-ui/styles/colors';
 
 const styles = {
     icon: {
@@ -44,13 +44,13 @@ export default class PlayerComponent extends React.Component {
 
         return (
             <div className={player.turn ? 'player' : 'player inactive'}>
-                <Paper className='title' zDepth={1}>
+                <Paper className='title' zDepth={1} style={{minHeight:'82px'}}>
                     <div className='buttons'>
                         <IconButton tooltip={player.name}
                                     onTouchTap={this.props._reconRoom}>
                             {player.disc ?
                                 <IconDisconnect/> :
-                                <IconName color={visible ? yellowA700 : null}/>}
+                                <IconName color={visible ? amberA700 : null}/>}
                         </IconButton>
                         
                         {player.ranking !== -1 &&

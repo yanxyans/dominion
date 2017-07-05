@@ -60,6 +60,7 @@ Player.prototype.getCardName = function(visible, card) {
         ret.name = visible ? card.name : '';
         ret.types = visible && card.types;
         ret.selected = card.selected;
+        ret.selectable = visible ? card.selectable : null;
     }
         
     return ret;

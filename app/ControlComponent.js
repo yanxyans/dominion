@@ -8,7 +8,7 @@ import {
 import PrimaryIcon from 'material-ui/svg-icons/navigation/chevron-right';
 import SecondaryIcon from 'material-ui/svg-icons/action/code';
 
-import { yellowA700, white } from 'material-ui/styles/colors';
+import { amberA700, white, greenA700, purple100 } from 'material-ui/styles/colors';
 
 /**
  * A basic vertical non-linear implementation
@@ -39,7 +39,7 @@ class ControlComponent extends React.Component {
                                             icon={null}
                                             className={!isDisabled && 'hvr-buzz-out'}
                                 >
-                                    <span style={{color: isActive ? yellowA700 : white}}>
+                                    <span style={{color: isActive ? amberA700 : white}}>
                                         {step}
                                     </span>
                                 </StepButton>

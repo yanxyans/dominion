@@ -3,13 +3,15 @@ import React from 'react';
 import Paper from 'material-ui/Paper';
 import Stack from './Stack';
 
+import { greenA700 } from 'material-ui/styles/colors';
+
 export default class BoardComponent extends React.Component {
     render() {
         var help = this.props.help;
         
         return (
             <Paper id='board' zDepth={2}>
-                <Paper className='title' zDepth={1}>
+                <Paper className='title' zDepth={1} style={{backgroundColor:greenA700}}>
                     <h1> piles </h1>
                 </Paper>
                 <div className='content'>
