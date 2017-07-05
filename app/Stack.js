@@ -83,7 +83,7 @@ export default class Stack extends React.Component {
                         
                         return <img key={index}
                                     src={source}
-                                    className='hvr-grow-shadow'
+                                    className='hvr-grow'
                                     style={this._getIndex(len - 1 - index, isLast, item.selected, item.selectable)}
                                     onTouchTap={tap.bind(null, index)}
                                     onMouseOver={over.bind(null, name)}

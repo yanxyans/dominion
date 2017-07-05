@@ -6,6 +6,8 @@ import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 
+import { amberA700 } from 'material-ui/styles/colors';
+
 export default class JoinComponent extends React.Component {
     state = {
         open: false,
@@ -37,6 +39,7 @@ export default class JoinComponent extends React.Component {
                         primary={true}
                         keyboardFocused={true}
                         onTouchTap={this._handleJoin}
+                        style={{color:amberA700}}
             />];
 
         return (
@@ -50,7 +53,8 @@ export default class JoinComponent extends React.Component {
                         onRequestClose={this._handleClose}>
                     <TextField id='room'
                                value={this.state.room}
-                               onChange={this._handleKey}/>
+                               onChange={this._handleKey}
+                               underlineFocusStyle={{borderColor:amberA700}}/>
                 </Dialog>
             </div>
         );
