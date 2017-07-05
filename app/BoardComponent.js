@@ -12,7 +12,7 @@ export default class BoardComponent extends React.Component {
         return (
             <Paper id='board' zDepth={2}>
                 <Paper className='title' zDepth={1} style={{backgroundColor:greenA700}}>
-                    <h1> piles </h1>
+                    <h1> supply </h1>
                 </Paper>
                 <div className='content'>
                     {Object.keys(this.props.piles).map(function(pile, index) {
