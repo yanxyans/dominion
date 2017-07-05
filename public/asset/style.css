@@ -42,11 +42,12 @@
 }
 
 .stack {
-    max-width: 270px;
+    max-width: 255px;
     padding: 5px;
     margin: 5px;
     overflow: auto;
     direction: rtl;
+    flex-flow: row nowrap;
 }
 
 .player {
