@@ -49,7 +49,8 @@ Player.prototype.retrievePlayerState = function(id, state) {
         points: this.points,
         disc: this.id === null,
         counted: this.counted,
-        ranking: this.ranking
+        ranking: this.ranking,
+        bought: this.bought
     };
 };
 

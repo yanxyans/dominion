@@ -141,6 +141,38 @@ Game.prototype.view = function(ret) {
                     if (this.turn === player.seat) {
                         player.control = ['Action', 'Buy', 'Cleanup'];
                         player.main = true;
+                        
+                        for (var j = 0; j < player.hand.length; j++) {
+                            var card = player.hand[j];
+                            
+                            if (player.phase === ACTION_PHASE &&
+                                card.types &&
+                                'action' in card.types &&
+                                this.action) {
+                                card.selectable = true;
+                            } else if (player.phase === BUY_PHASE &&
+                                       card.types &&
+                                       'treasure' in card.types &&
+                                       !player.bought) {
+                                card.selectable = true;
+                            }
+                        }
+                        
+                        var coin = this.coin;
+                        if (player.phase === BUY_PHASE && this.buy) {
+                            Object.keys(ret.piles).forEach(function(key) {
+                                var pile = ret.piles[key];
+                                
+                                for (var j = 0; j < pile.length; j++) {
+                                    var card = pile[j];
+                                    if (card.coin <= coin) {
+                                        card.selectable = true;
+                                    }
+                                }
+                            });
+                        }
+                        
+                        
                     }
                 } else if (this.state === 'END' && player.visible) {
                     player.control = ['Start'];
