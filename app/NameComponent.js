@@ -8,7 +8,10 @@ import TextField from 'material-ui/TextField';
 
 import { amberA700 } from 'material-ui/styles/colors';
 
+import IconName from 'material-ui/svg-icons/image/edit';
+
 export default class NameComponent extends React.Component {
+    
     state = {
         open: false,
         name: ''
@@ -45,7 +48,8 @@ export default class NameComponent extends React.Component {
         return (
             <div>
                 <ListItem primaryText={this.props.name}
-                          onTouchTap={this._handleOpen}/>
+                          onTouchTap={this._handleOpen}
+                          rightIcon={<IconName color={amberA700}/>}/>
                 <Dialog title='enter new name'
                         actions={actions}
                         modal={false}

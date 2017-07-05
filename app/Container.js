@@ -109,7 +109,8 @@ class Container extends React.Component {
                                    _setName={this._setName}
                                    _joinRoom={this._joinRoom}
                                    _setRoom={this._setRoom}
-                                   _toggleHelp={this._toggleHelp}/>
+                                   _toggleHelp={this._toggleHelp}
+                                   help={this.state.help}/>
                     {this.state.gameState &&
                     <GameComponent players={this.state.players}
                                    piles={this.state.piles}

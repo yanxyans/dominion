@@ -8,6 +8,8 @@ import TextField from 'material-ui/TextField';
 
 import { amberA700 } from 'material-ui/styles/colors';
 
+import IconRoom from 'material-ui/svg-icons/places/casino';
+
 export default class JoinComponent extends React.Component {
     state = {
         open: false,
@@ -45,7 +47,8 @@ export default class JoinComponent extends React.Component {
         return (
             <div>
                 <ListItem primaryText='join room'
-                          onTouchTap={this._handleOpen}/>
+                          onTouchTap={this._handleOpen}
+                          rightIcon={<IconRoom color={amberA700}/>}/>
                 <Dialog title='enter room name'
                         actions={actions}
                         modal={false}

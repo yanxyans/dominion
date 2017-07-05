@@ -28,6 +28,9 @@ import IconBooks from 'material-ui/svg-icons/av/library-books';
 import IconEmail from 'material-ui/svg-icons/communication/email';
 import IconMenu from 'material-ui/svg-icons/navigation/menu';
 
+import IconIn from 'material-ui/svg-icons/action/zoom-in';
+import IconOut from 'material-ui/svg-icons/action/zoom-out';
+
 const styles = {
     appBar: {
         backgroundColor: amberA700
@@ -87,7 +90,9 @@ export default class MenuComponent extends React.Component {
                         <NameComponent name={this.props.name}
                                        _setName={this.props._setName}/>
                         <JoinComponent _joinRoom={this.props._joinRoom}/>
-                        <ListItem primaryText='toggle magnify' onTouchTap={this.props._toggleHelp}/>
+                        <ListItem primaryText='toggle magnify'
+                                  onTouchTap={this.props._toggleHelp}
+                                  rightIcon={this.props.help ? <IconOut color={amberA700}/> : <IconIn color={amberA700}/>}/>
                     </List>
                     
                     <Divider/>
