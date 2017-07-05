@@ -10,7 +10,7 @@ function User(socket) {
 // user life cycle management
 
 User.prototype.setName = function(name) {
-	var cleanName = name.replace(/[^a-z0-9]/gi,'');
+	var cleanName = name.replace(/[^a-z0-9\s]/gi,'');
 	if (cleanName && cleanName.length <= 20) {
 		this.name = cleanName;
 		

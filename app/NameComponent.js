@@ -18,10 +18,10 @@ export default class NameComponent extends React.Component {
     }
     
     _handleOpen = () => {
-        this.setState({open: true});
+        this.setState({open: true, name: this.props.name});
     }
     _handleClose = () => {
-        this.setState({open: false, name: ''});
+        this.setState({open: false});
     }
     _handleSubmit = () => {
         this.props._setName(this.state.name);
