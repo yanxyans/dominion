@@ -45,7 +45,7 @@ export default class Stack extends React.Component {
         
         return Object.assign(
             {},
-            {zIndex:index, maxHeight:'100px', transition:'.3s'},
+            {zIndex:index, maxHeight:'95px', transition:'.3s'},
             isStacked,
             isSelected,
             isSelectable
@@ -54,7 +54,7 @@ export default class Stack extends React.Component {
     
     render() {
         var data = this.props.data;
-        var display = this.state.open ? data : data.slice(0, 5);
+        var display = this.state.open || this.props.alwaysOpen ? data : data.slice(0, 5);
         
         var size = data.length;
         var len = display.length;
@@ -64,11 +64,12 @@ export default class Stack extends React.Component {
         
         return (
             <Paper className={'wrap ' + this.props.tooltip} zDepth={1}>
+                {!this.props.alwaysOpen &&
                 <IconButton onTouchTap={this._handleToggle}
                             tooltip={this.props.tooltip + ' (' + size + ')'}>
                     {this.state.open ? <IconRemove/> : <IconAdd/>}
-                </IconButton>
-                <div className='stack'>
+                </IconButton>}
+                <div className={this.props.alwaysOpen ? 'wide stack' : 'default stack'}>
                     {display.map(function(item, index) {
                         var name = item.name;
                         var source = '/asset/cards/' + (name ? name : 'back') + '.jpg';

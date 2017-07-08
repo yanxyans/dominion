@@ -95,7 +95,8 @@ export default class PlayerComponent extends React.Component {
                            tooltip='play'
                            _tapCard={tap.bind(null, source.concat('play'))}
                            open={true}
-                           show={help}/>
+                           show={help}
+                           alwaysOpen={true}/>
 
                     <Stack data={player.deck}
                            tooltip='deck'
@@ -106,7 +107,8 @@ export default class PlayerComponent extends React.Component {
                            tooltip='hand'
                            _tapCard={tap.bind(null, source.concat('hand'))}
                            open={true}
-                           show={help}/>
+                           show={help}
+                           alwaysOpen={true}/>
                 </div>}
             </div>
         );
