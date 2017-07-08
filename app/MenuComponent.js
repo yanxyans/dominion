@@ -20,7 +20,7 @@ import { amberA700 } from 'material-ui/styles/colors';
 
 import IconPublic from 'material-ui/svg-icons/social/public';
 
-import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import {Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 
 import FontIcon from 'material-ui/FontIcon';
 
@@ -34,9 +34,6 @@ import IconOut from 'material-ui/svg-icons/action/zoom-out';
 const styles = {
     appBar: {
         backgroundColor: amberA700
-    },
-    appBarIcons: {
-        backgroundColor: '#303030'
     }
 };
 

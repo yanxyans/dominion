@@ -8,7 +8,7 @@ import {
 import PrimaryIcon from 'material-ui/svg-icons/navigation/chevron-right';
 import SecondaryIcon from 'material-ui/svg-icons/action/code';
 
-import { amberA700, white, greenA700, purple100 } from 'material-ui/styles/colors';
+import { amberA700, white } from 'material-ui/styles/colors';
 
 /**
  * A basic vertical non-linear implementation

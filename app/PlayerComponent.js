@@ -16,7 +16,7 @@ import IconTwo from 'material-ui/svg-icons/image/looks-two';
 import IconThree from 'material-ui/svg-icons/image/looks-3';
 import IconFour from 'material-ui/svg-icons/image/looks-4';
 
-import { amberA700, white, purpleA700, greenA700 } from 'material-ui/styles/colors';
+import { amberA700, white } from 'material-ui/styles/colors';
 
 const styles = {
     icon: {
@@ -39,8 +39,7 @@ export default class PlayerComponent extends React.Component {
         var over = this.props._handleMouseOver;
         var out = this.props._handleMouseOut;
         
-        var helper = this.props.help;
-        var help = helper && player.turn;
+        var help = this.props.help && player.turn;
 
         return (
             <div className={player.turn ? 'player' : 'player inactive'}>
@@ -91,30 +90,22 @@ export default class PlayerComponent extends React.Component {
                            tooltip='discard'
                            _tapCard={tap.bind(null, source.concat('discard'))}
                            open={false}
-                           _handleMouseOver={over}
-                           _handleMouseOut={out}
                            show={help}/>
                     <Stack data={player.play}
                            tooltip='play'
                            _tapCard={tap.bind(null, source.concat('play'))}
                            open={true}
-                           _handleMouseOver={over}
-                           _handleMouseOut={out}
                            show={help}/>
 
                     <Stack data={player.deck}
                            tooltip='deck'
                            _tapCard={tap.bind(null, source.concat('deck'))}
                            open={false}
-                           _handleMouseOver={over}
-                           _handleMouseOut={out}
                            show={help}/>
                     <Stack data={player.hand}
                            tooltip='hand'
                            _tapCard={tap.bind(null, source.concat('hand'))}
                            open={true}
-                           _handleMouseOver={over}
-                           _handleMouseOut={out}
                            show={help}/>
                 </div>}
             </div>

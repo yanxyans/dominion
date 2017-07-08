@@ -32,7 +32,7 @@ export default class PlayersComponent extends React.Component {
             <Paper id='players' zDepth={2}>
                 <Toolbar style={styles.appBar}>
                     <ToolbarGroup>
-                        <ToolbarTitle text="players" style={{color:white}}/>
+                        <ToolbarTitle text='players' style={{color:white}}/>
                     </ToolbarGroup>
                 </Toolbar>
                 
@@ -47,8 +47,6 @@ export default class PlayersComponent extends React.Component {
                                                 _reconRoom={this._reconRoom.bind(null, player.seat)}
                                                 _sendControl={this._sendControl}
                                                 _tapCard={this._tapCard}
-                                                _handleMouseOver={this._handleMouseOver}
-                                                _handleMouseOut={this._handleMouseOut}
                                                 help={this.help}/>;
                     }, this.props)}
                 </div>

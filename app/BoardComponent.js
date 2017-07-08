@@ -5,10 +5,9 @@ import Stack from './Stack';
 
 import { greenA700, white } from 'material-ui/styles/colors';
 
-import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import {Toolbar, ToolbarGroup, ToolbarTitle} from 'material-ui/Toolbar';
 
 import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
 
 import IconClear from 'material-ui/svg-icons/content/clear';
 import IconSort from 'material-ui/svg-icons/content/sort';
@@ -97,7 +96,7 @@ export default class BoardComponent extends React.Component {
             <Paper id='board' zDepth={2}>
                 <Toolbar style={styles.appBar}>
                     <ToolbarGroup>
-                        <ToolbarTitle text="supply" style={{color:white}}/>
+                        <ToolbarTitle text='supply' style={{color:white}}/>
                     </ToolbarGroup>
                     <ToolbarGroup>
                         
@@ -129,8 +128,6 @@ export default class BoardComponent extends React.Component {
                                       tooltip='pile'
                                       _tapCard={this._tapCard.bind(null, ['piles', pile])}
                                       open={false}
-                                      _handleMouseOver={this._handleMouseOver}
-                                      _handleMouseOut={this._handleMouseOut}
                                       show={help}/>;
                     }, this.props)}
                     {this.props.trash &&
@@ -138,8 +135,6 @@ export default class BoardComponent extends React.Component {
                            tooltip='trash'
                            _tapCard={this.props._tapCard.bind(null, ['trash'])}
                            open={false}
-                           _handleMouseOver={this.props._handleMouseOver}
-                           _handleMouseOut={this.props._handleMouseOut}
                            show={help}/>}
                 </div>
             </Paper>

@@ -60,8 +60,6 @@ export default class Stack extends React.Component {
         var len = display.length;
         
         var tap = this.props._tapCard;
-        var over = this.props._handleMouseOver;
-        var out = this.props._handleMouseOut;
         var show = this.props.show;
         
         return (
@@ -86,8 +84,6 @@ export default class Stack extends React.Component {
                                     className='hvr-grow'
                                     style={this._getIndex(len - 1 - index, isLast, item.selected, item.selectable)}
                                     onTouchTap={tap.bind(null, index)}
-                                    onMouseOver={over.bind(null, name)}
-                                    onMouseOut={out}
                                     data-for={guid}
                                     data-tip=''/>;
                     }, this)}
