@@ -105,29 +105,11 @@ Game.prototype.takePlayerSlot = function(user, slot) {
 };
 
 Game.prototype.reconnect = function(user, slot) {
-    if (!user) {
-        return {
-            head: 'err',
-            body: 'invalid user'
-        };
-    } else if (this.getPlayIndex(user.id) !== -1) {
-        return {
-            head: 'err',
-            body: 'user is already playing'
-        };
+    if (!user || this.getPlayIndex(user.id) !== -1) {
+        return false;
     }
     
-    var res = this.takePlayerSlot(user, slot);
-    if (res) {
-        return {
-            head: 'ok',
-            body: 'user is now playing'
-        };
-    }
-    return {
-        head: 'err',
-        body: 'could not take player slot'
-    };
+    return this.takePlayerSlot(user, slot);
 };
 
 Game.prototype.view = function(ret) {
@@ -246,11 +228,7 @@ Game.prototype.resetResources = function(player) {
 };
 
 Game.prototype.startGame = function(user) {
-    if (!user) {
-        return false;
-    } else if (this.getPlayIndex(user.id) === -1) {
-        return false;
-    } else if (this.state === 'MAIN') {
+    if (!user || this.getPlayIndex(user.id) === -1 || this.state === 'MAIN') {
         return false;
     }
     
@@ -260,7 +238,7 @@ Game.prototype.startGame = function(user) {
     
     var len = this.players.length;
     if (len < MIN_PLAYERS) {
-        return true;
+        return false;
     }
     
     // flag game as in progress
@@ -411,18 +389,13 @@ Game.prototype.tapCard = function(user, src, index) {
     var player = this.players[userIndex];
     var cards = this.getCards(src);
     
-    var ret = false;
     if (player && cards) {
-        if (todo) {
-            ret = this.handleTodo(todo, cards, index);
-        } else if (cards === player.hand) {
-            ret = this.handlePlay(player, cards, index);
-        } else if (cards in this.pilesWork) {
-            ret = this.handleBuy(player, cards, index);
-        }
+        return (todo && this.handleTodo(todo, cards, index)) ||
+            ((cards === player.hand) && this.handlePlay(player, cards, index)) ||
+            ((cards in this.pilesWork) && this.handleBuy(player, cards, index));
     }
     
-    return ret;
+    return false;
 };
 
 Game.prototype.getCards = function(src) {

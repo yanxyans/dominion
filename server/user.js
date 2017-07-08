@@ -15,16 +15,10 @@ User.prototype.setName = function(name) {
 		this.name = cleanName;
 		
 		this.updateUser();
-		return {
-			head: 'ok',
-			body: 'name has been set'
-		};
+		return true;
 	}
 	
-	return {
-		head: 'err',
-		body: 'name is not alphanumeric and less less than twenty characters'
-	};
+	return false;
 };
 
 User.prototype.addRoom = function(room, joinType) {

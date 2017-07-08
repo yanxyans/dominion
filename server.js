@@ -1,18 +1,19 @@
 var express = require('express');
 var path = require('path');
+var httpProxy = require('http-proxy');
 
-var ACTION_PHASE = 1;
-var BUY_PHASE = 2;
-var CLEANUP_PHASE = 3;
-
-var app = express();
+var PHASE_MAP = {
+    Action: 1,
+    Buy: 2,
+    Cleanup: 3
+};
 
 var isProduction = process.env.NODE_ENV === 'production';
-var server = require('http').createServer(app);
-var io = require('socket.io')(server);
 var port = process.env.PORT || 3000;
 
-var httpProxy = require('http-proxy');
+var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
 
 var proxy = httpProxy.createProxyServer();
 
@@ -55,19 +56,19 @@ app.use(express.static(publicPath));
 
 if (!isProduction) {
 
-  // We require the bundler inside the if block because
-  // it is only needed in a development environment. Later
-  // you will see why this is a good idea
-  var bundle = require('./server/bundle');
-  bundle();
+    // We require the bundler inside the if block because
+    // it is only needed in a development environment. Later
+    // you will see why this is a good idea
+    var bundle = require('./server/bundle');
+    bundle();
 
-  // Any requests to localhost:3000/build is proxied
-  // to webpack-dev-server
-  app.all('/build/*', function (req, res) {
-    proxy.web(req, res, {
-        target: 'http://localhost:8080'
+    // Any requests to localhost:3000/build is proxied
+    // to webpack-dev-server
+    app.all('/build/*', function (req, res) {
+        proxy.web(req, res, {
+            target: 'http://localhost:8080'
+        });
     });
-  });
 
 }
 
@@ -75,54 +76,37 @@ if (!isProduction) {
 // server will crash. An example of this is connecting to the
 // server when webpack is bundling
 proxy.on('error', function(e) {
-  console.log('Could not connect to proxy, please try again...');
+    console.log('Could not connect to proxy, please try again...');
 });
 
 server.listen(port, function () {
-  console.log('Server listening at port %d', port);
+    console.log('Server listening at port %d', port);
 });
 
 io.on('connection', function(socket) {
     
     var user = new User(socket);
     
-    var game = null;
-    var current = null;
-    
     socket.emit('_init', user.name);
     
     socket.on('_set_name', function(name) {
-        var res = user.setName(name);
-        if (res.head === 'ok') {
-            room.updateUser(user);
-        }
+        user.setName(name) && room.updateUser(user);
     });
     
     socket.on('_join_room', function(name) {
-        var res = room.joinUser(name, user);
-        if (res.head === 'ok') {
-            game = room.getGame(user.current);
-            current = user.current;
-        }
+        room.joinUser(name, user) && room.updateRoom(name);
     });
     
     socket.on('_set_room', function(name) {
-        var res = user.joinRoom(name);
-        if (res) {
-            room.updateRoom(user.current);
-            game = room.getGame(user.current);
-            current = user.current;
-        }
+        user.joinRoom(name) && room.updateRoom(name);
     });
     
     socket.on('_recon_room', function(slot) {
-        if (game && current) {
-            var res = game.reconnect(user, slot);
-            if (res.head === 'ok') {
-                room.toggleUserType(current, user);
-                room.updateRoom(current);
-            }
-        }
+        var current = user.current;
+        var game = room.getGame(current);
+        
+        game && game.reconnect(user, slot) &&
+        room.toggleUserType(user) && room.updateRoom(current);
     });
     
     socket.on('disconnect', function() {
@@ -132,35 +116,22 @@ io.on('connection', function(socket) {
     // game routines
     
     socket.on('_send_control', function(cntrl) {
-        if (game && current) {
-            var res = false;
-            switch (cntrl) {
-                case "Start":
-                    res = game.startGame(user);
-                    break;
-                case "Action":
-                    res = game.setPhase(user, ACTION_PHASE);
-                    break;
-                case "Buy":
-                    res = game.setPhase(user, BUY_PHASE);
-                    break;
-                case "Cleanup":
-                    res = game.setPhase(user, CLEANUP_PHASE);
-                    break;
-                default:
-                    res = game.tryControl(user, cntrl);
-            }
-            
-            if (res) {
-                room.updateRoom(current);
-            }
-        }
+        var current = user.current;
+        var game = room.getGame(current);
+        
+        game && (
+            (cntrl === 'Start' && game.startGame(user)) ||
+            (PHASE_MAP[cntrl] && game.setPhase(user, PHASE_MAP[cntrl])) ||
+            (game.tryControl(user, cntrl))
+        ) &&
+        room.updateRoom(current);
     });
     
     socket.on('_tap_card', function(src, index) {
-        if (game && current) {
-            game.tapCard(user, src, index) && room.updateRoom(current);
-        }
+        var current = user.current;
+        var game = room.getGame(current);
+        
+        game && game.tapCard(user, src, index) && room.updateRoom(current);
     });
     
 });

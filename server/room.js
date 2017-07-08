@@ -35,22 +35,9 @@ Room.prototype.roomHasUser = function(room, user) {
 
 Room.prototype.joinUser = function(name, user) {
 	var room = this.rooms[name];
-	if (!room) {
-		return {
-			head: 'err',
-			body: 'room does not exist'
-		};
-	} else if (!user) {
-		return {
-			head: 'err',
-			body: 'invalid user'
-		};
-	} else if (this.roomHasUser(room, user)) {
-		return {
-			head: 'err',
-			body: 'user already joined room'
-		};
-	}
+	if (!room || !user || this.roomHasUser(room, user)) {
+        return false;
+    }
 	
 	// user will be joined to room as player, if possible
 	var res = room.game.addPlayer(user);
@@ -62,12 +49,7 @@ Room.prototype.joinUser = function(name, user) {
 	
 	// user keeps inventory of rooms they are in
 	user.addRoom(name, joinType);
-	
-	this.updateRoom(name);
-	return {
-		head: 'ok',
-		body: 'user joined room'
-	};
+	return true;
 };
 
 Room.prototype.leaveUser = function(name, user) {
@@ -157,31 +139,20 @@ Room.prototype.getGame = function(name) {
 	return room.game;
 };
 
-Room.prototype.toggleUserType = function(name, user) {
+Room.prototype.toggleUserType = function(user) {
+    if (!user) {
+        return false;
+    }
+    
+    var name = user.current;
 	var room = this.rooms[name];
-	if (!room) {
-		return {
-			head: 'err',
-			body: 'room does not exist'
-		};
-	} else if (!user) {
-		return {
-			head: 'err',
-			body: 'invalid user'
-		};
-	} else if (!this.roomHasUser(room, user)) {
-		return {
-			head: 'err',
-			body: 'user is not in room'
-		};
+	if (!room || !this.roomHasUser(room, user)) {
+		return false;
 	}
 
 	var prevType = room.users[user.id].type;
 	room.users[user.id].type = prevType === 'SPECTATOR' ? 'PLAYER' : 'SPECTATOR';
-	return {
-		head: 'ok',
-		body: 'toggled user type'
-	};
+	return true;
 };
 
 Room.prototype.updateUser = function(user) {
