@@ -48,7 +48,7 @@ function selectItem(main, trigger, type, turn, valid, selectable, controls, sele
             var playerView = ret.players[turn];
             playerView.control = Object.keys(controls);
             
-            toSelect(ret);
+            toSelect(ret, playerView.visible);
         },
         function(cards, index) {
             var card = selectable(cards, index, selected);
@@ -214,12 +214,6 @@ function cellarAction(player, game) {
             },
             {
                 Discard: function() {
-                    for (var i = 0; i < player.hand.length; i++) {
-                        var card = player.hand[i];
-                        if (card.selectable) {
-                            delete card.selectable;
-                        }
-                    }
                     
                     var len = selected.length;
                     for (var i = 0; i < len; i++) {
@@ -231,14 +225,14 @@ function cellarAction(player, game) {
                 }
             },
             selected,
-            function(ret) {
-                var hand = player.hand;
-                for (var i = 0; i < hand.length; i++) {
-                    var card = hand[i];
-                    if (card.selected && card.selectable) {
-                        delete card.selectable;
-                    } else if (!card.selectable) {
-                        card.selectable = true;
+            function(ret, visible) {
+                if (visible) {
+                    var hand = ret.players[turn].hand;
+                    for (var i = 0; i < hand.length; i++) {
+                        var card = hand[i];
+                        if (!card.selected) {
+                            card.selectable = true;
+                        }
                     }
                 }
             });
@@ -331,16 +325,17 @@ function militiaAttack(player) {
             }
         },
         selected,
-        function(ret) {
-            var hand = player.hand;
-            var rem = hand.length - selected.length;
-            for (var i = 0; i < hand.length; i++) {
-                var card = hand[i];
-                if (rem === 3 &&
-                    card.selectable) {
-                    delete card.selectable;
-                } else if (rem > 3 && !card.selectable) {
-                    card.selectable = true;
+        function(ret, visible) {
+            if (visible) {
+                var hand = ret.players[turn].hand;;
+                var rem = hand.length - selected.length;
+                if (rem > 3) {
+                    for (var i = 0; i < hand.length; i++) {
+                        var card = hand[i];
+                        if (!card.selected) {
+                            card.selectable = true;
+                        }
+                    }
                 }
             }
         });
@@ -435,31 +430,23 @@ function mineAction(player, game) {
                             
                             return null;
                         }, gained, player.hand,
-                        function(ret) {
+                        function(ret, visible) {
                             var oldCard = selected[0];
-                            var piles = game.pilesWork;
-                            var names = Object.keys(piles).filter(function(name) {
-                                var pile = piles[name];
-                                if (pile.length > 0) {
-                                    var newCard = pile[0];
-                                    return 'treasure' in newCard.types &&
-                                           newCard.coin <= oldCard.coin + 3;
-                                }
-                                return false;
-                            });
+                            var piles = ret.piles;
+                            var names = Object.keys(piles);
                             
-                            var gainLen = gained.length;
                             for (var i = 0; i < names.length; i++) {
-                                var name = names[i];
-                                var pile = piles[name];
+                                var pile = piles[names[i]];
                                 
                                 for (var j = 0; j < pile.length; j++) {
                                     var card = pile[j];
-                                    if (gainLen === 1 &&
-                                        card.selectable) {
-                                        delete card.selectable;
-                                    } else if (gainLen === 0 &&
-                                               !card.selectable) {
+                                    
+                                    if (!(card.types.indexOf('treasure') !== -1 &&
+                                        card.coin <= oldCard.coin + 3)) {
+                                        break;
+                                    }
+                                    
+                                    if (gained.length === 0) {
                                         card.selectable = true;
                                     }
                                 }
@@ -488,12 +475,6 @@ function mineAction(player, game) {
             },
             {
                 Trash: function() {
-                    for (var i = 0; i < player.hand.length; i++) {
-                        var card = player.hand[i];
-                        if (card.selectable) {
-                            delete card.selectable;
-                        }
-                    }
                     
                     var len = selected.length;
                     for (var i = 0; i < len; i++) {
@@ -505,18 +486,18 @@ function mineAction(player, game) {
                 }
             },
             selected,
-            function(ret) {
-                var hand = player.hand;
-                var sel = selected.length;
-                for (var i = 0; i < hand.length; i++) {
-                    var card = hand[i];
-                    if (sel === 1 &&
-                        card.selectable) {
-                        delete card.selectable;
-                    } else if (sel === 0 &&
-                               'treasure' in card.types &&
-                               !card.selectable) {
-                        card.selectable = true;
+            function(ret, visible) {
+                if (visible) {
+                    var hand = ret.players[turn].hand;;
+                    var sel = selected.length;
+                    
+                    if (sel === 0) {
+                        for (var i = 0; i < hand.length; i++) {
+                            var card = hand[i];
+                            if (card.types && 'treasure' in card.types) {
+                                card.selectable = true;
+                            }
+                        }
                     }
                 }
             });
@@ -569,32 +550,25 @@ function remodelAction(player, game) {
                             
                             return null;
                         }, gained, player.discard,
-                        function(ret) {
+                        function(ret, visible) {
                             var oldCard = selected[0];
-                            var piles = game.pilesWork;
+                            var piles = ret.piles;
                             
-                            var names = Object.keys(piles).filter(function(name) {
-                                var pile = piles[name];
-                                if (pile.length > 0) {
-                                    var newCard = pile[0];
-                                    return newCard.coin <= oldCard.coin + 2;
-                                }
-                                return false;
-                            });
-                            
+                            var names = Object.keys(piles);
                             var gainLen = gained.length;
-                            for (var i = 0; i < names.length; i++) {
-                                var name = names[i];
-                                var pile = piles[name];
-                                
-                                for (var j = 0; j < pile.length; j++) {
-                                    var card = pile[j];
-                                    if (gainLen === 1 &&
-                                        card.selectable) {
-                                        delete card.selectable;
-                                    } else if (gainLen === 0 &&
-                                               !card.selectable) {
-                                        card.selectable = true;
+                            if (gainLen === 0) {
+                                for (var i = 0; i < names.length; i++) {
+                                    var pile = piles[names[i]];
+                                    
+                                    if (pile.length) {
+                                        var newCard = pile[0];
+                                        if (newCard.coin <= oldCard.coin + 2) {
+                                            
+                                            for (var j = 0; j < pile.length; j++) {
+                                                var card = pile[j];
+                                                card.selectable = true;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -630,17 +604,16 @@ function remodelAction(player, game) {
                 }
             },
             selected,
-            function(ret) {
-                var hand = player.hand;
-                var sel = selected.length;
-                for (var i = 0; i < hand.length; i++) {
-                    var card = hand[i];
-                    if (sel === 1 &&
-                        card.selectable) {
-                        delete card.selectable;
-                    } else if (sel === 0 &&
-                               !card.selectable) {
-                        card.selectable = true;
+            function(ret, visible) {
+                if (visible) {
+                    var hand = ret.players[turn].hand;;
+                    var sel = selected.length;
+                    
+                    if (sel === 0) {
+                        for (var i = 0; i < hand.length; i++) {
+                            var card = hand[i];
+                            card.selectable = true;
+                        }
                     }
                 }
             });
@@ -697,7 +670,7 @@ function workshopAction(player, game) {
     if (player && game) {
         
         var turn = player.seat;
-        var selected = [];                    
+        var selected = [];
         
         var gainIt = gainItem(player, game,
             function() {
@@ -716,28 +689,20 @@ function workshopAction(player, game) {
                 
                 return null;
             }, selected, player.discard,
-            function(ret) {
+            function(ret, visible) {
                 var sel = selected.length;
-                var piles = game.pilesWork;
+                var piles = ret.piles;
+                var names = Object.keys(piles);
                 
-                var names = Object.keys(piles).filter(function(name) {
-                    var pile = piles[name];
-                    if (pile.length > 0) {
-                        return pile[0].coin <= 4;
-                    }
-                    return false;
-                });
-                
-                for (var i = 0; i < names.length; i++) {
-                    var name = names[i];
-                    var pile = piles[name];
-                    
-                    for (var j = 0; j < pile.length; j++) {
-                        var card = pile[j];
-                        if (sel === 1 && card.selectable) {
-                            delete card.selectable;
-                        } else if (sel === 0 && !card.selectable) {
-                            card.selectable = true;
+                if (sel === 0) {
+                    for (var i = 0; i < names.length; i++) {
+                        var pile = piles[names[i]];
+                        
+                        if (pile.length && pile[0].coin <= 4) {
+                            for (var j = 0; j < pile.length; j++) {
+                                var card = pile[j];
+                                card.selectable = true;
+                            }
                         }
                     }
                 }

@@ -26,8 +26,8 @@ var room = new Room(io);
 var FirstGame = {
     name: 'first game',
     start: {
-        copper: 7,
-        estate: 3
+        estate: 3,
+        copper: 7
     },
     piles: {
         copper: [60, 60, 60],
