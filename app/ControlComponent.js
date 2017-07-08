@@ -14,6 +14,13 @@ import { amberA700, white } from 'material-ui/styles/colors';
  * A basic vertical non-linear implementation
  */
 class ControlComponent extends React.Component {
+    
+    componentDidMount() {
+        if (this.props.visible) {
+            var audio = new Audio('/asset/notif.mp3');
+            audio.play();
+        }
+    }
   
     render() {
         var phase = this.props.phase;
