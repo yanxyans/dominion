@@ -9,6 +9,8 @@ var CURSE_VALUE = 1;
 var Item = require('./item');
 var Task = require('./task');
 
+var SUPPLY = require('./util').SUPPLY;
+
 // coin and points factory
 
 function incPlayerCoin(value) {
@@ -35,690 +37,504 @@ function decPlayerPoints(points) {
     };
 }
 
-// item factory
+function mapCards(model, cards, view, type) {
+    for (var i = 0; i < model.length; i++) {
+        var data = model[i];
+        if (cards.indexOf(data) !== -1) {
+            view[i][type] = true;
+        }
+    }
+}
 
-function selectItem(main, trigger, type, turn, valid, selectable, controls, selected, toSelect) {
+function mapView(game, cards, view, type) {
+    // map player cards
+    for (var i = 0; i < game.players.length; i++) {
+        var player = game.players[i];
+        var pview = view.players[i];
+        if (pview.isPlayer || type === 'selected') {
+            mapCards(player.discard.slice(1), cards, pview.discard.slice(1), type);
+            mapCards(player.deck, cards, pview.deck, type);
+            mapCards(player.hand, cards, pview.hand, type);
+        }
+        
+        mapCards(player.discard.slice(0, 1), cards, pview.discard.slice(0, 1), type);
+        mapCards(player.play, cards, pview.play, type);
+    }
     
-    var selectTask = new Task(turn,
-        function(item) {
-            // do nothing
-        },
-        valid(), valid,
+    // map pile cards
+    Object.keys(game.supply).forEach(function(name) {
+        var work = game.supply[name][SUPPLY.WORK];
+        mapCards(work, cards, view.piles[name], type);
+    });
+    mapCards(game.trash, cards, view.trash, type);
+}
+
+function selectTask(type, main, trigger, resolve, controls,
+                    getSelectable, selected, player, game) {
+    
+    var slot = player.slot;
+    
+    return new Task(slot, type, [new Item(resolve,
         function(ret) {
-            var playerView = ret.players[turn];
-            playerView.control = Object.keys(controls);
+            ret.players[slot].control = this.controls;
             
-            toSelect(ret, playerView.visible);
+            var selectable = getSelectable(selected, player, game);
+            mapView(game, selectable, ret, 'selectable');
+            mapView(game, selected, ret, 'selected');
+            return true;
         },
         function(cards, index) {
-            var card = selectable(cards, index, selected);
-            if (!card) {
-                return;
-            }
-            
-            var found = selected.indexOf(card);
-            if (found === -1) {
-                // select
-                selected.push(card);
+            if (cards && index in cards) {
+                var card = cards[index];
                 
-                card.selected = true;
-            } else {
-                // deselect
-                selected.splice(found, 1);
+                var selectable = getSelectable(selected, player, game);
+                var isSelectable = selectable.indexOf(card);
+                var isSelected = selected.indexOf(card);
                 
-                delete card.selected;
-            }
-        },
-        controls);
-    
-    return new Item([selectTask, ...main], trigger, type, turn);
-}
-
-function trashItem(player, game, selected) {
-    var turn = player.seat;
-    
-    var trash = new Task(turn,
-        function(item) {
-            var len = selected.length;
-            for (var i = 0; i < len; i++) {
-                var card = selected[i];
-                var index = player.hand.indexOf(card);
-                
-                if (index !== -1) {
-                    player.hand.splice(index, 1);
-                    game.trash.unshift(card);
-                }
-            }
-        }, true);
-    
-    return new Item([trash], [], 'trash', turn);
-}
-
-function gainItem(player, game, valid, selectable, selected, dest, toSelect) {
-    var turn = player.seat;
-    
-    var gain = new Task(turn,
-        function(item) {
-            var len = selected.length;
-            
-            for (var i = 0; i < len; i++) {
-                var card = selected[i];
-                
-                var keys = Object.keys(game.pilesWork).filter(function(name) {
-                    var pile = game.pilesWork[name];
-                    return pile.indexOf(card) !== -1;
-                });
-                
-                if (keys.length === 1) {
-                    var pile = game.pilesWork[keys[0]];
-                    var index = pile.indexOf(card);
-                    if (index !== -1) {
-                        pile.splice(index, 1);
-                        dest.unshift(card);
-                    }
-                }
-            }
-        }, true);
-    
-    return selectItem([gain], [], 'gain', turn, valid, selectable,
-        {
-            Gain: function() {
-                if (selected.length === 1) {
-                    delete selected[0].selected;
-                    
-                    this.resolvable = true;
+                if (isSelectable !== -1) {
+                    // select
+                    selected.push(card);
+                    return true;
+                } else if (isSelected !== -1) {
+                    // unselect
+                    selected.splice(isSelected, 1);
                     return true;
                 }
-                
-                return false;
             }
-        },
-        selected, toSelect);
+        }, controls), ...main], trigger);
 }
-
-// task factory
-
-function discardTask(player, selected) {
-    var turn = player.seat;
-    
-    return new Task(turn,
-        function(item) {
-            var len = selected.length;
-            for (var i = 0; i < len; i++) {
-                var card = selected[i];
-                var index = player.hand.indexOf(card);
-                
-                if (index !== -1) {
-                    player.hand.splice(index, 1);
-                    player.discard.unshift(card);
-                }
-            }
-        }, true);
-}
-
-function drawTask(player, amt) {
-    var turn = player.seat;
-    return new Task(turn,
-        function(item) {
-            player.draw(amt);
-        }, true);
-}
-
-// misc
-
-function getWorkshopPiles(piles) {
-    return Object.keys(piles).filter(function(name) {
-        var pile = piles[name];
-        return pile.length > 0 && pile[0].coin <= 4;
-    });
-}
-
-// primary card routines
 
 function cellarAction(player, game) {
-    if (player && game) {
-        game.action++;
-        
-        var turn = player.seat;
-        var selected = [];
-        
-        var discardTk = new Task(turn,
-            function(item) {
-                if (selected.length) {
-                    var discard = discardTask(player, selected);
-                    var discardItem = new Item([discard], [], 'discard', turn);
-                    
-                    item.todo.push(discardItem);
-                }
-            }, true);
-        var drawTk = new Task(turn,
-            function(item) {
-                if (selected.length) {
-                    var draw = drawTask(player, selected.length);
-                    var drawItem = new Item([draw], [], 'draw', turn);
-                    
-                    item.todo.push(drawItem);
-                }
-            }, true);
-            
-        var playItem = selectItem([discardTk, drawTk], [], 'play', turn,
-            function() {
-                return player.hand.length < 1;
-            },
-            function(cards, index, sel) {
-                if (cards === player.hand && index in cards) {
-                    return cards[index];
-                }
-                
-                return null;
-            },
-            {
-                Discard: function() {
-                    
-                    var len = selected.length;
-                    for (var i = 0; i < len; i++) {
-                        delete selected[i].selected;
-                    }
-                    
-                    this.resolvable = true;
-                    return true;
-                }
-            },
-            selected,
-            function(ret, visible) {
-                if (visible) {
-                    var hand = ret.players[turn].hand;
-                    for (var i = 0; i < hand.length; i++) {
-                        var card = hand[i];
-                        if (!card.selected) {
-                            card.selectable = true;
+    game.action++;
+    
+    var slot = player.slot;
+    var selected = [];
+    game.todo.push(new Task(slot, 'play', [new Item(
+        function(task) {
+            if (player.hand.length > 0) {
+                task.todo.push(selectTask('discard', [], [],
+                    function(task) {
+                        // resolve
+                        return player.hand.length === 0;
+                    },
+                    {
+                        Discard: function(player, game) {
+                            for (var i = 0; i < selected.length; i++) {
+                                var card = selected[i];
+                                var index = player.hand.indexOf(card);
+                                
+                                if (index !== -1) {
+                                    player.hand.splice(index, 1);
+                                    player.discard.unshift(card);
+                                }
+                            }
+                            
+                            this.resolve = function(task) {
+                                return true;
+                            };
+                            return true;
                         }
-                    }
-                }
-            });
-            
-        game.todo.push(playItem);
-    }
+                    },
+                    function(selected, player, game) {
+                        // get selectable
+                        var selectable = [];
+                        var hand = player.hand;
+                        for (var i = 0; i < hand.length; i++) {
+                            var card = hand[i];
+                            if (selected.indexOf(card) === -1) {
+                                selectable.push(card);
+                            }
+                        }
+                        return selectable;
+                    }, selected, player, game))
+            }
+            return true;
+        }), new Item(
+        function(task) {
+            if (selected.length > 0) {
+                task.todo.push(new Task(slot, 'draw', [new Item(
+                    function(task) {
+                        // resolve
+                        player.draw(selected.length);
+                        return true;
+                    })], []));
+            }
+            return true;
+        })], []));
 }
 
 function marketAction(player, game) {
-    if (player) {
-        var turn = player.seat;
-        
-        var drawTk = new Task(turn,
-            function(item) {
-                var draw = drawTask(player, 1);
-                var drawItem = new Item([draw], [], 'draw', turn);
-                
-                item.todo.push(drawItem);
-            }, true);
-        
-        var playItem = new Item([drawTk], [], 'play', turn);
-        
-        game.todo.push(playItem);
-        game.action++;
-        game.buy++;
-        game.coin++;
-    }
+    var slot = player.slot;
+    game.todo.push(new Task(slot, 'play', [new Item(
+        function(task) {
+            task.todo.push(new Task(slot, 'draw', [new Item(
+                function(task) {
+                    player.draw(1);
+                    return true;
+                })], []));
+            return true;
+        })], []));
+    game.action++;
+    game.buy++;
+    game.coin++;
 }
 
 function militiaAction(player, game) {
-    if (player && game) {
-        game.coin += 2;
-        
-        var attacker = player.seat;
-        var len = game.players.length;
-        for (let i = 1; i < len; i++) {
-            let toAttack = {};
-            let index = (attacker + i) % len;
-            toAttack[index] = game.players[index];
-            
-            var attackTask = new Task(attacker,
-                function(item) {
-                    var attacked = toAttack[index];
-                    if (attacked && attacked.hand.length > 3) {
-                        item.todo.push(militiaAttack(attacked));
-                    }
-                }, true);
-            
-            var attackItem = new Item([attackTask], [], 'attack', attacker);
-            attackItem.targets = toAttack;
-            
-            game.todo.push(attackItem);
-        }
-    }
+    game.coin += 2;
+    
+    var slot = player.slot;
+    var players = game.players;
+    game.todo.push(new Task(slot, 'play', [new Item(
+        function(task) {
+            task.todo.push(militiaAttack(slot, 
+                players.slice(slot + 1).concat(
+                players.slice(0, slot)),
+                game));
+            return true;
+        })], []));
 }
 
-function militiaAttack(player) {
-    var turn = player.seat;
-    var selected = [];
-    
-    var discardTk = discardTask(player, selected);
-    
-    return selectItem([discardTk], [], 'discard', turn,
-        function() {
-            return player.hand.length < 4;
-        },
-        function(cards, index, sel) {
-            if (cards === player.hand && index in cards) {
-                var card = cards[index];
-                if (player.hand.length - sel.length > 3 ||
-                    sel.indexOf(card) !== -1) {
-                    return card;
-                }
-            }
-            
-            return null;
-        },
-        {
-            Discard: function() {
-                var len = selected.length;
-                if (player.hand.length - len === 3) {
-                    for (var i = 0; i < len; i++) {
-                        delete selected[i].selected;
-                    }
-                    
-                    this.resolvable = true;
-                    return true;
-                }
-                return false;
-            }
-        },
-        selected,
-        function(ret, visible) {
-            if (visible) {
-                var hand = ret.players[turn].hand;;
-                var rem = hand.length - selected.length;
-                if (rem > 3) {
-                    for (var i = 0; i < hand.length; i++) {
-                        var card = hand[i];
-                        if (!card.selected) {
-                            card.selectable = true;
+function militiaAttack(slot, targets, game) {
+    return new Task(slot, 'attack', targets.map(function(target) {
+        return new Item(function(task) {
+            if (target.hand.length > 3) {
+                var selected = [];
+                task.todo.push(selectTask('discard', [], [],
+                    function(task) {
+                        return target.hand.length <= 3;
+                    },
+                    {
+                        Discard: function(player, game) {
+                            if (target.hand.length - selected.length === 3) {
+                                for (var i = 0; i < selected.length; i++) {
+                                    var card = selected[i];
+                                    var index = target.hand.indexOf(card);
+                                    
+                                    if (index !== -1) {
+                                        target.hand.splice(index, 1);
+                                        target.discard.unshift(card);
+                                    }
+                                }
+                                return true;
+                            }
+                            return false;
                         }
-                    }
-                }
+                    },
+                    function(selected, player, game) {
+                        var selectable = [];
+                        if (target.hand.length - selected.length > 3) {
+                            var hand = target.hand;
+                            for (var i = 0; i < hand.length; i++) {
+                                var card = hand[i];
+                                if (selected.indexOf(card) === -1) {
+                                    selectable.push(card);;
+                                }
+                            }
+                        }
+                        return selectable;
+                    }, selected, target, game));
             }
+            return true;
+        }, null, null, null, {
+            target: target
         });
+    }), []);
 }
 
 function moatAction(player, game) {
-    if (player) {
-        var turn = player.seat;
-        
-        var drawTk = new Task(turn,
-            function(item) {
-                var draw = drawTask(player, 2);
-                var drawItem = new Item([draw], [], 'draw', turn);
-                
-                item.todo.push(drawItem);
-            }, true);
-        
-        var playItem = new Item([drawTk], [], 'play', turn);
-        
-        game.todo.push(playItem);
+    var slot = player.slot;
+    game.todo.push(new Task(slot, 'play', [new Item(
+        function(task) {
+            task.todo.push(new Task(slot, 'draw', [new Item(
+                function(task) {
+                    player.draw(2);
+                    return true;
+                })], []));
+            return true;
+        })], []));
+}
+
+function moatReaction(player, task) {
+    var index = task.main.findIndex(function(item) {
+        return player === item.target;
+    });
+    if (index !== -1) {
+        // negate attack
+        task.main.splice(index, 1);
     }
 }
 
-function moatReaction(player, item, callback) {
-    if (item && player) {
-        var targets = item.targets;
-        var index = player.seat;
-        if (targets && targets[index]) {
-            delete targets[index];
-            
-            var name = player.name;
-            callback(name + ' reveals a moat from hand');
-        }
-    }
-}
-
-function moatReact(player, item) {
-    if (item) {
-        var type = item.type;
-        var state = item.state;
-        var targets = item.targets;
-        var index = player.seat
-        
-        return type === 'attack' && state === 'PRE' && targets && index in targets;
-    }
-    return false;
+function moatReactable(player, task) {
+    return task.type === 'attack' &&
+        task.state === 'PREP' &&
+        task.main.find(function(item) {
+            return player === item.target;
+        });
 }
 
 function mineAction(player, game) {
-    if (player && game) {
-        
-        var turn = player.seat;
-        var selected = [];
-        var gained = [];
-        
-        var trashTask = new Task(turn,
-            function(item) {
-                if (selected.length === 1) {
-                    var trashIt = trashItem(player, game, selected);
-                    
-                    item.todo.push(trashIt);
-                }
-            }, true);
-        var gainTask = new Task(turn,
-            function(item) {
-                if (selected.length === 1) {
-                    var oldCard = selected[0];
-                    
-                    item.todo.push(gainItem(player, game,
-                        function() {
-                            return Object.keys(game.pilesWork).filter(function(name) {
-                                var pile = game.pilesWork[name];
-                                if (pile.length > 0) {
-                                    var newCard = pile[0];
-                                    return 'treasure' in newCard.types &&
-                                           newCard.coin <= oldCard.coin + 3;
-                                }
-                                return false;
-                            }).length === 0;
-                        },
-                        function(cards, index, gn) {
-                            var piles = game.pilesWork;
-                            if (cards in piles && index in piles[cards]) {
-                                var newCard = piles[cards][index];
-                                if (('treasure' in newCard.types &&
-                                    newCard.coin <= oldCard.coin + 3 &&
-                                    gn.length < 1) ||
-                                    gn.indexOf(newCard) !== -1) {
-                                    return newCard;
-                                }
-                            }
-                            
-                            return null;
-                        }, gained, player.hand,
-                        function(ret, visible) {
-                            var oldCard = selected[0];
-                            var piles = ret.piles;
-                            var names = Object.keys(piles);
-                            
-                            for (var i = 0; i < names.length; i++) {
-                                var pile = piles[names[i]];
+    var slot = player.slot;
+    var selected = [];
+    var gained = [];
+    
+    var mineableCards = function(card, supply) {
+        var mineable = [];
+        Object.keys(supply).forEach(function(name) {
+            var work = supply[name][SUPPLY.WORK];
+            mineable = mineable.concat(
+                work.filter(function(supplyCard) {
+                    return 'treasure' in supplyCard.types &&
+                           supplyCard.coin <= card.coin + 3;
+                }));
+        });
+        return mineable;
+    };
+    
+    game.todo.push(new Task(slot, 'play', [new Item(
+        function(task) {
+            if (player.hand.find(function(card) {
+                return 'treasure' in card.types;
+            })) {
+                task.todo.push(selectTask('trash', [], [],
+                    function(task) {
+                        return !player.hand.find(function(card) {
+                            return 'treasure' in card.types;
+                        });
+                    },
+                    {
+                        Trash: function(player, game) {
+                            for (var i = 0; i < selected.length; i++) {
+                                var card = selected[i];
+                                var index = player.hand.indexOf(card);
                                 
-                                for (var j = 0; j < pile.length; j++) {
-                                    var card = pile[j];
-                                    
-                                    if (!(card.types.indexOf('treasure') !== -1 &&
-                                        card.coin <= oldCard.coin + 3)) {
-                                        break;
-                                    }
-                                    
-                                    if (gained.length === 0) {
-                                        card.selectable = true;
-                                    }
+                                if (index !== -1) {
+                                    player.hand.splice(index, 1);
+                                    game.trash.unshift(card);
                                 }
                             }
-                        }));
-                }
-            }, true);
-        
-        var playItem = selectItem([trashTask, gainTask], [], 'play', turn,
-            function() {
-                return player.hand.filter(function(card) {
-                    return 'treasure' in card.types;
-                }) < 1;
-            },
-            function(cards, index, sel) {
-                if (cards === player.hand && index in cards) {
-                    var card = cards[index];
-                    if ((sel.length < 1 &&
-                        'treasure' in card.types) ||
-                        sel.indexOf(card) !== -1) {
-                        return card;
-                    }
-                }
-                
-                return null;
-            },
-            {
-                Trash: function() {
-                    
-                    var len = selected.length;
-                    for (var i = 0; i < len; i++) {
-                        delete selected[i].selected;
-                    }
-                    
-                    this.resolvable = true;
-                    return true;
-                }
-            },
-            selected,
-            function(ret, visible) {
-                if (visible) {
-                    var hand = ret.players[turn].hand;;
-                    var sel = selected.length;
-                    
-                    if (sel === 0) {
-                        for (var i = 0; i < hand.length; i++) {
-                            var card = hand[i];
-                            if (card.types && 'treasure' in card.types) {
-                                card.selectable = true;
+                            
+                            this.resolve = function(task) {
+                                return true;
+                            };
+                            return true;
+                        }
+                    },
+                    function(selected, player, game) {
+                        var selectable = [];
+                        if (selected.length < 1) {
+                            var hand = player.hand;
+                            for (var i = 0; i < hand.length; i++) {
+                                var card = hand[i];
+                                if ('treasure' in card.types) {
+                                    selectable.push(card);
+                                }
                             }
                         }
-                    }
+                        return selectable;
+                    }, selected, player, game));
+            }
+            return true;
+        }), new Item(
+        function(task) {
+            if (selected.length === 1) {
+                var card = selected[0];
+                if (mineableCards(card, game.supply).length > 0) {
+                    task.todo.push(selectTask('gain', [], [],
+                        function(task) {
+                            return mineableCards(card, game.supply).length === 0;
+                        },
+                        {
+                            Gain: function(player, game) {
+                                if (gained.length === 1) {
+                                    var gainedCard = gained[0];
+                                    player.gainCard(game.supply, gainedCard, 'hand');
+                                    
+                                    this.resolve = function(task) {
+                                        return true;
+                                    };
+                                    return true;
+                                }
+                                return false;
+                            }
+                        },
+                        function(selected, player, game) {
+                            return selected.length === 0 ?
+                                mineableCards(card, game.supply) :
+                                [];
+                        }, gained, player, game));
                 }
-            });
-        
-        game.todo.push(playItem);
-    }
+            }
+            return true;
+        })], []));
 }
 
 function remodelAction(player, game) {
-    if (player && game) {
-
-        var turn = player.seat;
-        var selected = [];
-        var gained = [];
-        
-        var trashTask = new Task(turn,
-            function(item) {
-                if (selected.length === 1) {
-                    var trashIt = trashItem(player, game, selected);
-                    
-                    item.todo.push(trashIt);
-                }
-            }, true);
-        var gainTask = new Task(turn,
-            function(item) {
-                if (selected.length === 1) {
-                    var oldCard = selected[0];
-                    
-                    item.todo.push(gainItem(player, game,
-                        function() {
-                            return Object.keys(game.pilesWork).filter(function(name) {
-                                var pile = game.pilesWork[name];
-                                if (pile.length > 0) {
-                                    var newCard = pile[0];
-                                    return newCard.coin <= oldCard.coin + 2;
+    var slot = player.slot;
+    var selected = [];
+    var gained = [];
+    
+    var remodelCards = function(card, supply) {
+        var cards = [];
+        Object.keys(supply).forEach(function(name) {
+            var work = supply[name][SUPPLY.WORK];
+            cards = cards.concat(
+                work.filter(function(supplyCard) {
+                    return supplyCard.coin <= card.coin + 2;
+                }));
+        });
+        return cards;
+    };
+    
+    game.todo.push(new Task(slot, 'play', [new Item(
+        function(task) {
+            if (player.hand.length > 0) {
+                task.todo.push(selectTask('trash', [], [],
+                    function(task) {
+                        return player.hand.length === 0;
+                    },
+                    {
+                        Trash: function(player, game) {
+                            if (selected.length === 1) {
+                                var card = selected[0];
+                                var index = player.hand.indexOf(card);
+                                
+                                if (index !== -1) {
+                                    player.hand.splice(index, 1);
+                                    game.trash.unshift(card);
+                                }
+                                
+                                this.resolve = function(task) {
+                                    return true;
+                                };
+                                return true;
+                            }
+                            return false;
+                        }
+                    },
+                    function(selected, player, game) {
+                        var selectable = [];
+                        if (selected.length < 1) {
+                            var hand = player.hand;
+                            for (var i = 0; i < hand.length; i++) {
+                                var card = hand[i];
+                                selectable.push(card);
+                            }
+                        }
+                        return selectable;
+                    }, selected, player, game));
+            }
+            return true;
+        }), new Item(
+        function(task) {
+            if (selected.length === 1) {
+                var card = selected[0];
+                if (remodelCards(card, game.supply).length > 0) {
+                    task.todo.push(selectTask('gain', [], [],
+                        function(task) {
+                            return remodelCards(card, game.supply).length === 0;
+                        },
+                        {
+                            Gain: function(player, game) {
+                                if (gained.length === 1) {
+                                    var gainedCard = gained[0];
+                                    player.gainCard(game.supply, gainedCard, 'discard');
+                                    
+                                    this.resolve = function(task) {
+                                        return true;
+                                    };
+                                    return true;
                                 }
                                 return false;
-                            }).length === 0;
+                            }
                         },
-                        function(cards, index, gn) {
-                            var piles = game.pilesWork;
-                            if (cards in piles && index in piles[cards]) {
-                                var newCard = piles[cards][index];
-                                if ((newCard.coin <= oldCard.coin + 2 &&
-                                    gn.length < 1) ||
-                                    gn.indexOf(newCard) !== -1) {
-                                    return newCard;
-                                }
-                            }
-                            
-                            return null;
-                        }, gained, player.discard,
-                        function(ret, visible) {
-                            var oldCard = selected[0];
-                            var piles = ret.piles;
-                            
-                            var names = Object.keys(piles);
-                            var gainLen = gained.length;
-                            if (gainLen === 0) {
-                                for (var i = 0; i < names.length; i++) {
-                                    var pile = piles[names[i]];
-                                    
-                                    if (pile.length) {
-                                        var newCard = pile[0];
-                                        if (newCard.coin <= oldCard.coin + 2) {
-                                            
-                                            for (var j = 0; j < pile.length; j++) {
-                                                var card = pile[j];
-                                                card.selectable = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }));
+                        function(selected, player, game) {
+                            return selected.length === 0 ?
+                                remodelCards(card, game.supply) :
+                                [];
+                        }, gained, player, game));
                 }
-            }, true);
-        
-        var playItem = selectItem([trashTask, gainTask], [], 'play', turn,
-            function() {
-                return player.hand.length < 1;
-            },
-            function(cards, index, sel) {
-                if (cards === player.hand && index in cards) {
-                    var card = cards[index];
-                    if (sel.length < 1 ||
-                        sel.indexOf(card) !== -1) {
-                        return card;
-                    }
-                }
-                
-                return null;
-            },
-            {
-                Trash: function() {
-                    if (selected.length === 1) {
-                        delete selected[0].selected;
-                        
-                        this.resolvable = true;
-                        return true;
-                    }
-                    
-                    return false;
-                }
-            },
-            selected,
-            function(ret, visible) {
-                if (visible) {
-                    var hand = ret.players[turn].hand;;
-                    var sel = selected.length;
-                    
-                    if (sel === 0) {
-                        for (var i = 0; i < hand.length; i++) {
-                            var card = hand[i];
-                            card.selectable = true;
-                        }
-                    }
-                }
-            });
-        
-        game.todo.push(playItem);
-    }
+            }
+            return true;
+        })], []));
 }
 
 function smithyAction(player, game) {
-    if (player) {
-        var turn = player.seat;
-        
-        var drawTk = new Task(turn,
-            function(item) {
-                var draw = drawTask(player, 3);
-                var drawItem = new Item([draw], [], 'draw', turn);
-                
-                item.todo.push(drawItem);
-            }, true);
-        
-        var playItem = new Item([drawTk], [], 'play', turn);
-        
-        game.todo.push(playItem);
-    }
+    var slot = player.slot;
+    game.todo.push(new Task(slot, 'play', [new Item(
+        function(task) {
+            task.todo.push(new Task(slot, 'draw', [new Item(
+                function(task) {
+                    player.draw(3);
+                    return true;
+                })], []));
+            return true;
+        })], []));
 }
 
 function villageAction(player, game) {
-    if (player) {
-        var turn = player.seat;
-        
-        var drawTk = new Task(turn,
-            function(item) {
-                var draw = drawTask(player, 1);
-                var drawItem = new Item([draw], [], 'draw', turn);
-                
-                item.todo.push(drawItem);
-            }, true);
-        
-        var playItem = new Item([drawTk], [], 'play', turn);
-        
-        game.todo.push(playItem);
-        game.action += 2;
-    }
+    var slot = player.slot;
+    game.todo.push(new Task(slot, 'play', [new Item(
+        function(task) {
+            task.todo.push(new Task(slot, 'draw', [new Item(
+                function(task) {
+                    player.draw(1);
+                    return true;
+                })], []));
+            return true;
+        })], []));
+    game.action += 2;
 }
 
 function woodcutterAction(player, game) {
-    if (player) {
-        game.buy++;
-        game.coin += 2;
-    }
+    game.buy++;
+    game.coin += 2;
 }
 
 function workshopAction(player, game) {
-    if (player && game) {
-        
-        var turn = player.seat;
-        var selected = [];
-        
-        var gainIt = gainItem(player, game,
-            function() {
-                return getWorkshopPiles(game.pilesWork).length === 0;
-            },
-            function(cards, index, sel) {
-                var piles = game.pilesWork;
-                if (cards in piles && index in piles[cards]) {
-                    var card = piles[cards][index];
-                    if ((card.coin <= 4 &&
-                        sel.length < 1) ||
-                        sel.indexOf(card) !== -1) {
-                        return card;
-                    }
-                }
-                
-                return null;
-            }, selected, player.discard,
-            function(ret, visible) {
-                var sel = selected.length;
-                var piles = ret.piles;
-                var names = Object.keys(piles);
-                
-                if (sel === 0) {
-                    for (var i = 0; i < names.length; i++) {
-                        var pile = piles[names[i]];
-                        
-                        if (pile.length && pile[0].coin <= 4) {
-                            for (var j = 0; j < pile.length; j++) {
-                                var card = pile[j];
-                                card.selectable = true;
+    var slot = player.slot;
+    var gained = [];
+    
+    var workshopCards = function(supply) {
+        var cards = [];
+        Object.keys(supply).forEach(function(name) {
+            var work = supply[name][SUPPLY.WORK];
+            cards = cards.concat(
+                work.filter(function(supplyCard) {
+                    return supplyCard.coin <= 4;
+                }));
+        });
+        return cards;
+    };
+    
+    game.todo.push(new Task(slot, 'play', [new Item(
+        function(task) {
+            if (workshopCards(game.supply).length > 0) {
+                task.todo.push(selectTask('gain', [], [],
+                    function(task) {
+                        return workshopCards(game.supply).length === 0;
+                    },
+                    {
+                        Gain: function(player, game) {
+                            if (gained.length === 1) {
+                                var gainedCard = gained[0];
+                                player.gainCard(game.supply, gainedCard, 'discard');
+                                
+                                this.resolve = function(task) {
+                                    return true;
+                                };
+                                return true;
                             }
+                            return false;
                         }
-                    }
-                }
-            });
-            
-        var gainTask = new Task(turn,
-            function(item) {
-                if (getWorkshopPiles(game.pilesWork).length > 0) {
-                    item.todo.push(gainIt);
-                }
-            }, true);
-        
-        var playItem = new Item([gainTask], [], 'play', turn);
-        
-        game.todo.push(playItem);
-    }
+                    },
+                    function(selected, player, game) {
+                        return selected.length === 0 ?
+                            workshopCards(game.supply) :
+                            [];
+                    }, gained, player, game));
+            }
+            return true;
+        })], []));
 }
 
 function getCardAttributes(name) {
@@ -794,7 +610,7 @@ function getCardAttributes(name) {
                     action: moatAction,
                     reaction: moatReaction
                 },
-                canReact: moatReact
+                reactable: moatReactable
             };
         case 'province':
             return {
@@ -860,9 +676,11 @@ function Card(name) {
     this.coin = attributes.coin;
     this.types = attributes.types;
     
-    if (attributes.canReact) {
-        this.canReact = attributes.canReact;
-    }
+    this.reactable = attributes.reactable ?
+        attributes.reactable :
+        function(player, item) {
+            return false;
+        };
 }
 
 module.exports = Card;

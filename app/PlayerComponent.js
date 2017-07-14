@@ -29,9 +29,10 @@ const styles = {
 export default class PlayerComponent extends React.Component {
     
     render() {
+        
         var player = this.props.player;
-        var source = ['players', player.seat];
-        var visible = player.visible;
+        var source = ['players', player.slot];
+        var visible = player.isPlayer;
         
         var hasContent = this.props.hasContent;
         
@@ -39,10 +40,10 @@ export default class PlayerComponent extends React.Component {
         var over = this.props._handleMouseOver;
         var out = this.props._handleMouseOut;
         
-        var help = this.props.help && player.turn;
+        var help = this.props.help && player.isTurn;
 
         return (
-            <div className={player.turn ? 'player' : 'player inactive'}>
+            <div className={player.isTurn ? 'player' : 'player inactive'}>
                 <Paper className='title' zDepth={1} style={{minHeight:'82px'}}>
                     <div className='buttons'>
                         <IconButton tooltip={player.name}
@@ -52,12 +53,12 @@ export default class PlayerComponent extends React.Component {
                                 <IconName color={visible ? amberA700 : null}/>}
                         </IconButton>
                         
-                        {player.ranking !== -1 &&
+                        {player.rank !== -1 &&
                         <IconButton tooltip={player.points + (player.points === 1 ? ' point' : ' points')}>
-                            {player.ranking === 0 && <IconOne/>}
-                            {player.ranking === 1 && <IconTwo/>}
-                            {player.ranking === 2 && <IconThree/>}
-                            {player.ranking === 3 && <IconFour/>}
+                            {player.rank === 0 && <IconOne/>}
+                            {player.rank === 1 && <IconTwo/>}
+                            {player.rank === 2 && <IconThree/>}
+                            {player.rank === 3 && <IconFour/>}
                         </IconButton>}
                         
                         {player.action !== undefined &&
@@ -84,7 +85,6 @@ export default class PlayerComponent extends React.Component {
                                       _sendControl={this.props._sendControl}/>}
                 </Paper>
                 
-                {hasContent &&
                 <div className='content'>
                     <Stack data={player.discard}
                            tooltip='discard'
@@ -109,7 +109,7 @@ export default class PlayerComponent extends React.Component {
                            open={true}
                            show={help}
                            alwaysOpen={true}/>
-                </div>}
+                </div>
             </div>
         );
     }

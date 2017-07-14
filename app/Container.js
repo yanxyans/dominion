@@ -24,7 +24,7 @@ class Container extends React.Component {
         socket.on('_init', this._init);
         socket.on('_user_state', this._updateUserState);        
         socket.on('_room_state', this._updateRoomState);
-        socket.on('_react_message', this._reactMessage);
+        socket.on('_reaction_event', this._reactMessage);
     }
     state = {
         name: '',
@@ -35,7 +35,6 @@ class Container extends React.Component {
         piles: {},
         trash: null,
         help: true,
-        gameState: null,
         messageOpen: false,
         messageContent: ''
     }
@@ -61,9 +60,8 @@ class Container extends React.Component {
             this.setState({
                 users: roomState.users,
                 players: roomState.players,
-                piles: roomState.piles,
-                trash: roomState.trash,
-                gameState: roomState.state
+                piles: roomState.supply,
+                trash: roomState.trash
             });
         }
     }
@@ -111,15 +109,13 @@ class Container extends React.Component {
                                    _setRoom={this._setRoom}
                                    _toggleHelp={this._toggleHelp}
                                    help={this.state.help}/>
-                    {this.state.gameState &&
                     <GameComponent players={this.state.players}
                                    piles={this.state.piles}
                                    trash={this.state.trash}
                                    help={this.state.help}
-                                   gameState={this.state.gameState}
                                    _reconRoom={this._reconRoom}
                                    _sendControl={this._sendControl}
-                                   _tapCard={this._tapCard}/>}
+                                   _tapCard={this._tapCard}/>
                     <Snackbar open={this.state.messageOpen}
                               message={this.state.messageContent}
                               autoHideDuration={4000}

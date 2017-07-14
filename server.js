@@ -20,17 +20,23 @@ var proxy = httpProxy.createProxyServer();
 var publicPath = path.resolve(__dirname, 'public');
 var roomPath = path.resolve(__dirname, 'server', 'room');
 var userPath = path.resolve(__dirname, 'server', 'user');
+var cardPath = path.resolve(__dirname, 'server', 'card');
 
 var Room = require(roomPath);
 var User = require(userPath);
+var Card = require(cardPath);
+
 var room = new Room(io);
+
 var FirstGame = {
     name: 'first game',
-    start: {
+    startDeck: {
         estate: 3,
-        copper: 7
+        militia: 1,
+        moat: 1,
+        province: 4
     },
-    piles: {
+    supply: {
         copper: [60, 60, 60],
         silver: [40, 40, 40],
         gold: [30, 30, 30],
@@ -49,7 +55,20 @@ var FirstGame = {
         mine: [10, 10, 10]
     }
 };
-room.newRoom(FirstGame.name, FirstGame.start, FirstGame.piles);
+Object.keys(FirstGame.supply).forEach(function(name) {
+    var toSupply = FirstGame.supply[name];
+    var amt = toSupply[toSupply.length - 1];
+    
+    var work = [];
+    toSupply.unshift(work);
+    
+    var pile = [];
+    for (var i = 0; i < amt; i++) {
+        pile.unshift(new Card(name));
+    }
+    toSupply.unshift(pile);
+});
+room.newRoom(FirstGame);
 
 // We point to our static assets
 app.use(express.static(publicPath));
@@ -94,7 +113,7 @@ io.on('connection', function(socket) {
     });
     
     socket.on('_join_room', function(name) {
-        room.joinUser(name, user) && room.updateRoom(name);
+        room.joinUser(name, user);
     });
     
     socket.on('_set_room', function(name) {
@@ -104,9 +123,13 @@ io.on('connection', function(socket) {
     socket.on('_recon_room', function(slot) {
         var current = user.current;
         var game = room.getGame(current);
+        var userRoom = user.rooms[current];
         
-        game && game.reconnect(user, slot) &&
-        room.toggleUserType(user) && room.updateRoom(current);
+        game && userRoom &&
+        userRoom.type === 'spectator' &&
+        game.reconnect(user, slot) &&
+        room.setPlayer(user) &&
+        room.updateRoom(current);
     });
     
     socket.on('disconnect', function() {
@@ -120,9 +143,10 @@ io.on('connection', function(socket) {
         var game = room.getGame(current);
         
         game && (
-            (cntrl === 'Start' && game.startGame(user)) ||
+            (cntrl === 'Start' && game.start(user)) ||
+            (cntrl === 'Restart' && game.restart(user)) ||
             (PHASE_MAP[cntrl] && game.setPhase(user, PHASE_MAP[cntrl])) ||
-            (game.tryControl(user, cntrl))
+            (game.completeItem(user, cntrl))
         ) &&
         room.updateRoom(current);
     });

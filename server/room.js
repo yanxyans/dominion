@@ -5,91 +5,69 @@ function Room(io) {
 	this.rooms = {};
 }
 
-Room.prototype.newRoom = function(name, start, piles) {
+Room.prototype.newRoom = function(newGame) {
+    if (!newGame) {
+        return false;
+    }
+    
+    var name = newGame.name;
 	if (this.rooms[name]) {
-		return {
-			head: 'err',
-			body: 'room is taken'
-		};
+		return false;
 	}
     
-    var callback = this.emitMessage.bind(this, name);
-	
+    var callback = this.emitRoom.bind(this, name);
 	this.rooms[name] = {
-		game: new Game(start, piles, callback),
+		game: new Game(newGame.startDeck, newGame.supply, callback),
 		users: {}
 	};
-	return {
-		head: 'ok',
-		body: 'room is created'
-	};
+	return true;
 };
 
-Room.prototype.emitMessage = function(room, message) {
-    this.io.sockets.in(room).emit('_react_message', message);
+Room.prototype.emitRoom = function(room, type, content) {
+    this.io.sockets.in(room).emit(type, content);
 };
 
-Room.prototype.roomHasUser = function(room, user) {
+Room.prototype.hasUser = function(room, user) {
 	return user.id in room.users;
 };
 
 Room.prototype.joinUser = function(name, user) {
 	var room = this.rooms[name];
-	if (!room || !user || this.roomHasUser(room, user)) {
+    if (!room || !user || this.hasUser(room, user)) {
         return false;
     }
 	
 	// user will be joined to room as player, if possible
 	var res = room.game.addPlayer(user);
-	var joinType = res ? 'PLAYER' : 'SPECTATOR';
+	var joinType = res ? 'player' : 'spectator';
+    
 	room.users[user.id] = {
 		name: user.name,
 		type: joinType
 	};
-	
-	// user keeps inventory of rooms they are in
 	user.addRoom(name, joinType);
+    
+    this.updateRoom(name);
 	return true;
 };
 
 Room.prototype.leaveUser = function(name, user) {
 	var room = this.rooms[name];
-	if (!room) {
-		return {
-			head: 'err',
-			body: 'room does not exist'
-		};
-	} else if (!user) {
-		return {
-			head: 'err',
-			body: 'invalid user'
-		};
-	} else if (!this.roomHasUser(room, user)) {
-		return {
-			head: 'err',
-			body: 'user is not in room'
-		};
-	}
+    if (!room || !user || !this.hasUser(room, user)) {
+        return false;
+    }
 	
-	// get user join type
 	var joinType = room.users[user.id].type;
-	
-	// remove user from room
-	delete room.users[user.id];
-	
-	// update room inventory
-	user.removeRoom(name);
-	
-	// if user was a player, also free up a player slot
-	if (joinType === 'PLAYER') {
+	if (joinType === 'player') {
 		room.game.removePlayer(user);
 	}
 	
+	// remove user from room
+	delete room.users[user.id];
+	user.removeRoom(name);
+	
 	this.updateRoom(name);
-	return {
-		head: 'ok',
-		body: 'user left room'
-	};
+	return true;
 };
 
 Room.prototype.updateRoom = function(name) {
@@ -109,86 +87,71 @@ Room.prototype.updateRoom = function(name) {
 };
 
 Room.prototype.retrieveRoomState = function(room, id) {
-	if (!room) {
-		return null;
-	} else if (!room.users[id]) {
+	if (!room || !room.users[id]) {
 		return null;
 	}
 	
 	var gameState = room.game.retrieveGameState(id);
 	return {
-		users: Object.keys(room.users).map(function(uid) {
-			return {
-				name: this[uid].name,
-				type: this[uid].type.toLowerCase()
-			};
-		}, room.users),
+		users: Object.keys(room.users).map(function(id) {
+            var user = room.users[id];
+            return { name: user.name, type: user.type };
+        }),
 		players: gameState.players,
-		piles: gameState.piles,
-		trash: gameState.trash,
-        state: gameState.state
+		supply: gameState.piles,
+		trash: gameState.trash
 	};
 };
 
 Room.prototype.getGame = function(name) {
 	var room = this.rooms[name];
-	if (!room) {
-		return null;
-	}
-	
-	return room.game;
+    return room ? room.game : null;
 };
 
-Room.prototype.toggleUserType = function(user) {
+Room.prototype.setPlayer = function(user) {
     if (!user) {
         return false;
     }
     
     var name = user.current;
 	var room = this.rooms[name];
-	if (!room || !this.roomHasUser(room, user)) {
+    var userRoom = user.rooms[name];
+	if (!room || !userRoom || !this.hasUser(room, user)) {
 		return false;
 	}
 
-	var prevType = room.users[user.id].type;
-	room.users[user.id].type = prevType === 'SPECTATOR' ? 'PLAYER' : 'SPECTATOR';
+	room.users[user.id].type = 'player';
+    userRoom.type = 'player';
 	return true;
 };
 
 Room.prototype.updateUser = function(user) {
     if (user) {
-        var userRooms = user.rooms;
         var id = user.id;
         var name = user.name;
-        Object.keys(userRooms).forEach(function(userRoom) {
-            if (userRoom in this.rooms) {
-                var room = this.rooms[userRoom];
+        
+        Object.keys(user.rooms).forEach(function(userRoom) {
+            var room = this.rooms[userRoom];
+            
+            if (room) {
+                var user = room.users[id];
                 
-                if (room) {
-                    var users = room.users;
-                    var players = room.game.players;
-                    
-                    var update = false;
-                    if (id in users) {
-                        users[id].name = name;
-                        update = true;
+                if (user) {
+                    user.name = name;
+                    if (user.type === 'player') {
+                        var players = room.game.players;
+                        var player = players.find(function(player) {
+                            return player.id === id;
+                        });
+                        if (player) {
+                            player.name = name;
+                        }
                     }
                     
-                    players = players.filter(function(player) {
-                        return player.id === id;
-                    });
-                    if (players.length === 1) {
-                        players[0].name = name;
-                        update = true;
-                    }
-                    
-                    if (update) {
-                        this.updateRoom(userRoom);
-                    }
+                    this.updateRoom(userRoom);
                 }
             }
         }, this);
-        
     }
 };
 

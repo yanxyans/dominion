@@ -1,26 +1,24 @@
-function Item(main, trigger, type, origin) {
-    this.main = main;
-    this.trigger = trigger;
+function Item(resolve, view, apply, controls, attributes) {
+    this.resolve = resolve;
     
-    this.state = 'PRE';
-    this.react = [];
-    this.todo = [];
-    this.type = type;
-    this.origin = origin;
-}
-
-Item.prototype.getItem = function() {
-    switch (this.state) {
-        case 'PRE':
-            return this.react.length ? this.react[0] : null;
-        case 'MAIN':
-            return this.main.length ? this.main[0] : null;
-        case 'POST':
-            return this.react.length ? this.react[0] :
-                  (this.trigger.length ? this.trigger[0] : null);
-        default:
-            return null;
+    this.view = view ? view : function(ret) {
+        // do nothing
+    };
+    this.apply = apply ? apply : function(cards, index) {
+        // do nothing
+    };
+    
+    this.controls = controls ? Object.keys(controls) : [];
+    
+    this.controls.forEach(function(control) {
+        this[control] = controls[control];
+    }, this);
+    
+    if (attributes) {
+        Object.keys(attributes).forEach(function(attr) {
+            this[attr] = attributes[attr];
+        }, this);
     }
-};
+}
 
 module.exports = Item;

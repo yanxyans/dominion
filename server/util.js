@@ -19,24 +19,60 @@ module.exports = {
         return Math.floor(Math.random() * (max - min)) + min;
     },
     
-    /**
-     * @description determine if an array contains one or more items from another array.
-     * @param {array} haystack the array to search.
-     * @param {array} arr the array providing items to check for in the haystack.
-     * @return {boolean} true|false if haystack contains at least one item from arr.
-     */
-    findOne: function(haystack, arr) {
-        return arr.some(function (v) {
-            return haystack.indexOf(v) >= 0;
-        });
-    },
-    
     moveCards: function(src, dest, amt) {
         if (src && dest && src.length >= amt) {
             for (var i = 0; i < amt; i++) {
                 dest.unshift(src.shift());
             }
         }
+    },
+    
+    getStack: function(stack, mid) {
+        var ret = [];
+        
+        if (stack) {
+            var end = stack.length;
+            if (mid <= end) {
+                for (var i = 0; i < mid; i++) {
+                    var card = stack[i];
+                    ret.push({
+                        name: card.name,
+                        coin: card.coin,
+                        types: Object.keys(card.types),
+                        reactable: card.reactable
+                    });
+                }
+                
+                for (var i = mid; i < end; i++) {
+                    var card = stack[i];
+                    ret.push({});
+                }
+            }
+        }
+        
+        return ret;
+    },
+    
+    returnCards: function(src, dest, loc) {
+        while (src.length) {
+            var card = src.shift();
+            dest[card.name][loc].unshift(card);
+            
+        }
+    },
+    
+            
+    
+    PHASE: {
+        STANDBY: 0,
+        ACTION: 1,
+        BUY: 2,
+        CLEANUP: 3
+    },
+    
+    SUPPLY: {
+        PILE: 0,
+        WORK: 1
     }
     
 };

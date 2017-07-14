@@ -1,60 +1,97 @@
 var Player = require('./player');
-var Card = require('./card');
+var Item = require('./item');
+var Task = require('./task');
 
 var getRandomInt = require('./util').getRandomInt;
 var moveCards = require('./util').moveCards;
-var Task = require('./task');
+var getStack = require('./util').getStack;
+var retCards = require('./util').returnCards;
+
+var PHASE = require('./util').PHASE;
+var SUPPLY = require('./util').SUPPLY;
 
 var MAX_PLAYERS = 4;
 var MIN_PLAYERS = 2;
-
 var TURN_DRAW_AMT = 5;
+var PILE_OUT = 3;
 
-var ACTION_PHASE = 1;
-var BUY_PHASE = 2;
-var CLEANUP_PHASE = 3;
-
-var ACTION_PLAY = 'action';
-var TREASURE_PLAY = 'treasure';
-
-function Game(start, piles, callback) {
-    this.start = start;
-    this.pilesOrigin = piles;
-    this.pilesWork = {};
-    this.trash = null;
+function Game(startDeck, supply, callback) {
     
-    this.players = [];
     this.state = 'INIT';
-    
     this.turn = -1;
-    this.todo = [];
     
-    this.action = 0;
-    this.buy = 0;
-    this.coin = 0;
+    this.startDeck = startDeck;
+    this.players = [];
+    this.initResources();
+    
+    this.supply = supply;
+    this.trash = [];
     
     this.callback = callback;
 }
 
-Game.prototype.addPlayer = function(user) {
-    if (this.state === 'MAIN') {
-        return false;
-    } else if (!user) {
-        return false;
-    }
-    
-    this.players = this.players.filter(function(player) {
-        return player.id !== null;
-    });
-    
+Game.prototype.initResources = function() {
+    this.action = 0;
+    this.buy = 0;
+    this.coin = 0;
+    this.todo = [];
+};
+
+Game.prototype.returnAll = function() {
     var len = this.players.length;
-    if (len >= MAX_PLAYERS) {
+    for (var i = len - 1; i > -1; i--) {
+        var player = this.players[i];
+        player.returnCards(this.supply, SUPPLY.PILE);
+        if (player.id === null) {
+            this.players.splice(i, 1);
+        } else {
+            player.init();
+        }
+    }
+    
+    retCards(this.trash, this.supply, SUPPLY.PILE);
+};
+
+Game.prototype.restartGame = function() {
+    this.returnAll();
+    this.alignWorkSupply();
+    
+    this.initResources();
+    
+    this.state = 'INIT';
+    this.turn = -1;
+};
+
+Game.prototype.addPlayer = function(user) {
+    if (!user || this.state !== 'INIT') {
         return false;
     }
     
-    // game has not started and can has house user
+    if (this.players.length >= MAX_PLAYERS) {
+        return false;
+    }
+    
     this.players.push(new Player(user));
+    this.alignWorkSupply();
     return true;
+};
+
+Game.prototype.alignWorkSupply = function() {
+    var supply = this.supply;
+    var numPlayers = this.players.length;
+    Object.keys(supply).forEach(function(name) {
+        var arr = supply[name];
+        var work = arr[SUPPLY.WORK];
+        var pile = arr[SUPPLY.PILE];
+        if (numPlayers < 2) {
+            moveCards(work, pile, work.length);
+        } else if (arr[numPlayers] > work.length) {
+            moveCards(pile, work, arr[numPlayers] - work.length);
+        } else if (arr[numPlayers] < work.length) {
+            moveCards(work, pile, work.length - arr[numPlayers]);
+        }
+        // else already aligned
+    });
 };
 
 Game.prototype.removePlayer = function(user) {
@@ -69,10 +106,17 @@ Game.prototype.removePlayer = function(user) {
     }
     
     if (this.state !== 'MAIN') {
-        // free up a player slot
-        this.players.splice(slot, 1);
+        // free player slot
+        var player = this.players.splice(slot, 1)[0];
+        player.returnCards(this.supply, SUPPLY.PILE);
+        
+        this.alignWorkSupply();
+        
+        if (this.state === 'END' && this.players.length === 0) {
+            this.restartGame();
+        }
     } else {
-        // game is in progress, wait for someone to reconnect
+        // game in progress, wait on reconnect
         var player = this.players[slot];
         
         player.id = null;
@@ -88,9 +132,7 @@ Game.prototype.getPlayIndex = function(id) {
 };
 
 Game.prototype.takePlayerSlot = function(user, slot) {
-    if (!(slot in this.players)) {
-        return false;
-    } else if (!user) {
+    if (!user || !(slot in this.players)) {
         return false;
     }
     
@@ -113,128 +155,113 @@ Game.prototype.reconnect = function(user, slot) {
 };
 
 Game.prototype.view = function(ret) {
-    if (ret) {
-        for (var i = 0; i < ret.players.length; i++) {
-            var player = ret.players[i];
+    var players = ret.players;
+    var len = players.length;
+    for (var i = 0; i < len; i++) {
+        var player = players[i];
+        
+        if (this.state === 'INIT' &&
+            player.isPlayer &&
+            len >= MIN_PLAYERS) {
+            player.control = ['Start'];
+        } else if (this.state === 'MAIN' &&
+                   player.isTurn) {
+            player.control = ['Action', 'Buy', 'Cleanup'];
+            player.action = ret.action;
+            player.buy = ret.buy;
+            player.coin = ret.coin;
+            player.main = true;
             
-                if (this.state === 'INIT' && player.visible) {
-                    player.control = ['Start'];
-                } else if (this.state === 'MAIN') {
-                    if (this.turn === player.seat) {
-                        player.control = ['Action', 'Buy', 'Cleanup'];
-                        player.main = true;
-                        
-                        for (var j = 0; j < player.hand.length; j++) {
-                            var card = player.hand[j];
-                            
-                            if (player.phase === ACTION_PHASE &&
-                                card.types &&
-                                'action' in card.types &&
-                                this.action) {
-                                card.selectable = true;
-                            } else if (player.phase === BUY_PHASE &&
-                                       card.types &&
-                                       'treasure' in card.types &&
-                                       !player.bought) {
-                                card.selectable = true;
-                            }
-                        }
-                        
-                        var coin = this.coin;
-                        if (player.phase === BUY_PHASE && this.buy) {
-                            Object.keys(ret.piles).forEach(function(key) {
-                                var pile = ret.piles[key];
-                                
-                                for (var j = 0; j < pile.length; j++) {
-                                    var card = pile[j];
-                                    if (card.coin <= coin) {
-                                        card.selectable = true;
-                                    }
-                                }
-                            });
-                        }
-                        
-                        
+            if (player.isPlayer) {
+                for (var j = 0; j < player.hand.length; j++) {
+                    var card = player.hand[j];
+                    
+                    if (player.phase === PHASE.ACTION &&
+                        card.types.indexOf('action') !== -1 &&
+                        this.action) {
+                        card.selectable = true;
+                    } else if (player.phase === PHASE.BUY &&
+                               card.types.indexOf('treasure') !== -1 &&
+                               !player.bought) {
+                        card.selectable = true;
                     }
-                } else if (this.state === 'END' && player.visible) {
-                    player.control = ['Start'];
                 }
-
+            }
+            
+            var coin = this.coin;
+            if (player.phase === PHASE.BUY && this.buy) {
+                Object.keys(ret.piles).forEach(function(key) {
+                    var pile = ret.piles[key];
+                    
+                    for (var j = 0; j < pile.length; j++) {
+                        var card = pile[j];
+                        if (card.coin <= coin) {
+                            card.selectable = true;
+                        }
+                    }
+                });
+            }
+        } else if (this.state === 'END' &&
+                   player.isPlayer) {
+            player.control = ['Restart'];
         }
+
     }
 };
 
 Game.prototype.retrieveGameState = function(id) {
-    var todo = this.getTodo(this.todo);
-    var piles = {};
-    Object.keys(this.pilesWork).forEach(function(key) {
-        var pile = this.pilesWork[key];
-        
-        var ret = [];
-        for (var i = 0; i < pile.length; i++) {
-            var card = pile[i];
-            
-            ret.push({
-                name: card.name,
-                coin: card.coin,
-                types: Object.keys(card.types)
-            });
-        }
-        piles[key] = ret;
-    }, this);
+    var task = this.nextTask();
+    
+    var state = this.state;
+    var turn = task ? task.nextTurn() : this.turn;
+    var players = this.players.map(function(player) {
+        return player.retrievePlayerState(id === player.id,
+                                          turn === player.slot,
+                                          state === 'END');
+    });
+    
+    var supply = this.supply;
+    var work = {};
+    Object.keys(supply).forEach(function(name) {
+        var stack = supply[name][SUPPLY.WORK];
+        work[name] = getStack(stack, stack.length);
+    });
     
     var ret = {
-        players: this.players.map(function(player, index) {
-            var visible = id === player.id;
-            var playerState = player.retrievePlayerState(id, this.state);
-            playerState.visible = visible;
-            
-            if (playerState.seat === this.turn && this.turn !== -1) {
-                playerState.action = this.action;
-                playerState.buy = this.buy;
-                playerState.coin = this.coin;
-            }
-            
-            var turn = todo ? todo.getItem().turn : this.turn;
-            playerState.turn = turn === player.seat && turn !== -1;
-            
-            return playerState;
-        }, this),
-        piles: piles,
-        trash: this.trash,
-        state: this.state
+        players: players,
+        piles: work,
+        trash: getStack(this.trash, this.trash.length),
+        action: this.action,
+        buy: this.buy,
+        coin: this.coin
     };
     
-    if (todo) {
-        var item = todo.getItem();
-        if (item && item.view) {
-            item.view(ret);
-        }
-    } else {
-        this.view(ret);
-    }
-    
+    task ? task.nextItem().view(ret) : this.view(ret);
     return ret;
 };
 
-Game.prototype.resetResources = function(player) {
+Game.prototype.giveResources = function(player) {
     this.action = 1;
     this.buy = 1;
     this.coin = 0;
     
-    player.phase = ACTION_PHASE;
+    player.phase = PHASE.ACTION;
     
     player.bought = false;
 };
 
-Game.prototype.startGame = function(user) {
-    if (!user || this.getPlayIndex(user.id) === -1 || this.state === 'MAIN') {
+Game.prototype.restart = function(user) {
+    if (!user || this.getPlayIndex(user.id) === -1) {
         return false;
     }
-    
-    this.players = this.players.filter(function(player) {
-        return player.id !== null;
-    });
+    this.restartGame();
+    return true;
+};
+
+Game.prototype.start = function(user) {
+    if (!user || this.getPlayIndex(user.id) === -1 || this.state !== 'INIT') {
+        return false;
+    }
     
     var len = this.players.length;
     if (len < MIN_PLAYERS) {
@@ -244,52 +271,48 @@ Game.prototype.startGame = function(user) {
     // flag game as in progress
     this.state = 'MAIN';
     
-    // init piles
-    this.pilesWork = {};
-    var pilesName = Object.keys(this.pilesOrigin);
-    for (var i = 0; i < pilesName.length; i++) {
-        var pileName = pilesName[i];
-        // array containing pile size for two, three, and four players
-        var pileSize = this.pilesOrigin[pileName][len - MIN_PLAYERS];
-        
-        this.pilesWork[pileName] = [];
-        for (var j = 0; j < pileSize; j++) {
-            this.pilesWork[pileName].unshift(new Card(pileName));
-        }
-    }
-    
-    // init trash pile
-    this.trash = [];
-    
-    // get starting hand
-    var startHand = Object.keys(this.start);
-    var startLen = startHand.length;
+    // get starting deck
+    var startDeck = this.startDeck;
+    var supply = this.supply;
     
     for (var i = 0; i < len; i++) {
         var player = this.players[i];
         
-        // initialize player variables
-        player.init(i);
-        
-        // distribute pile cards to player discards
-        for (var j = 0; j < startLen; j++) {
-            var startCard = startHand[j];
-            var startAmount = this.start[startCard];
-            moveCards(this.pilesWork[startCard], player.discard, startAmount); 
-        }
-        
-        // player starts with five cards in hand
+        Object.keys(startDeck).forEach(function(name) {
+            moveCards(supply[name][SUPPLY.WORK],
+                      player.discard,
+                      startDeck[name]);
+        });
         player.draw(TURN_DRAW_AMT);
+        
+        player.setSlot(i);
     }
     
-    // designate the first turn
-    var firstTurn = getRandomInt(0, len);
-    var firstPlayer = this.players[firstTurn];
+    // randomly choose first player
+    var turnOne = getRandomInt(0, len);
+    var playerOne = this.players[turnOne];
     
-    this.resetResources(firstPlayer);
-    this.turn = firstTurn;
+    this.giveResources(playerOne);
+    this.turn = turnOne;
     
     return true;
+};
+
+Game.prototype.endGame = function() {
+    if (this.state === 'MAIN') {
+        this.state = 'END';
+        
+        var len = this.players.length;
+        for (var i = 0; i < len; i++) {
+            this.players[i].applyPoints(this);
+        }
+        
+        this.players.slice().sort(function(pOne, pTwo) {
+            return pTwo.points - pOne.points;
+        }).forEach(function(player, index) {
+            player.rank = index;
+        });
+    }
 };
 
 Game.prototype.setPhase = function(user, phase) {
@@ -297,12 +320,10 @@ Game.prototype.setPhase = function(user, phase) {
         return false;
     }
     
-    var userIndex = this.getPlayIndex(user.id);
-    var playIndex = this.turn;
-    if (userIndex !== playIndex ||
+    var playIndex = this.getPlayIndex(user.id);
+    if (this.turn !== playIndex ||
         this.todo.length ||
-        phase < 0 ||
-        phase > 3) {
+        phase > PHASE.CLEANUP) {
         return false;
     }
     
@@ -312,57 +333,26 @@ Game.prototype.setPhase = function(user, phase) {
     }
     
     player.phase = phase;
-    if (phase === CLEANUP_PHASE) {
+    if (phase === PHASE.CLEANUP) {
         // cleanup sequence
         player.cleanUp();
         player.draw(TURN_DRAW_AMT);
         
-        if (!this.pilesWork.province.length ||
-           (Object.keys(this.pilesWork).filter(function(pile) {
-               return !this[pile].length;
-           }, this.pilesWork).length >= 3)) {
-            // game end
+        var supply = this.supply;
+        if (supply.province[SUPPLY.WORK].length === 0 ||
+            Object.keys(supply).filter(function(name) {
+                return supply[name][SUPPLY.WORK].length === 0;
+            }).length >= PILE_OUT) {
             
-            var len = this.players.length;
-            for (var i = 0; i < len; i++) {
-                player = this.players[i];
-                player.countScore(this);
-            }
-            
-            var ranking = {};
-            var sortedByPoints = this.players.map(function(player) {
-                return {
-                    id: player.id,
-                    points: player.points
-                };
-            }).sort(function(playerA, playerB) {
-                return playerB.points - playerA.points;
-            }).forEach(function(player, index) {
-                ranking[player.id] = index;
-            });
-            
-            for (var i = 0; i < len; i++) {
-                player = this.players[i];
-                
-                if (player.id in ranking) {
-                    player.ranking = ranking[player.id];
-                }
-            }            
-            
-            this.state = 'END';
-            
-            this.action = 0;
-            this.buy = 0;
-            this.coin = 0;
-            this.turn = -1;
-        } else {
-        
-            var nextTurn = (this.turn + 1) % this.players.length;
-            var nextPlayer = this.players[nextTurn];
-            
-            this.resetResources(nextPlayer);
-            this.turn = nextTurn;
+            this.endGame();
         }
+        
+        var turnNext = (this.turn + 1) % this.players.length;
+        var playerNext = this.players[turnNext];
+        
+        this.giveResources(playerNext);
+        this.turn = turnNext;
+        
     }
     
     return true;
@@ -373,29 +363,31 @@ Game.prototype.tapCard = function(user, src, index) {
         return false;
     }
     
-    var userIndex = this.getPlayIndex(user.id);
-    var todo = this.getTodo(this.todo);
-    if (todo) {
-        var item = todo.getItem();
-        if (userIndex !== item.turn) {
-            return false;
-        }
-    } else {
-        if (userIndex !== this.turn) {
-            return false;
-        }
+    var playIndex = this.getPlayIndex(user.id);
+    var task = this.nextTask();
+    
+    if (task && task.nextTurn() !== playIndex) {
+        return false;
+    } else if (!task && this.turn !== playIndex) {
+        return false;
     }
     
-    var player = this.players[userIndex];
     var cards = this.getCards(src);
-    
-    if (player && cards) {
-        return (todo && this.handleTodo(todo, cards, index)) ||
-            ((cards === player.hand) && this.handlePlay(player, cards, index)) ||
-            ((cards in this.pilesWork) && this.handleBuy(player, cards, index));
+    if (!cards) {
+        console.log(cards);
     }
     
-    return false;
+    var player = this.players[playIndex];
+    return (task && this.handleTask(task, cards, index)) ||
+        ((cards === player.hand) && this.handlePlay(player, cards, index)) ||
+        ((this.getPileName(cards) in this.supply) && this.handleBuy(player, cards, index));
+};
+
+Game.prototype.getPileName = function(pile) {
+    var supply = this.supply;
+    return Object.keys(supply).find(function(name) {
+        return supply[name][SUPPLY.WORK] === pile;
+    });
 };
 
 Game.prototype.getCards = function(src) {
@@ -422,7 +414,7 @@ Game.prototype.getPlayerCards = function(src) {
             cards === 'discard' ||
             cards === 'play' ||
             cards === 'deck')) {
-          return this.players[player][cards];
+            return this.players[player][cards];
         }
     }
     
@@ -431,21 +423,39 @@ Game.prototype.getPlayerCards = function(src) {
 
 Game.prototype.getPileCards = function(src) {
     if (src && src.length === 1) {
-        var pile = src[0];
-        if (pile in this.pilesWork) {
-            return pile;
+        var name = src[0];
+        if (name in this.supply) {
+            return this.supply[name][SUPPLY.WORK];
         }
     }
     
     return null;
 };
 
-Game.prototype.handleTodo = function(todo, cards, index) {
-    if (todo) {
-        var item = todo.getItem();
-        if (item && item.apply) {
-            item.apply(cards, index);
-            this.advanceTodo(this.todo);
+Game.prototype.handleTask = function(task, cards, index) {
+    var item = task.nextItem();
+    if (item.apply(cards, index)) {
+        this.advanceTask(this.todo);
+        return true;
+    }
+    
+    return false;
+};
+
+Game.prototype.handlePlay = function(player, cards, index) {
+    if (index in cards) {
+        var card = cards[index];
+        
+        if (player.phase === PHASE.ACTION &&
+            'action' in card.types &&
+            this.action) {
+            this.action--;
+            player.playCard(card, 'action', this);
+            return true;
+        } else if ('treasure' in card.types &&
+                   player.phase === PHASE.BUY &&
+                   !player.bought) {
+            player.playCard(card, 'treasure', this);
             return true;
         }
     }
@@ -453,159 +463,116 @@ Game.prototype.handleTodo = function(todo, cards, index) {
     return false;
 };
 
-Game.prototype.handlePlay = function(player, cards, index) {
-    if (player && cards && cards === player.hand && index in cards) {
+Game.prototype.handleBuy = function(player, cards, index) {
+    if (index in cards) {
         var card = cards[index];
         
-        if (card) {
-            if (ACTION_PLAY in card.types &&
-                player.canPlayAction(card) &&
-                this.action) {
-                this.action--;
-                this.playCard(player, cards.splice(index, 1)[0], ACTION_PLAY);
-                return true;
-            } else if (TREASURE_PLAY in card.types &&
-                       player.canPlayTreasure(card) &&
-                       !this.bought) {
-                this.playCard(player, cards.splice(index, 1)[0], TREASURE_PLAY);
-                return true;
+        if (player.phase === PHASE.BUY &&
+            card.coin <= this.coin &&
+            this.buy) {
+            
+            // pay for card
+            this.coin -= card.coin;
+            this.buy--;
+            
+            if (!player.bought) {
+                player.bought = true;
             }
+            
+            // gain card
+            var supply = this.supply;
+            this.todo.push(new Task(player.slot, 'gain', [new Item(
+                function(task) {
+                    player.gainCard(supply, card, 'discard');
+                    return true;
+                })], []));
+            
+            this.advanceTask(this.todo);
+            return true;
         }
     }
     
     return false;
 };
 
-Game.prototype.playCard = function(player, card, playType) {
-    player.play.unshift(card);
-    
-    // apply
-    card.types[playType](player, this);
-    
-    this.advanceTodo(this.todo);
-};
-
-Game.prototype.handleBuy = function(player, cards, index) {
-    if (player && cards in this.pilesWork && index in this.pilesWork[cards]) {
-        var pile = this.pilesWork[cards];
-        var card = pile[index];
-        
-        if (card) {
-            if (player.canBuy(card) &&
-                card.coin <= this.coin &&
-                this.buy) {
-                
-                // purchase
-                this.coin -= card.coin;
-                this.buy--;
-                
-                if (!player.bought) {
-                    player.bought = true;
-                }
-                
-                // gain event
-                pile.splice(index, 1);
-                player.discard.unshift(card);
-                
-                this.advanceTodo(this.todo);
-                return true;
-            }
-        }
-    }
-    
-    return false;
-};
-
-Game.prototype.tryControl = function(user, cntrl) {
+Game.prototype.completeItem = function(user, control) {
     if (!user || this.state !== 'MAIN') {
         return false;
     }
     
-    var userIndex = this.getPlayIndex(user.id);
-    var todo = this.getTodo(this.todo);
-    if (!todo) {
+    var task = this.nextTask();
+    if (!task) {
         return false;
     }
     
-    var item = todo.getItem();
-    if (userIndex !== item.turn || item.controls.indexOf(cntrl) === -1) {
+    var playIndex = this.getPlayIndex(user.id);
+    var item = task.nextItem();
+    if (task.nextTurn() !== playIndex ||
+        item.controls.indexOf(control) === -1) {
         return false;
     }
     
-    var ret = item[cntrl]();
-    if (ret) {
-        this.advanceTodo(this.todo);
+    var player = this.players[playIndex];
+    if (item[control](player, this)) {
+        this.advanceTask(this.todo);
+        return true;
     }
     
-    return ret;
+    return false;
 };
 
-Game.prototype.advanceTodo = function(todo) {
+Game.prototype.advanceTask = function(todo) {
     while (todo.length) {
-        var item = todo[0];
-        var ret = this.advanceItem(item);
-        if (ret) {
-            todo.shift();
-        } else {
+        var task = todo[0];
+        if (!this.advanceItem(task)) {
             return false;
         }
+        
+        todo.shift();
     }
     
     return true;
 };
 
-Game.prototype.advanceItem = function(item) {
+Game.prototype.advanceItem = function(task) {
     while (true) {
-        // break for redo, return true to complete / false to wait on input
-        var ret = this.advanceTodo(item.todo);
-        if (!ret) {
+        // return false on unresolved children task
+        if (!this.advanceTask(task.todo)) {
             return false;
         }
         
-        switch (item.state) {
-            case 'PRE':
-                if (!item.react.length) {
-                    this.handleReactions(item);
-                }
+        switch (task.state) {
+            case 'PREP':
+                this.getReactions(task);
                 
-                this.advanceReactions(item);
-                
-                if (item.react.length) {
+                if (!this.advanceReactions(task)) {
                     return false;
                 }
             case 'MAIN':
-                item.state = 'MAIN';
+                task.state = 'MAIN';
                 
-                if (item.main.length) {
-                    var m = item.main[0];
-                    if (!m.resolvable) {
+                if (task.main.length) {
+                    if (!task.main[0].resolve(task)) {
                         return false;
                     }
                     
-                    item.main.shift();
-                    m.resolve(item);
+                    task.main.shift();
                     break;
                 }
             case 'POST':
-                item.state = 'POST';
+                task.state = 'POST';
+                this.getReactions(task);
                 
-                if (!item.react.length) {
-                    this.handleReactions(item);
-                }
-                
-                this.advanceReactions(item);
-                if (item.react.length) {
+                if (!this.advanceReactions(task)) {
                     return false;
                 }
                 
-                if (item.trigger.length) {
-                    var t = item.trigger[0];
-                    if (!t.resolvable) {
+                if (task.trigger.length) {
+                    if (!task.trigger[0].resolve(task)) {
                         return false;
                     }
                     
-                    item.trigger.shift();
-                    t.resolve(item);
+                    task.trigger.shift();
                     break;
                 }
                 
@@ -614,78 +581,91 @@ Game.prototype.advanceItem = function(item) {
     }
 };
 
-Game.prototype.getTodo = function(todo) {
-    var len = todo.length;
-    if (len) {
-        var res = todo[0];
-        var ret = this.getTodo(res.todo);
-        
-        return ret ? ret : res;
+Game.prototype.nextTask = function() {
+    var todo = this.todo;
+    
+    if (todo.length) {
+        var task = todo[0];
+        while (task.todo.length) {
+            task = task.todo[0];
+        }
+        return task;
     }
     
     return null;
 };
 
-Game.prototype.handleReactions = function(item) {
-    var origin = item.origin;
-    var len = this.players.length;
-    var callback = this.callback;
-    for (let i = 0; i < len; i++) {
+Game.prototype.getReactions = function(task) {
+    if (!task.react.length) {
+        let slot = task.slot;
+        var len = this.players.length;
+        var callback = this.callback;
         
-        let turn = (origin + i) % len;
-        let player = this.players[turn];
-        
-        var reactTask = new Task(turn, undefined, false,
-            function(item) {
-                return player.canReact(item) && !this.resolvable;
-            },
-            function(ret) {
-                if (ret && ret.players) {
+        for (let i = 0; i < len; i++) {
+            let turn = (slot + i) % len;
+            let player = this.players[turn];
+            
+            task.react.push(new Item(
+                function(task) {
+                    return !player.hasReactable(task);
+                },
+                function(ret) {
                     var retp = ret.players[turn];
-                    if (retp) {
-                        retp.control = ['Finish'];
-                        
+                    retp.control = this.controls;
+                    
+                    if (retp.isPlayer) {
                         var hand = retp.hand;
-                        
                         for (var j = 0; j < hand.length; j++) {
                             var card = hand[j];
-                            if (card.canReact &&
-                                card.canReact(player, item)) {
+                            if (card.reactable(player, task)) {
                                 card.selectable = true;
                             }
                         }
                     }
-                }
-            },
-            function(cards, index) {
-                // use react card
-                if (cards === player.hand && index in cards) {
-                    var card = cards[index];
-                    if (card.canReact && card.canReact(player, item)) {
-                        card.types.reaction(player, item, callback);
+                },
+                function(cards, index) {
+                    // use reaction card
+                    if (cards === player.hand && index in cards) {
+                        var card = cards[index];
+                        if (card.reactable(player, task)) {
+                            card.types.reaction(player, task);
+                            
+                            callback('_reaction_event',
+                                player.name +
+                                ' reveals a ' +
+                                card.name +
+                                ' from hand');
+                                
+                            return true;
+                        }
                     }
-                }
-            },
-            {
-                Finish: function() {
-                    this.resolvable = true;
-                    return true;
-                }
-            });
-        
-        item.react.push(reactTask);
+                    return false;
+                },
+                {
+                    Finish: function() {
+                        this.resolve = function(task) {
+                            return true;
+                        };
+                        return true;
+                    }
+                },
+                {
+                    slot: turn
+                }));
+        }
     }
 };
 
-Game.prototype.advanceReactions = function(item) {
-    while (item.react.length) {
-        var r = item.react[0];
-        if (r.valid(item)) {
-            break;
+Game.prototype.advanceReactions = function(task) {
+    while (task.react.length) {
+        var reaction = task.react[0];
+        if (!reaction.resolve(task)) {
+            return false;
         }
         
-        item.react.shift();
+        task.react.shift();
     }
+    return true;
 };
 
 module.exports = Game;

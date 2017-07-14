@@ -89,9 +89,8 @@ User.prototype.updateUser = function(emptyView) {
 		this.socket.emit('_room_state', {
 			users: [],
 			players: [],
-			piles: {},
-			trash: null,
-            state: null
+			supply: {},
+			trash: null
 		});
 	}
 };

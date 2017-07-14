@@ -17,16 +17,9 @@ const styles = {
 export default class PlayersComponent extends React.Component {
     render() {
         var players = this.props.players;
-        var gameState = this.props.gameState;
-        var sortedPlayers = gameState !== 'END' ?
-            players :
-            players.filter(function(player) {
-                return player.counted;
-            }).sort(function(playerA, playerB) {
-                return playerB.points - playerA.points;
-            }).concat(players.filter(function(player) {
-                return !player.counted;
-            }));
+        var sortedPlayers = players.sort(function(playerA, playerB) {
+            return playerA.rank - playerB.rank;
+        });
             
         return (
             <Paper id='players' zDepth={2}>
@@ -38,13 +31,11 @@ export default class PlayersComponent extends React.Component {
                 
                 <div className='content'>
                     {sortedPlayers.map(function(player, index) {
-                        player.turn = player.turn || gameState !== 'MAIN';
+                        player.turn = player.isTurn;
                         return <PlayerComponent key={index}
                                                 player={player}
-                                                hasContent={gameState === 'MAIN' ||
-                                                           (gameState === 'END' &&
-                                                            player.counted)}
-                                                _reconRoom={this._reconRoom.bind(null, player.seat)}
+                                                hasContent={player.rank}
+                                                _reconRoom={this._reconRoom.bind(null, player.slot)}
                                                 _sendControl={this._sendControl}
                                                 _tapCard={this._tapCard}
                                                 help={this.help}/>;

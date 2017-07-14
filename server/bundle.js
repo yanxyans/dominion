@@ -1,11 +1,8 @@
 var Webpack = require('webpack');
 var WebpackDevServer = require('webpack-dev-server');
 var webpackConfig = require('./../webpack.config');
-var path = require('path');
-var fs = require('fs');
-var mainPath = path.resolve(__dirname, '..', 'app', 'Container');
 
-module.exports = function () {
+module.exports = function() {
 
     // First we fire up Webpack and pass in the configuration we
     // created
@@ -39,7 +36,7 @@ module.exports = function () {
         quiet: false,
         noInfo: true,
         stats: {
-          colors: true
+            colors: true
         }
     });
 

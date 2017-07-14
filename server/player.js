@@ -1,106 +1,80 @@
 var shuffle = require('./util').shuffle;
-var findOne = require('./util').findOne;
 var moveCards = require('./util').moveCards;
+var getStack = require('./util').getStack;
+var retCards = require('./util').returnCards;
 
-var ACTION_PHASE = 1;
-var BUY_PHASE = 2;
+var PHASE = require('./util').PHASE;
+var SUPPLY = require('./util').SUPPLY;
 
 function Player(user) {
     this.id = user.id;
     this.name = user.name;
     
-    // game variables
-    
-    // card storage
+    // card store
     this.deck = [];
     this.discard = [];
     this.hand = [];
     this.play = [];
     
-    // start in standby phase
-    this.phase = 0;
+    // standby phase
+    this.phase = PHASE.STANDBY;
     
-    // used for state management, set at game start
-    this.seat = -1;
+    // allocate at game start
+    this.slot = -1;
     
-    // buy status
     this.bought = false;
     
+    // allocate at game end
     this.points = 0;
-    
-    this.counted = false;
-    
-    this.ranking = -1;
+    this.rank = -1;
 }
 
-Player.prototype.retrievePlayerState = function(id, state) {
-    var visible = id === this.id || state === 'END';
+Player.prototype.retrievePlayerState = function(isPlayer, isTurn, isEnd) {
     return {
         name: this.name,
-        deck: this.deck.map(this.getCardName.bind(null, state === 'END')),
-        discard: this.discard.map(function(card, index) {
-            var show = visible ? true : index === 0;
-            return this.getCardName(show, card);
-        }, this),
-        hand: this.hand.map(this.getCardName.bind(null, visible)),
-        play: this.play.map(this.getCardName.bind(null, true)),
+        deck: getStack(this.deck, isEnd ? this.deck.length : 0),
+        discard: getStack(this.discard, isPlayer || isEnd ?
+            this.discard.length :
+            Math.min(this.discard.length, 1)),
+        hand: getStack(this.hand, isPlayer || isEnd ? this.hand.length : 0),
+        play: getStack(this.play, this.play.length),
         phase: this.phase,
-        seat: this.seat,
+        slot: this.slot,
         points: this.points,
+        rank: this.rank,
         disc: this.id === null,
-        counted: this.counted,
-        ranking: this.ranking,
+        isPlayer: isPlayer,
+        isTurn: isTurn || isEnd,
         bought: this.bought
     };
 };
 
-Player.prototype.getCardName = function(visible, card) {
-    var ret = {};
-    if (card) {
-        ret.coin = visible && card.coin;
-        ret.name = visible ? card.name : '';
-        ret.types = visible && card.types;
-        ret.selected = card.selected;
-        ret.canReact = visible && card.canReact;
-    }
-        
-    return ret;
-};
-
-Player.prototype.init = function(seat) {
-    this.emptyCards();
+Player.prototype.init = function() {
+    this.phase = PHASE.STANDBY;
     
-    this.phase = 0;
-    
-    this.seat = seat;
+    this.slot = -1;
     
     this.bought = false;
     
     this.points = 0;
-    
-    this.counted = false;
-    
-    this.ranking = -1;
+    this.rank = -1;
 };
 
-Player.prototype.emptyCards = function() {
-    this.deck = [];
-    this.discard = [];
-    this.hand = [];
-    this.play = [];
+Player.prototype.setSlot = function(slot) {
+    this.slot = slot;
 };
 
 Player.prototype.draw = function(amt) {
-    var deck_amt = this.deck.length;
-    var draw_amt = Math.min(amt, deck_amt);
+    var deckAmt = this.deck.length;
+    var drawAmt = Math.min(amt, deckAmt);
     
-    moveCards(this.deck, this.hand, draw_amt);
+    moveCards(this.deck, this.hand, drawAmt);
     
-    if (draw_amt < amt && this.discard.length) {
+    if (drawAmt < amt && this.discard.length) {
         shuffle(this.discard);
         // place shuffled cards on top of deck
         [this.deck, this.discard] = [this.discard, this.deck];
-        this.draw(amt - draw_amt);
+        this.draw(amt - drawAmt);
     }
 };
 
@@ -109,28 +83,14 @@ Player.prototype.cleanUp = function() {
     moveCards(this.play, this.discard, this.play.length);
     
     // standby phase
-    this.phase = 0;
-    
-    this.bought = false;
+    this.phase = PHASE.STANDBY;
 };
 
-Player.prototype.canPlayAction = function(card) {
-    return card && this.phase === ACTION_PHASE;
-};
-
-Player.prototype.canPlayTreasure = function(card) {
-    return card && this.phase === BUY_PHASE && !this.bought;
-};
-
-Player.prototype.canBuy = function(card) {
-    return card && this.phase === BUY_PHASE;
-};
-
-Player.prototype.canReact = function(item) {
+Player.prototype.hasReactable = function(task) {
     var len = this.hand.length;
     for (var i = 0; i < len; i++) {
         var card = this.hand[i];
-        if (card.canReact && card.canReact(this, item)) {
+        if (card.reactable(this, task)) {
             return true;
         }
     }
@@ -138,23 +98,48 @@ Player.prototype.canReact = function(item) {
     return false;
 };
 
-Player.prototype.countScore = function(game) {
-    this.getScoreIn(this.hand, game);
-    this.getScoreIn(this.play, game);
-    this.getScoreIn(this.deck, game);
-    this.getScoreIn(this.discard, game);
-    
-    this.counted = true;
+Player.prototype.applyPoints = function(game) {
+    this.applyPointsStack(this.hand, game);
+    this.applyPointsStack(this.play, game);
+    this.applyPointsStack(this.deck, game);
+    this.applyPointsStack(this.discard, game);
 };
 
-Player.prototype.getScoreIn = function(stack, game) {
-    for (var i = 0; i < stack.length; i++) {
+Player.prototype.applyPointsStack = function(stack, game) {
+    var len = stack.length;
+    for (var i = 0; i < len; i++) {
         var card = stack[i];
-        if ('victory' in card.types) {
-            card.types.victory(this, game);
-        } else if ('curse' in card.types) {
-            card.types.curse(this, game);
-        }
+        var types = card.types;
+        (types.victory && types.victory(this, game)) ||
+        (types.curse && types.curse(this, game));
+    }
+};
+
+Player.prototype.returnCards = function(supply, pile) {
+    retCards(this.deck, supply, pile);
+    retCards(this.discard, supply, pile);
+    retCards(this.hand, supply, pile);
+    retCards(this.play, supply, pile);
+};
+
+Player.prototype.playCard = function(card, playType, game) {
+    var index = this.hand.indexOf(card);
+    if (index !== -1) {
+        this.hand.splice(index, 1);
+        this.play.unshift(card);
+        
+        card.types[playType](this, game);
+        game.advanceTask(game.todo);
+    }
+};
+
+Player.prototype.gainCard = function(supply, card, dest) {
+    var name = card.name;
+    var work = supply[name][SUPPLY.WORK];
+    var index = work.indexOf(card);
+    if (index !== -1) {
+        work.splice(index, 1);
+        this[dest].unshift(card);
     }
 };
 
