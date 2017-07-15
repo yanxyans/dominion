@@ -31,10 +31,8 @@ var room = new Room(io);
 var FirstGame = {
     name: 'first game',
     startDeck: {
-        estate: 3,
-        militia: 1,
-        moat: 1,
-        province: 4
+        copper: 7,
+        estate: 3
     },
     supply: {
         copper: [60, 60, 60],
