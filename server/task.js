@@ -13,13 +13,14 @@ function Task(slot, type, main, trigger) {
 Task.prototype.nextTurn = function() {
     if (this.state === 'PREP' && this.react.length) {
         return this.react[0].slot;
-    } else if (this.state === 'MAIN') {
+    } else if (this.state === 'MAIN' && this.main.length) {
         return this.slot;
     } else if (this.state === 'POST') {
         if (this.react.length) {
             return this.react[0].slot;
+        } else if (this.trigger.length) {
+            return this.slot;
         }
-        return this.slot;
     }
     
     return -1;

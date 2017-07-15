@@ -1,39 +1,24 @@
-var COPPER_VALUE = 1;
-var SILVER_VALUE = 2;
-var GOLD_VALUE = 3;
-var ESTATE_VALUE = 1;
-var DUCHY_VALUE = 3;
-var PROVINCE_VALUE = 6;
-var CURSE_VALUE = 1;
-
 var Item = require('./item');
 var Task = require('./task');
 
 var SUPPLY = require('./util').SUPPLY;
-
-// coin and points factory
+var CONSTANT = require('./util').CONSTANT;
 
 function incPlayerCoin(value) {
     return function(player, game) {
-        if (player) {
-            game.coin += value;
-        }
+        game.coin += value;
     };
 }
 
 function incPlayerPoints(points) {
     return function(player, game) {
-        if (player) {
-            player.points += points;
-        }
+        player.points += points;
     };
 }
 
 function decPlayerPoints(points) {
     return function(player, game) {
-        if (player) {
-            player.points -= points;
-        }
+        player.points -= points;
     };
 }
 
@@ -48,10 +33,11 @@ function mapCards(model, cards, view, type) {
 
 function mapView(game, cards, view, type) {
     // map player cards
-    for (var i = 0; i < game.players.length; i++) {
-        var player = game.players[i];
+    var players = game.players;
+    for (var i = 0; i < players.length; i++) {
+        var player = players[i];
         var pview = view.players[i];
-        if (pview.isPlayer || type === 'selected') {
+        if ((type === 'selectable' && pview.isPlayer) || type === 'selected') {
             mapCards(player.discard.slice(1), cards, pview.discard.slice(1), type);
             mapCards(player.deck, cards, pview.deck, type);
             mapCards(player.hand, cards, pview.hand, type);
@@ -71,7 +57,6 @@ function mapView(game, cards, view, type) {
 
 function selectTask(type, main, trigger, resolve, controls,
                     getSelectable, selected, player, game) {
-    
     var slot = player.slot;
     
     return new Task(slot, type, [new Item(resolve,
@@ -135,6 +120,15 @@ function getSelectable(hand, selectCondition) {
         }
     }
     return selectable;
+}
+
+function getGainable(supply, gainCondition) {
+    var gainable = [];
+    Object.keys(supply).forEach(function(name) {
+        var work = supply[name][SUPPLY.WORK];
+        gainable = gainable.concat(work.filter(gainCondition));
+    });
+    return gainable;
 }
 
 function cellarAction(player, game) {
@@ -263,15 +257,6 @@ function moatReactable(player, task) {
         task.main.find(function(item) {
             return player === item.target;
         });
-}
-
-function getGainable(supply, gainCondition) {
-    var gainable = [];
-    Object.keys(supply).forEach(function(name) {
-        var work = supply[name][SUPPLY.WORK];
-        gainable = gainable.concat(work.filter(gainCondition));
-    });
-    return gainable;
 }
 
 function mineAction(player, game) {
@@ -490,35 +475,35 @@ function getCardAttributes(name) {
             return {
                 coin: 0,
                 types: {
-                    treasure: incPlayerCoin(COPPER_VALUE)
+                    treasure: incPlayerCoin(CONSTANT.COPPER_VALUE)
                 }
             };
         case 'curse':
             return {
                 coin: 0,
                 types: {
-                    curse: decPlayerPoints(CURSE_VALUE)
+                    curse: decPlayerPoints(CONSTANT.CURSE_VALUE)
                 }
             };
         case 'duchy':
             return {
                 coin: 5,
                 types: {
-                    victory: incPlayerPoints(DUCHY_VALUE)
+                    victory: incPlayerPoints(CONSTANT.DUCHY_VALUE)
                 }
             };
         case 'estate':
             return {
                 coin: 2,
                 types: {
-                    victory: incPlayerPoints(ESTATE_VALUE)
+                    victory: incPlayerPoints(CONSTANT.ESTATE_VALUE)
                 }
             };
         case 'gold':
             return {
                 coin: 6,
                 types: {
-                    treasure: incPlayerCoin(GOLD_VALUE)
+                    treasure: incPlayerCoin(CONSTANT.GOLD_VALUE)
                 }
             };
         case 'market':
@@ -556,7 +541,7 @@ function getCardAttributes(name) {
             return {
                 coin: 8,
                 types: {
-                    victory: incPlayerPoints(PROVINCE_VALUE)
+                    victory: incPlayerPoints(CONSTANT.PROVINCE_VALUE)
                 }
             };
         case 'remodel':
@@ -570,7 +555,7 @@ function getCardAttributes(name) {
             return {
                 coin: 3,
                 types: {
-                    treasure: incPlayerCoin(SILVER_VALUE)
+                    treasure: incPlayerCoin(CONSTANT.SILVER_VALUE)
                 }
             };
         case 'smithy':

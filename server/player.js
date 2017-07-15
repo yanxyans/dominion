@@ -54,8 +54,6 @@ Player.prototype.init = function() {
     
     this.slot = -1;
     
-    this.bought = false;
-    
     this.points = 0;
     this.rank = -1;
 };
@@ -84,6 +82,8 @@ Player.prototype.cleanUp = function() {
     
     // standby phase
     this.phase = PHASE.STANDBY;
+    
+    this.bought = false;
 };
 
 Player.prototype.hasReactable = function(task) {

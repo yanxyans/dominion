@@ -9,14 +9,9 @@ var retCards = require('./util').returnCards;
 
 var PHASE = require('./util').PHASE;
 var SUPPLY = require('./util').SUPPLY;
-
-var MAX_PLAYERS = 4;
-var MIN_PLAYERS = 2;
-var TURN_DRAW_AMT = 5;
-var PILE_OUT = 3;
+var CONSTANT = require('./util').CONSTANT;
 
 function Game(startDeck, supply, callback) {
-    
     this.state = 'INIT';
     this.turn = -1;
     
@@ -37,29 +32,18 @@ Game.prototype.initResources = function() {
     this.todo = [];
 };
 
-Game.prototype.returnAll = function() {
-    var len = this.players.length;
-    for (var i = len - 1; i > -1; i--) {
-        var player = this.players[i];
-        player.returnCards(this.supply, SUPPLY.PILE);
-        if (player.id === null) {
-            this.players.splice(i, 1);
-        } else {
-            player.init();
-        }
-    }
-    
-    retCards(this.trash, this.supply, SUPPLY.PILE);
+Game.prototype.resetResources = function() {
+    this.action = 0;
+    this.buy = 0;
+    this.coin = 0;
 };
 
-Game.prototype.restartGame = function() {
-    this.returnAll();
-    this.alignWorkSupply();
+Game.prototype.giveResources = function(player) {
+    this.action = 1;
+    this.buy = 1;
+    this.coin = 0;
     
-    this.initResources();
-    
-    this.state = 'INIT';
-    this.turn = -1;
+    player.phase = PHASE.ACTION;
 };
 
 Game.prototype.addPlayer = function(user) {
@@ -67,7 +51,7 @@ Game.prototype.addPlayer = function(user) {
         return false;
     }
     
-    if (this.players.length >= MAX_PLAYERS) {
+    if (this.players.length >= CONSTANT.MAX_PLAYERS) {
         return false;
     }
     
@@ -110,9 +94,9 @@ Game.prototype.removePlayer = function(user) {
         var player = this.players.splice(slot, 1)[0];
         player.returnCards(this.supply, SUPPLY.PILE);
         
-        this.alignWorkSupply();
-        
-        if (this.state === 'END' && this.players.length === 0) {
+        if (this.state === 'INIT') {
+            this.alignWorkSupply();
+        } else if (this.state === 'END' && this.players.length === 0) {
             this.restartGame();
         }
     } else {
@@ -131,6 +115,14 @@ Game.prototype.getPlayIndex = function(id) {
     }).indexOf(id);
 };
 
+Game.prototype.reconnect = function(user, slot) {
+    if (!user || this.getPlayIndex(user.id) !== -1) {
+        return false;
+    }
+    
+    return this.takePlayerSlot(user, slot);
+};
+
 Game.prototype.takePlayerSlot = function(user, slot) {
     if (!user || !(slot in this.players)) {
         return false;
@@ -146,12 +138,35 @@ Game.prototype.takePlayerSlot = function(user, slot) {
     return true;
 };
 
-Game.prototype.reconnect = function(user, slot) {
-    if (!user || this.getPlayIndex(user.id) !== -1) {
-        return false;
-    }
+Game.prototype.retrieveGameState = function(id) {
+    var task = this.nextTask();
     
-    return this.takePlayerSlot(user, slot);
+    var state = this.state;
+    var turn = task ? task.nextTurn() : this.turn;
+    var players = this.players.map(function(player) {
+        return player.retrievePlayerState(id === player.id,
+                                          turn === player.slot,
+                                          state === 'END');
+    });
+    
+    var supply = this.supply;
+    var work = {};
+    Object.keys(supply).forEach(function(name) {
+        var stack = supply[name][SUPPLY.WORK];
+        work[name] = getStack(stack, stack.length);
+    });
+    
+    var ret = {
+        players: players,
+        piles: work,
+        trash: getStack(this.trash, this.trash.length),
+        action: this.action,
+        buy: this.buy,
+        coin: this.coin
+    };
+    
+    task ? task.nextItem().view(ret) : this.view(ret);
+    return ret;
 };
 
 Game.prototype.view = function(ret) {
@@ -162,7 +177,7 @@ Game.prototype.view = function(ret) {
         
         if (this.state === 'INIT' &&
             player.isPlayer &&
-            len >= MIN_PLAYERS) {
+            len >= CONSTANT.MIN_PLAYERS) {
             player.control = ['Start'];
         } else if (this.state === 'MAIN' &&
                    player.isTurn) {
@@ -209,62 +224,13 @@ Game.prototype.view = function(ret) {
     }
 };
 
-Game.prototype.retrieveGameState = function(id) {
-    var task = this.nextTask();
-    
-    var state = this.state;
-    var turn = task ? task.nextTurn() : this.turn;
-    var players = this.players.map(function(player) {
-        return player.retrievePlayerState(id === player.id,
-                                          turn === player.slot,
-                                          state === 'END');
-    });
-    
-    var supply = this.supply;
-    var work = {};
-    Object.keys(supply).forEach(function(name) {
-        var stack = supply[name][SUPPLY.WORK];
-        work[name] = getStack(stack, stack.length);
-    });
-    
-    var ret = {
-        players: players,
-        piles: work,
-        trash: getStack(this.trash, this.trash.length),
-        action: this.action,
-        buy: this.buy,
-        coin: this.coin
-    };
-    
-    task ? task.nextItem().view(ret) : this.view(ret);
-    return ret;
-};
-
-Game.prototype.giveResources = function(player) {
-    this.action = 1;
-    this.buy = 1;
-    this.coin = 0;
-    
-    player.phase = PHASE.ACTION;
-    
-    player.bought = false;
-};
-
-Game.prototype.restart = function(user) {
-    if (!user || this.getPlayIndex(user.id) === -1) {
-        return false;
-    }
-    this.restartGame();
-    return true;
-};
-
 Game.prototype.start = function(user) {
     if (!user || this.getPlayIndex(user.id) === -1 || this.state !== 'INIT') {
         return false;
     }
     
     var len = this.players.length;
-    if (len < MIN_PLAYERS) {
+    if (len < CONSTANT.MIN_PLAYERS) {
         return false;
     }
     
@@ -283,7 +249,7 @@ Game.prototype.start = function(user) {
                       player.discard,
                       startDeck[name]);
         });
-        player.draw(TURN_DRAW_AMT);
+        player.draw(CONSTANT.TURN_DRAW);
         
         player.setSlot(i);
     }
@@ -298,21 +264,37 @@ Game.prototype.start = function(user) {
     return true;
 };
 
-Game.prototype.endGame = function() {
-    if (this.state === 'MAIN') {
-        this.state = 'END';
-        
-        var len = this.players.length;
-        for (var i = 0; i < len; i++) {
-            this.players[i].applyPoints(this);
-        }
-        
-        this.players.slice().sort(function(pOne, pTwo) {
-            return pTwo.points - pOne.points;
-        }).forEach(function(player, index) {
-            player.rank = index;
-        });
+Game.prototype.restart = function(user) {
+    if (!user || this.getPlayIndex(user.id) === -1 || this.state !== 'END') {
+        return false;
     }
+    this.restartGame();
+    return true;
+};
+
+Game.prototype.restartGame = function() {
+    this.state = 'INIT';
+    this.turn = -1;
+    
+    this.initResources();
+    
+    this.returnAll();
+    this.alignWorkSupply();
+};
+
+Game.prototype.returnAll = function() {
+    var len = this.players.length;
+    for (var i = len - 1; i > -1; i--) {
+        var player = this.players[i];
+        player.returnCards(this.supply, SUPPLY.PILE);
+        if (player.id === null) {
+            this.players.splice(i, 1);
+        } else {
+            player.init();
+        }
+    }
+    
+    retCards(this.trash, this.supply, SUPPLY.PILE);
 };
 
 Game.prototype.setPhase = function(user, phase) {
@@ -336,26 +318,45 @@ Game.prototype.setPhase = function(user, phase) {
     if (phase === PHASE.CLEANUP) {
         // cleanup sequence
         player.cleanUp();
-        player.draw(TURN_DRAW_AMT);
+        player.draw(CONSTANT.TURN_DRAW);
         
         var supply = this.supply;
         if (supply.province[SUPPLY.WORK].length === 0 ||
             Object.keys(supply).filter(function(name) {
                 return supply[name][SUPPLY.WORK].length === 0;
-            }).length >= PILE_OUT) {
+            }).length >= CONSTANT.PILE_OUT) {
             
             this.endGame();
+        } else {
+            var turnNext = (this.turn + 1) % this.players.length;
+            var playerNext = this.players[turnNext];
+            
+            this.giveResources(playerNext);
+            this.turn = turnNext;
         }
-        
-        var turnNext = (this.turn + 1) % this.players.length;
-        var playerNext = this.players[turnNext];
-        
-        this.giveResources(playerNext);
-        this.turn = turnNext;
         
     }
     
     return true;
+};
+
+Game.prototype.endGame = function() {
+    if (this.state === 'MAIN') {
+        this.state = 'END';
+        
+        var len = this.players.length;
+        for (var i = 0; i < len; i++) {
+            this.players[i].applyPoints(this);
+        }
+        
+        this.players.slice().sort(function(pOne, pTwo) {
+            return pTwo.points - pOne.points;
+        }).forEach(function(player, index) {
+            player.rank = index;
+        });
+        
+        this.resetResources();
+    }
 };
 
 Game.prototype.tapCard = function(user, src, index) {
@@ -374,20 +375,13 @@ Game.prototype.tapCard = function(user, src, index) {
     
     var cards = this.getCards(src);
     if (!cards) {
-        console.log(cards);
+        return false;
     }
     
     var player = this.players[playIndex];
     return (task && this.handleTask(task, cards, index)) ||
         ((cards === player.hand) && this.handlePlay(player, cards, index)) ||
         ((this.getPileName(cards) in this.supply) && this.handleBuy(player, cards, index));
-};
-
-Game.prototype.getPileName = function(pile) {
-    var supply = this.supply;
-    return Object.keys(supply).find(function(name) {
-        return supply[name][SUPPLY.WORK] === pile;
-    });
 };
 
 Game.prototype.getCards = function(src) {
@@ -430,6 +424,13 @@ Game.prototype.getPileCards = function(src) {
     }
     
     return null;
+};
+
+Game.prototype.getPileName = function(pile) {
+    var supply = this.supply;
+    return Object.keys(supply).find(function(name) {
+        return supply[name][SUPPLY.WORK] === pile;
+    });
 };
 
 Game.prototype.handleTask = function(task, cards, index) {
@@ -521,6 +522,20 @@ Game.prototype.completeItem = function(user, control) {
     return false;
 };
 
+Game.prototype.nextTask = function() {
+    var todo = this.todo;
+    
+    if (todo.length) {
+        var task = todo[0];
+        while (task.todo.length) {
+            task = task.todo[0];
+        }
+        return task;
+    }
+    
+    return null;
+};
+
 Game.prototype.advanceTask = function(todo) {
     while (todo.length) {
         var task = todo[0];
@@ -568,11 +583,8 @@ Game.prototype.advanceItem = function(task) {
                 }
                 
                 if (task.trigger.length) {
-                    if (!task.trigger[0].resolve(task)) {
-                        return false;
-                    }
-                    
-                    task.trigger.shift();
+                    var item = task.trigger.shift();
+                    item.resolve(task);
                     break;
                 }
                 
@@ -581,23 +593,9 @@ Game.prototype.advanceItem = function(task) {
     }
 };
 
-Game.prototype.nextTask = function() {
-    var todo = this.todo;
-    
-    if (todo.length) {
-        var task = todo[0];
-        while (task.todo.length) {
-            task = task.todo[0];
-        }
-        return task;
-    }
-    
-    return null;
-};
-
 Game.prototype.getReactions = function(task) {
     if (!task.react.length) {
-        let slot = task.slot;
+        var slot = task.slot;
         var len = this.players.length;
         var callback = this.callback;
         
@@ -634,7 +632,7 @@ Game.prototype.getReactions = function(task) {
                                 player.name +
                                 ' reveals a ' +
                                 card.name +
-                                ' from hand');
+                                ' from hand!');
                                 
                             return true;
                         }

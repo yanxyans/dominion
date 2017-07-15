@@ -49,7 +49,6 @@ module.exports = {
                 }
             }
         }
-        
         return ret;
     },
     
@@ -57,11 +56,8 @@ module.exports = {
         while (src.length) {
             var card = src.shift();
             dest[card.name][loc].unshift(card);
-            
         }
     },
-    
-            
     
     PHASE: {
         STANDBY: 0,
@@ -73,6 +69,20 @@ module.exports = {
     SUPPLY: {
         PILE: 0,
         WORK: 1
+    },
+    
+    CONSTANT: {
+        COPPER_VALUE: 1,
+        SILVER_VALUE: 2,
+        GOLD_VALUE: 3,
+        ESTATE_VALUE: 1,
+        DUCHY_VALUE: 3,
+        PROVINCE_VALUE: 6,
+        CURSE_VALUE: 1,
+        MAX_PLAYERS: 4,
+        MIN_PLAYERS: 2,
+        TURN_DRAW: 5,
+        PILE_OUT: 3
     }
     
 };

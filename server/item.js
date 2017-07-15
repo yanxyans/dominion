@@ -5,7 +5,7 @@ function Item(resolve, view, apply, controls, attributes) {
         // do nothing
     };
     this.apply = apply ? apply : function(cards, index) {
-        // do nothing
+        return true;
     };
     
     this.controls = controls ? Object.keys(controls) : [];
