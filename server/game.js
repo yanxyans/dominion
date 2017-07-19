@@ -96,7 +96,9 @@ Game.prototype.removePlayer = function(user) {
         
         if (this.state === 'INIT') {
             this.alignWorkSupply();
-        } else if (this.state === 'END' && this.players.length === 0) {
+        } else if (this.state === 'END' && this.players.filter(function(player) {
+            return player.id;
+        }).length === 0) {
             this.restartGame();
         }
     } else {
@@ -116,7 +118,7 @@ Game.prototype.getPlayIndex = function(id) {
 };
 
 Game.prototype.reconnect = function(user, slot) {
-    if (!user || this.getPlayIndex(user.id) !== -1) {
+    if (!user || this.state !== 'MAIN' || this.getPlayIndex(user.id) !== -1) {
         return false;
     }
     

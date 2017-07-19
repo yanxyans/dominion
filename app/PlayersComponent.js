@@ -11,6 +11,11 @@ export default class PlayersComponent extends React.Component {
     render() {
         var players = this.props.players;
         var len = players.length;
+        for (var i = 0; i < len; i++) {
+            if (players[i].slot === -1) {
+                players[i].slot = len - 1 - i;
+            }
+        }
         
         var index = players.findIndex(function(player) {
             return player.isPlayer;
