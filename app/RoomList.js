@@ -11,7 +11,7 @@ function wrapState(ComposedComponent) {
         }
 
         _handleRequestChange = (event, room) => {
-            this.props._setRoom(room);
+            this.props._join(room);
         }
 
         render() {

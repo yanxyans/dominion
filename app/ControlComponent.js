@@ -8,7 +8,7 @@ import {
 import PrimaryIcon from 'material-ui/svg-icons/navigation/chevron-right';
 import SecondaryIcon from 'material-ui/svg-icons/action/code';
 
-import { amberA700, white } from 'material-ui/styles/colors';
+import { black, white } from 'material-ui/styles/colors';
 
 /**
  * A basic vertical non-linear implementation
@@ -16,7 +16,7 @@ import { amberA700, white } from 'material-ui/styles/colors';
 class ControlComponent extends React.Component {
     
     componentDidMount() {
-        if (this.props.visible) {
+        if (this.props.isPlayer) {
             var audio = new Audio('/asset/notif.mp3');
             audio.play();
         }
@@ -24,9 +24,9 @@ class ControlComponent extends React.Component {
   
     render() {
         var phase = this.props.phase;
-        var visible = this.props.visible;
+        var isPlayer = this.props.isPlayer;
         
-        var send = this.props._sendControl;
+        var _complete = this.props._complete;
         
         return (
             <div className='controls'>
@@ -36,17 +36,16 @@ class ControlComponent extends React.Component {
                          connector={phase !== null ? <PrimaryIcon/> : <SecondaryIcon/>}
                 >
                     {this.props.control.map(function(step, index) {
-                        var isDisabled = !visible || (phase !== null && index <= phase);
+                        var isDisabled = !isPlayer || (phase !== null && index <= phase);
                         var isActive = phase !== null && index === phase;
                         
                         return (
                             <Step key={index}>
-                                <StepButton onTouchTap={send.bind(null, step)}
+                                <StepButton onTouchTap={_complete.bind(null, step)}
                                             disabled={isDisabled}
                                             icon={null}
-                                            className={!isDisabled && 'hvr-buzz-out'}
                                 >
-                                    <span style={{color: isActive ? amberA700 : white}}>
+                                    <span style={{color: isActive ? black : white, fontWeight: isActive ? 'bold' : null}}>
                                         {step}
                                     </span>
                                 </StepButton>

@@ -1,7 +1,7 @@
 function User(socket) {
 	this.socket = socket;
 	this.id = socket.id;
-	this.name = 'name yourself';
+	this.name = 'rename';
 	
 	this.rooms = {};
 	this.current = null;
@@ -23,9 +23,7 @@ User.prototype.setName = function(name) {
 
 User.prototype.addRoom = function(room, joinType) {
 	if (!this.rooms[room]) {
-		this.rooms[room] = {
-			type: joinType
-		};
+		this.rooms[room] = joinType;
 		
 		// join room after add
 		this.joinRoom(room);
@@ -98,7 +96,7 @@ User.prototype.updateUser = function(emptyView) {
 User.prototype.retrieveUserState = function() {
 	return {
 		name: this.name,
-		rooms: Object.keys(this.rooms),
+		rooms: this.rooms,
 		current: this.current
 	};
 };

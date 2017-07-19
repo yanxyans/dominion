@@ -123,8 +123,8 @@ io.on('connection', function(socket) {
         var game = room.getGame(current);
         var userRoom = user.rooms[current];
         
-        game && userRoom &&
-        userRoom.type === 'spectator' &&
+        game &&
+        userRoom === 'spectator' &&
         game.reconnect(user, slot) &&
         room.setPlayer(user) &&
         room.updateRoom(current);

@@ -104,7 +104,7 @@ Game.prototype.removePlayer = function(user) {
         var player = this.players[slot];
         
         player.id = null;
-        player.name = 'reconnect here';
+        player.name = 'reconnect';
     }
     return true;
 };

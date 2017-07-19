@@ -1,141 +1,68 @@
 import React from 'react';
 
 import Paper from 'material-ui/Paper';
-import Stack from './Stack';
-
-import { greenA700, white } from 'material-ui/styles/colors';
-
-import {Toolbar, ToolbarGroup, ToolbarTitle} from 'material-ui/Toolbar';
+import AppBar from 'material-ui/AppBar';
 
 import IconButton from 'material-ui/IconButton';
-
-import IconClear from 'material-ui/svg-icons/content/clear';
 import IconSort from 'material-ui/svg-icons/content/sort';
+import IconClear from 'material-ui/svg-icons/content/clear';
 
-const styles = {
-    appBar: {
-        backgroundColor: greenA700
-    },
-};
+import Stack from './Stack';
 
 export default class BoardComponent extends React.Component {
     state = {
-        sortState: 0
+        sorted: false
     }
     
-    _toggleSort = (type) => {
-        this.setState({sortState: type});
+    _toggle = () => {
+        this.setState({sorted: !this.state.sorted});
     }
     
     render() {
-        var help = this.props.help;
-        
-        var p = this.props.piles
-        var piles = Object.keys(this.props.piles);
-        if (this.state.sortState === 0) {
-        } else if (this.state.sortState === 1) {
-            piles.sort(function(pileA, pileB) {
-                pileA = p[pileA];
-                pileB = p[pileB];
-                var lenA = pileA.length;
-                var lenB = pileB.length;
-                if (lenA === 0 && lenB === 0) {
-                    return 0;
-                } else if (lenA === 0) {
-                    return 1;
-                } else if (lenB === 0) {
-                    return -1;
-                } else {
-                    return pileA[0].coin - pileB[0].coin;
+        var supply = this.props.supply;
+        var keys = Object.keys(supply);
+        if (this.state.sorted) {
+            keys.sort(function(keyA, keyB) {
+                var lenA = supply[keyA].length;
+                var lenB = supply[keyB].length;
+                if (!lenA || !lenB) {
+                    return lenB - lenA;
                 }
-            });
-        } else if (this.state.sortState === 2) {
-            piles.sort(function(pileA, pileB) {
-                pileA = p[pileA];
-                pileB = p[pileB];
-                var lenA = pileA.length;
-                var lenB = pileB.length;
-                if (lenA === 0 && lenB === 0) {
-                    return 0;
-                } else if (lenA === 0) {
-                    return 1;
-                } else if (lenB === 0) {
-                    return -1;
-                } else {
-                    var typeA = pileA[0].types;
-                    var typeB = pileB[0].types;
-                    
-                    if (typeA.length && typeB.length) {
-                        
-                        var a = typeA[0];
-                        var b = typeB[0];
-                        return a.charCodeAt(0) - b.charCodeAt(0);
-                    }
-                    return 0;
-                }
-            });
-        } else if (this.state.sortState === 3) {
-            piles.sort(function(pileA, pileB) {
-                pileA = p[pileA];
-                pileB = p[pileB];
-                var lenA = pileA.length;
-                var lenB = pileB.length;
-                if (lenA === 0 && lenB === 0) {
-                    return 0;
-                } else if (lenA === 0) {
-                    return 1;
-                } else if (lenB === 0) {
-                    return -1;
-                } else {
-                    return lenA - lenB;
-                }
+                return supply[keyA][0].coin - supply[keyB][0].coin;
             });
         }
         
+        var trash = this.props.trash;
+        var tooltip = this.props.tooltip;
+        var _tap = this.props._tap;
+        
         return (
             <Paper id='board' zDepth={2}>
-                <Toolbar style={styles.appBar}>
-                    <ToolbarGroup>
-                        <ToolbarTitle text='supply' style={{color:white}}/>
-                    </ToolbarGroup>
-                    <ToolbarGroup>
-                        
-                        <IconButton tooltip='cost'
-                                    onTouchTap={this._toggleSort.bind(null, 1)}>
-                            <IconSort/>
-                        </IconButton>
-                        
-                        <IconButton tooltip='type'
-                                    onTouchTap={this._toggleSort.bind(null, 2)}>
-                            <IconSort/>
-                        </IconButton>
-                        
-                        <IconButton tooltip='size'
-                                    onTouchTap={this._toggleSort.bind(null, 3)}>
-                            <IconSort/>
-                        </IconButton>
-                        
-                        <IconButton tooltip='reorder'
-                                    onTouchTap={this._toggleSort.bind(null, 0)}>
-                            <IconClear/>
-                        </IconButton>
-                    </ToolbarGroup>
-                </Toolbar>
+                <AppBar title='supply'
+                        showMenuIconButton={false}
+                        iconElementRight={this.state.sorted ?
+                            <IconButton><IconClear/></IconButton> :
+                            <IconButton><IconSort/></IconButton>}
+                        onRightIconButtonTouchTap={this._toggle}
+                        style={{zIndex:998}}/>
                 <div className='content'>
-                    {piles.map(function(pile, index) {
+                    {keys.map(function(name, index) {
+                        var cards = supply[name];
                         return <Stack key={index}
-                                      data={this.piles[pile]}
-                                      tooltip='pile'
-                                      _tapCard={this._tapCard.bind(null, ['piles', pile])}
-                                      open={false}
-                                      show={help}/>;
-                    }, this.props)}
-                    {this.props.trash &&
-                    <Stack data={this.props.trash}
-                           tooltip='trash'
-                           _tapCard={this.props._tapCard.bind(null, ['trash'])}
-                           open={false}
-                           show={help}/>}
+                                      name={name}
+                                      cards={cards}
+                                      stacked={true}
+                                      canToggle={false}
+                                      tooltip={tooltip}
+                                      _tap={_tap.bind(null, ['piles', name])}/>;
+                    })}
+                    {trash &&
+                    <Stack name='trash'
+                           cards={trash}
+                           stacked={true}
+                           canToggle={trash.length > 1}
+                           tooltip={tooltip}
+                            _tap={_tap.bind(null, ['trash'])}/>}
                 </div>
             </Paper>
         );

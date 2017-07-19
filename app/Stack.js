@@ -1,11 +1,12 @@
 import React from 'react';
+import ReactTooltip from 'react-tooltip';
 
 import Paper from 'material-ui/Paper';
-import IconButton from 'material-ui/IconButton';
+import Subheader from 'material-ui/Subheader';
 
+import IconButton from 'material-ui/IconButton';
 import IconAdd from 'material-ui/svg-icons/content/add';
 import IconRemove from 'material-ui/svg-icons/content/remove';
-import ReactTooltip from 'react-tooltip';
 
 function guidGenerator() {
     var S4 = function() {
@@ -19,82 +20,51 @@ export default class Stack extends React.Component {
         super(props);
         
         this.state = {
-            open: props.open,
-            show: props.show
-        };
-    }
-    
-    componentDidMount() {
-        this.setState({open: this.props.open});
+            stacked: props.stacked
+        }
     }
     
     _handleToggle = () => {
-        this.setState({open: !this.state.open});
-    }
-    
-    _getIndex = (index, isLast, selected, selectable) => {
-        var isStacked = !this.state.open && !isLast ?
-            {marginRight:'-50px'} :
-            {margin:'1px'};
-        var isSelected = selected ?
-            {opacity:0.35} :
-            null;
-        var isSelectable = selectable ?
-            {boxShadow:'0px 0px 1px 1px #FFAB00'} :
-            null;
-        
-        return Object.assign(
-            {},
-            {zIndex:index, maxHeight:'95px', transition:'.3s'},
-            isStacked,
-            isSelected,
-            isSelectable
-        );
+        this.setState({stacked: !this.state.stacked});
     }
     
     render() {
-        var data = this.props.data;
-        var display = this.state.open || this.props.alwaysOpen ? data : data.slice(0, 5);
-        
-        var size = data.length;
-        var len = display.length;
-        
-        var tap = this.props._tapCard;
-        var show = this.props.show;
+        var stacked = this.state.stacked;
+        var cards = !stacked ?
+            this.props.cards :
+            this.props.cards.slice(0, 5);
+        var tooltip = this.props.tooltip;
+        var _tap = this.props._tap;
         
         return (
-            <Paper className={'wrap ' + this.props.tooltip} zDepth={1}>
-                {!this.props.alwaysOpen &&
-                <IconButton onTouchTap={this._handleToggle}
-                            tooltip={this.props.tooltip + ' (' + size + ')'}>
-                    {this.state.open ? <IconRemove/> : <IconAdd/>}
+            <Paper zDepth={1} className='wrap'>
+                {this.props.canToggle &&
+                <IconButton onTouchTap={this._handleToggle}>
+                    {stacked ? <IconRemove/> : <IconAdd/>}
                 </IconButton>}
-                <div className={this.props.alwaysOpen ? 'wide stack' : 'default stack'}>
-                    {display.map(function(item, index) {
-                        var name = item.name;
+                <div className='stack'>
+                    {cards.map(function(card, index) {
+                        var name = card.name;
                         var source = '/asset/cards/' + (name ? name : 'back') + '.jpg';
-                        item.source = source;
-                        
-                        var isLast = index === 0;
+                        card.source = source;
                         
                         const guid = guidGenerator();
-                        item.guid = guid;
-                        
+                        card.guid = guid;
+                        var ind = 0 - index;
                         return <img key={index}
                                     src={source}
-                                    className='hvr-grow'
-                                    style={this._getIndex(len - 1 - index, isLast, item.selected, item.selectable)}
-                                    onTouchTap={tap.bind(null, index)}
+                                    onTouchTap={_tap.bind(null, index)}
                                     data-for={guid}
-                                    data-tip=''/>;
-                    }, this)}
-                    {display.map(function(item, index) {
-                        return <ReactTooltip id={item.guid}
-                                             key={index}
-                                             effect='solid'
-                                             type='light'>
-                                    {show && <img src={item.source}
-                                                  style={{maxHeight:'400px'}}/>}
+                                    data-tip=''
+                                    className={!stacked || index === 0 ? 'card' : 'card stacked'}
+                                    style={{zIndex:ind}}/>;
+                    })}
+                    {cards.map(function(card, index) {
+                        return <ReactTooltip key={index}
+                                             id={card.guid}>
+                                    {tooltip &&
+                                    <img src={card.source}
+                                         className='tooltip'/>}
                                </ReactTooltip>;
                     })}
                 </div>

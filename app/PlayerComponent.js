@@ -1,60 +1,51 @@
 import React from 'react';
 
-import ControlComponent from './ControlComponent';
-import Stack from './Stack';
-
 import Paper from 'material-ui/Paper';
 import IconButton from 'material-ui/IconButton';
-
 import IconName from 'material-ui/svg-icons/action/face';
 import IconDisconnect from 'material-ui/svg-icons/alert/warning';
-
 import IconPoints from 'material-ui/svg-icons/action/grade'
-
 import IconOne from 'material-ui/svg-icons/image/looks-one';
 import IconTwo from 'material-ui/svg-icons/image/looks-two';
 import IconThree from 'material-ui/svg-icons/image/looks-3';
 import IconFour from 'material-ui/svg-icons/image/looks-4';
 
-import { amberA700, white } from 'material-ui/styles/colors';
+import ControlComponent from './ControlComponent';
+import Stack from './Stack';
 
 const styles = {
     icon: {
         fontSize: '20px',
-        color: white,
-        width: 'auto'
+        width: 'auto',
+        color: '#fff'
     }
+}
+
+function plural(attr) {
+    return attr === 1 ? '' : 's';
 }
 
 export default class PlayerComponent extends React.Component {
     
     render() {
-        
         var player = this.props.player;
         var source = ['players', player.slot];
-        var visible = player.isPlayer;
-        
-        var hasContent = this.props.hasContent;
-        
-        var tap = this.props._tapCard;
-        var over = this.props._handleMouseOver;
-        var out = this.props._handleMouseOut;
-        
-        var help = this.props.help && player.isTurn;
+        var tooltip = this.props.tooltip;
+        var _tap = this.props._tap;
 
         return (
             <div className={player.isTurn ? 'player' : 'player inactive'}>
-                <Paper className='title' zDepth={1} style={{minHeight:'82px'}}>
+                <Paper className='title' zDepth={1} style={{minHeight:'82px',backgroundColor:this.props.color}}>
                     <div className='buttons'>
                         <IconButton tooltip={player.name}
-                                    onTouchTap={this.props._reconRoom}>
+                                    onTouchTap={this.props._recon}>
                             {player.disc ?
                                 <IconDisconnect/> :
-                                <IconName color={visible ? amberA700 : null}/>}
+                                <IconName/>}
                         </IconButton>
                         
                         {player.rank !== -1 &&
-                        <IconButton tooltip={player.points + (player.points === 1 ? ' point' : ' points')}>
+                        <IconButton tooltip={player.points + ' point' + plural(player.points)}>
                             {player.rank === 0 && <IconOne/>}
                             {player.rank === 1 && <IconTwo/>}
                             {player.rank === 2 && <IconThree/>}
@@ -62,17 +53,17 @@ export default class PlayerComponent extends React.Component {
                         </IconButton>}
                         
                         {player.action !== undefined &&
-                        <IconButton tooltip={player.action + (player.action === 1 ? ' action' : ' actions')}
+                        <IconButton tooltip={player.action + ' action' + plural(player.action)}
                                     style={styles.icon}>
                             {player.action + 'A'}
                         </IconButton>}
                         {player.buy !== undefined &&
-                        <IconButton tooltip={player.buy + (player.buy === 1 ? ' buy' : ' buys')}
+                        <IconButton tooltip={player.buy + ' buy' + plural(player.buy)}
                                     style={styles.icon}>
                             {player.buy + 'B'}
                         </IconButton>}
                         {player.coin !== undefined &&
-                        <IconButton tooltip={player.coin + (player.coin === 1 ? ' coin' : ' coins')}
+                        <IconButton tooltip={player.coin + ' coin' + plural(player.coin)}
                                     style={styles.icon}>
                             {player.coin + 'C'}
                         </IconButton>}
@@ -81,34 +72,35 @@ export default class PlayerComponent extends React.Component {
                     {player.control &&
                     <ControlComponent control={player.control}
                                       phase={player.main ? player.phase - 1 : null}
-                                      visible={visible}
-                                      _sendControl={this.props._sendControl}/>}
+                                      isPlayer={player.isPlayer}
+                                      _complete={this.props._complete}/>}
                 </Paper>
                 
                 <div className='content'>
-                    <Stack data={player.discard}
-                           tooltip='discard'
-                           _tapCard={tap.bind(null, source.concat('discard'))}
-                           open={false}
-                           show={help}/>
-                    <Stack data={player.play}
-                           tooltip='play'
-                           _tapCard={tap.bind(null, source.concat('play'))}
-                           open={true}
-                           show={help}
-                           alwaysOpen={true}/>
-
-                    <Stack data={player.deck}
-                           tooltip='deck'
-                           _tapCard={tap.bind(null, source.concat('deck'))}
-                           open={false}
-                           show={help}/>
-                    <Stack data={player.hand}
-                           tooltip='hand'
-                           _tapCard={tap.bind(null, source.concat('hand'))}
-                           open={true}
-                           show={help}
-                           alwaysOpen={true}/>
+                    <Stack name='discard'
+                           cards={player.discard}
+                           stacked={true}
+                           canToggle={player.discard.length > 1}
+                           tooltip={tooltip}
+                           _tap={_tap.bind(null, source.concat('discard'))}/>
+                    <Stack name='play'
+                           cards={player.play}
+                           stacked={false}
+                           canToggle={false}
+                           tooltip={tooltip}
+                           _tap={_tap.bind(null, source.concat('play'))}/>
+                    <Stack name='deck'
+                           cards={player.deck}
+                           stacked={true}
+                           canToggle={player.deck.length > 1}
+                           tooltip={tooltip}
+                           _tap={_tap.bind(null, source.concat('deck'))}/>
+                    <Stack name='hand'
+                           cards={player.hand}
+                           stacked={false}
+                           canToggle={false}
+                           tooltip={tooltip}
+                           _tap={_tap.bind(null, source.concat('hand'))}/>
                 </div>
             </div>
         );
