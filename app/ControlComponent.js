@@ -45,7 +45,7 @@ class ControlComponent extends React.Component {
                                             disabled={isDisabled}
                                             icon={null}
                                 >
-                                    <span style={{color: isActive ? black : white, fontWeight: isActive ? 'bold' : null}}>
+                                    <span style={{color: isActive ? black : white}}>
                                         {step}
                                     </span>
                                 </StepButton>
