@@ -12,7 +12,6 @@
     justify-content: space-around;
     flex-flow: row wrap;
 }
-
 .title {
     display: flex;
     align-items: center;
@@ -54,8 +53,12 @@
 }
 
 .selectable {
-    outline: 2px outset rgba(0, 151, 167, 0.6);
+    box-shadow: 0 0 5px rgba(0, 151, 167, 0.8);
 }
 .selected {
-    outline: 2px inset rgba(255, 64, 129, 0.6);
+    box-shadow: 0 0 5px rgba(255, 64, 129, 0.8);
+}
+.selectable:hover, .selected:hover {
+    -webkit-transform: scale(1.1);
+    transform: scale(1.1);
 }
