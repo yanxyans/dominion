@@ -68,7 +68,7 @@ export default class PlayersComponent extends React.Component {
                                                 _tap={this._tap}
                                                 _recon={this._recon.bind(null, player.slot)}
                                                 color={colors[player.slot]}
-                                                hideContent={view === 0 && index < len - 1}
+                                                hideContent={view === 0 && !player.isPlayer}
                                                 allCards={view === 2}/>;
                     }, this.props)}
                 </div>

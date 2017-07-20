@@ -14,7 +14,7 @@ export default class GameComponent extends React.Component {
                                 tooltip={this.props.tooltip}
                                 _tap={this.props._tap}/>
                 <PlayersComponent isPlayer={this.props.isPlayer}
-                                  players={this.props.players.reverse()}
+                                  players={this.props.players.slice(0).reverse()}
                                   _recon={this.props._recon}
                                   _complete={this.props._complete}
                                   _tap={this.props._tap}
