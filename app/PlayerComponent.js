@@ -76,32 +76,29 @@ export default class PlayerComponent extends React.Component {
                                       _complete={this.props._complete}/>}
                 </Paper>
                 
+                {!this.props.hideContent &&
                 <div className='content'>
                     <Stack name='discard'
                            cards={player.discard}
-                           stacked={true}
-                           canToggle={player.discard.length > 1}
+                           stacked={!this.props.allCards}
                            tooltip={tooltip}
                            _tap={_tap.bind(null, source.concat('discard'))}/>
                     <Stack name='play'
                            cards={player.play}
                            stacked={false}
-                           canToggle={false}
                            tooltip={tooltip}
                            _tap={_tap.bind(null, source.concat('play'))}/>
                     <Stack name='deck'
                            cards={player.deck}
-                           stacked={true}
-                           canToggle={player.deck.length > 1}
+                           stacked={!this.props.allCards}
                            tooltip={tooltip}
                            _tap={_tap.bind(null, source.concat('deck'))}/>
                     <Stack name='hand'
                            cards={player.hand}
                            stacked={false}
-                           canToggle={false}
                            tooltip={tooltip}
                            _tap={_tap.bind(null, source.concat('hand'))}/>
-                </div>
+                </div>}
             </div>
         );
     }

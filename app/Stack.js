@@ -4,10 +4,6 @@ import ReactTooltip from 'react-tooltip';
 import Paper from 'material-ui/Paper';
 import Subheader from 'material-ui/Subheader';
 
-import IconButton from 'material-ui/IconButton';
-import IconAdd from 'material-ui/svg-icons/content/add';
-import IconRemove from 'material-ui/svg-icons/content/remove';
-
 function guidGenerator() {
     var S4 = function() {
        return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
@@ -16,20 +12,9 @@ function guidGenerator() {
 }
 
 export default class Stack extends React.Component {
-    constructor(props) {
-        super(props);
-        
-        this.state = {
-            stacked: props.stacked
-        }
-    }
-    
-    _handleToggle = () => {
-        this.setState({stacked: !this.state.stacked});
-    }
     
     render() {
-        var stacked = this.state.stacked;
+        var stacked = this.props.stacked;
         var cards = !stacked ?
             this.props.cards :
             this.props.cards.slice(0, 5);
@@ -38,10 +23,6 @@ export default class Stack extends React.Component {
         
         return (
             <Paper zDepth={1} className='wrap'>
-                {this.props.canToggle &&
-                <IconButton onTouchTap={this._handleToggle}>
-                    {stacked ? <IconRemove/> : <IconAdd/>}
-                </IconButton>}
                 <div className='stack'>
                     {cards.map(function(card, index) {
                         var name = card.name;

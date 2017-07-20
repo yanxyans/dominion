@@ -52,15 +52,13 @@ export default class BoardComponent extends React.Component {
                                       name={name}
                                       cards={cards}
                                       stacked={true}
-                                      canToggle={false}
                                       tooltip={tooltip}
                                       _tap={_tap.bind(null, ['piles', name])}/>;
                     })}
                     {trash &&
                     <Stack name='trash'
                            cards={trash}
-                           stacked={true}
-                           canToggle={trash.length > 1}
+                           stacked={false}
                            tooltip={tooltip}
                             _tap={_tap.bind(null, ['trash'])}/>}
                 </div>
