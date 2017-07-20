@@ -31,14 +31,23 @@ export default class Stack extends React.Component {
                         
                         const guid = guidGenerator();
                         card.guid = guid;
+                        
                         var ind = 0 - index;
+                        var onTop = !stacked || index === 0;
+                        var name = onTop ? 'card' : 'card stacked';
+                        if (onTop && card.selectable) {
+                            name += ' selectable';
+                        } else if (card.selected) {
+                            name += ' selected';
+                        }
+                        
                         return <img key={index}
                                     src={source}
-                                    onTouchTap={_tap.bind(null, index)}
+                                    onTouchTap={onTop ? _tap.bind(null, index) : null}
                                     data-for={guid}
                                     data-tip=''
-                                    className={!stacked || index === 0 ? 'card' : 'card stacked'}
-                                    style={{zIndex:ind}}/>;
+                                    className={name}
+                                    style={{zIndex: stacked ? ind : null}}/>;
                     })}
                     {cards.map(function(card, index) {
                         return <ReactTooltip key={index}

@@ -1,5 +1,7 @@
 .card {
     max-height: 95px;
+    transition: 0.3s;
+    margin: 3px;
 }
 .stacked {
     margin-right: -55px;
@@ -31,7 +33,7 @@
     flex: 1 0 100%;
 }
 
-.player .wrap {
+.player .wrap, #board .wrap {
     display: flex;
     flex-flow: row nowrap;
     justify-content: center;
@@ -44,18 +46,16 @@
 .player .wrap:nth-child(even) {
     flex: 1 0 75%;
 }
-
-#board .wrap {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: center;
-    direction: rtl;
-    min-height: 110px;
-}
-
 #board .wrap:not(:last-child) {
     flex: 0 1 12.5%;
 }
 #board .wrap:last-child {
     flex: 1 0 100%;
+}
+
+.selectable {
+    outline: 2px outset rgba(0, 151, 167, 0.6);
+}
+.selected {
+    outline: 2px inset rgba(255, 64, 129, 0.6);
 }
