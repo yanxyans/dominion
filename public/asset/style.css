@@ -13,14 +13,14 @@
     align-items: flex-start;
     flex-flow: row wrap;
 }
-.title {
+.title, .buttons {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
     flex-flow: row wrap;
 }
-.buttons {
-    display: flex;
+.inactive {
+    opacity: 0.4;
 }
 
 .player .stack.min:nth-child(odd) {
