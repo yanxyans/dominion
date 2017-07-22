@@ -9,47 +9,49 @@
 
 .content {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
+    align-items: flex-start;
     flex-flow: row wrap;
 }
 .title {
     display: flex;
-    align-items: center;
     justify-content: space-around;
+    align-items: center;
 }
 .buttons {
     display: flex;
 }
 
-.player {
+.player .stack.min:nth-child(odd) {
+    flex: 1 1 114.94px;
+}
+.player .stack.min:nth-child(even) {
+    flex: 1 1 308.06px;
+}
+.player .stack.full:nth-child(odd) {
+    flex: 1 1 0;
+}
+.player .stack.full:nth-child(even) {
+    flex: 1 1 0;
+}
+#board .stack:not(:last-child), .player:not(:last-child) {
+    flex: 1 1 auto;
+}
+#board .stack:last-child, .player:last-child {
+    flex: 1 1 100%;
+}
+.stack {
     display: flex;
-    flex-flow: column nowrap;
-}
-.player:not(:last-child) {
-    flex: 1 0 auto;
-}
-.player:last-child {
-    flex: 1 0 100%;
-}
-
-.player .wrap, #board .wrap {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: center;
+    flex-flow: row wrap;
     direction: rtl;
     min-height: 110px;
+    justify-content: center;
+    align-items: center;
 }
-.player .wrap:nth-child(odd) {
-    flex: 0 1 25%;
-}
-.player .wrap:nth-child(even) {
-    flex: 1 0 75%;
-}
-#board .wrap:not(:last-child) {
-    flex: 0 1 12.5%;
-}
-#board .wrap:last-child {
-    flex: 1 0 100%;
+.wrap {
+    display: flex;
+    flex-flow: row wrap;
+    flex: 1 1 100%;
 }
 
 .selectable {

@@ -44,7 +44,7 @@ export default class PlayerComponent extends React.Component {
                                 <IconName/>}
                         </IconButton>
                         
-                        {player.rank !== -1 &&
+                        {false &&
                         <IconButton tooltip={player.points + ' point' + plural(player.points)}>
                             {player.rank === 0 && <IconOne/>}
                             {player.rank === 1 && <IconTwo/>}
@@ -52,24 +52,24 @@ export default class PlayerComponent extends React.Component {
                             {player.rank === 3 && <IconFour/>}
                         </IconButton>}
                         
-                        {player.action !== undefined &&
+                        {false &&
                         <IconButton tooltip={player.action + ' action' + plural(player.action)}
                                     style={styles.icon}>
                             {player.action + 'A'}
                         </IconButton>}
-                        {player.buy !== undefined &&
+                        {false &&
                         <IconButton tooltip={player.buy + ' buy' + plural(player.buy)}
                                     style={styles.icon}>
                             {player.buy + 'B'}
                         </IconButton>}
-                        {player.coin !== undefined &&
+                        {false &&
                         <IconButton tooltip={player.coin + ' coin' + plural(player.coin)}
                                     style={styles.icon}>
                             {player.coin + 'C'}
                         </IconButton>}
                     </div>
                     
-                    {player.control &&
+                    {false &&
                     <ControlComponent control={player.control}
                                       phase={player.main ? player.phase - 1 : null}
                                       isPlayer={player.isPlayer}
@@ -78,26 +78,34 @@ export default class PlayerComponent extends React.Component {
                 
                 {!this.props.hideContent &&
                 <div className='content'>
-                    <Stack name='discard'
-                           cards={player.discard}
-                           stacked={!this.props.allCards}
-                           tooltip={tooltip}
-                           _tap={_tap.bind(null, source.concat('discard'))}/>
-                    <Stack name='play'
-                           cards={player.play}
-                           stacked={false}
-                           tooltip={tooltip}
-                           _tap={_tap.bind(null, source.concat('play'))}/>
-                    <Stack name='deck'
-                           cards={player.deck}
-                           stacked={!this.props.allCards}
-                           tooltip={tooltip}
-                           _tap={_tap.bind(null, source.concat('deck'))}/>
-                    <Stack name='hand'
-                           cards={player.hand}
-                           stacked={false}
-                           tooltip={tooltip}
-                           _tap={_tap.bind(null, source.concat('hand'))}/>
+                    <div className='wrap'>
+                        <Stack name='discard'
+                               cards={player.discard}
+                               stacked={!this.props.allCards}
+                               tooltip={tooltip}
+                               came={' ' + (this.props.allCards ? 'full' : 'min')}
+                               _tap={_tap.bind(null, source.concat('discard'))}/>
+                        <Stack name='play'
+                               cards={player.play}
+                               stacked={false}
+                               tooltip={tooltip}
+                               came={' ' + (this.props.allCards ? 'full' : 'min')}
+                               _tap={_tap.bind(null, source.concat('play'))}/>
+                    </div>
+                    <div className='wrap'>
+                        <Stack name='deck'
+                               cards={player.deck}
+                               stacked={!this.props.allCards}
+                               tooltip={tooltip}
+                               came={' ' + (this.props.allCards ? 'full' : 'min')}
+                               _tap={_tap.bind(null, source.concat('deck'))}/>
+                        <Stack name='hand'
+                               cards={player.hand}
+                               stacked={false}
+                               tooltip={tooltip}
+                               came={' ' + (this.props.allCards ? 'full' : 'min')}
+                               _tap={_tap.bind(null, source.concat('hand'))}/>
+                    </div>
                 </div>}
             </div>
         );
