@@ -17,6 +17,7 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
+    flex-flow: row wrap;
 }
 .buttons {
     display: flex;
@@ -26,7 +27,7 @@
     flex: 1 1 114.94px;
 }
 .player .stack.min:nth-child(even) {
-    flex: 1 1 308.06px;
+    flex: 1 1 498.06px;
 }
 .player .stack.full:nth-child(odd) {
     flex: 1 1 0;
@@ -34,10 +35,10 @@
 .player .stack.full:nth-child(even) {
     flex: 1 1 0;
 }
-#board .stack:not(:last-child), .player:not(:last-child) {
+#board .content .wrap > .stack, .player:not(:last-child) {
     flex: 1 1 auto;
 }
-#board .stack:last-child, .player:last-child {
+#board .content > .stack, .player:last-child {
     flex: 1 1 100%;
 }
 .stack {

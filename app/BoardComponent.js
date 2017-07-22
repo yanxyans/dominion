@@ -46,15 +46,17 @@ export default class BoardComponent extends React.Component {
                         onRightIconButtonTouchTap={this._toggle}
                         style={{zIndex:998}}/>
                 <div className='content'>
-                    {keys.map(function(name, index) {
-                        var cards = supply[name];
-                        return <Stack key={index}
-                                      name={name}
-                                      cards={cards}
-                                      stacked={true}
-                                      tooltip={tooltip}
-                                      _tap={_tap.bind(null, ['piles', name])}/>;
-                    })}
+                    <div className='wrap'>
+                        {keys.map(function(name, index) {
+                            var cards = supply[name];
+                            return <Stack key={index}
+                                          name={name}
+                                          cards={cards}
+                                          stacked={true}
+                                          tooltip={tooltip}
+                                          _tap={_tap.bind(null, ['piles', name])}/>;
+                        })}
+                    </div>
                     {trash &&
                     <Stack name='trash'
                            cards={trash}
