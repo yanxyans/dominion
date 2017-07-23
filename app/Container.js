@@ -76,7 +76,12 @@ class Container extends React.Component {
         });
     }
     _game = (message) => {
-        console.log(message);
+        console.log('%c ' + message,
+            ((message.indexOf('game start') > -1 || message.indexOf('game end') > -1) && 'color:grey;font-size:20px;font-weight:bold') ||
+            (message.indexOf('(1)') > -1 && 'color:red;font-size:14px') ||
+            (message.indexOf('(2)') > -1 && 'color:blue;font-size:14px') ||
+            (message.indexOf('(3)') > -1 && 'color:green;font-size:14px') ||
+            (message.indexOf('(4)') > -1 && 'color:yellow;font-size:14px'));
     }
     _timeout = () => {
         this.setState({

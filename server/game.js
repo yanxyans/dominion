@@ -349,7 +349,6 @@ Game.prototype.endGame = function() {
         var callback = this.callback;
         
         this.state = 'END';
-        callback('_game_event', 'game end');
         
         var len = this.players.length;
         for (var i = 0; i < len; i++) {
@@ -364,6 +363,7 @@ Game.prototype.endGame = function() {
         });
         
         this.resetResources();
+        callback('_game_event', 'game end');
     }
 };
 
