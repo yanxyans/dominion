@@ -1,9 +1,9 @@
 # dominion
-the board game, made for learning purposes
+* the board game, made for learning purposes
 
 # online play
-go to dominerino.herokuapp.com
+* dominerino.herokuapp.com
 
 # development
-npm install
-npm start
+* npm install
+* npm start

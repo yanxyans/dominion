@@ -58,10 +58,10 @@
 }
 
 .selectable {
-    box-shadow: 0 0 5px rgba(0, 151, 167, 0.8);
+    box-shadow: 0 0 10px rgba(0, 151, 167, 0.8);
 }
 .selected {
-    box-shadow: 0 0 5px rgba(255, 64, 129, 0.8);
+    box-shadow: 0 0 10px rgba(255, 64, 129, 0.8);
 }
 .selectable:hover, .selected:hover {
     -webkit-transform: scale(1.1);
