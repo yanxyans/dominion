@@ -1,3 +1,5 @@
+var CONSTANT = require('./util').CONSTANT;
+
 function User(socket) {
 	this.socket = socket;
 	this.id = socket.id;
@@ -11,7 +13,7 @@ function User(socket) {
 
 User.prototype.setName = function(name) {
 	var cleanName = name.replace(/[^a-z0-9\s]/gi,'');
-	if (cleanName && cleanName.length <= 16) {
+	if (cleanName && cleanName.length <= CONSTANT.MAX_CHAR) {
 		this.name = cleanName;
 		
 		this.updateUser();

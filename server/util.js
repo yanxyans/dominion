@@ -82,7 +82,8 @@ module.exports = {
         MAX_PLAYERS: 4,
         MIN_PLAYERS: 2,
         TURN_DRAW: 5,
-        PILE_OUT: 3
+        PILE_OUT: 3,
+        MAX_CHAR: 16
     }
     
 };

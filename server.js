@@ -1,15 +1,15 @@
 var express = require('express');
-var path = require('path');
 var httpProxy = require('http-proxy');
+var path = require('path');
+
+var isProduction = process.env.NODE_ENV === 'production';
+var port = process.env.PORT || 3000;
 
 var PHASE_MAP = {
     Action: 1,
     Buy: 2,
     Cleanup: 3
 };
-
-var isProduction = process.env.NODE_ENV === 'production';
-var port = process.env.PORT || 3000;
 
 var app = express();
 var server = require('http').createServer(app);
@@ -81,7 +81,7 @@ if (!isProduction) {
 
     // Any requests to localhost:3000/build is proxied
     // to webpack-dev-server
-    app.all('/build/*', function (req, res) {
+    app.all('/build/*', function(req, res) {
         proxy.web(req, res, {
             target: 'http://localhost:8080'
         });
@@ -96,7 +96,7 @@ proxy.on('error', function(e) {
     console.log('Could not connect to proxy, please try again...');
 });
 
-server.listen(port, function () {
+server.listen(port, function() {
     console.log('Server listening at port %d', port);
 });
 
@@ -104,11 +104,15 @@ io.on('connection', function(socket) {
     
     var user = new User(socket);
     
+    // user routines
+    
     socket.emit('_init', user.name);
     
     socket.on('_set_name', function(name) {
         user.setName(name) && room.updateUser(user);
     });
+    
+    // room routines
     
     socket.on('_join_room', function(name) {
         room.joinUser(name, user);
