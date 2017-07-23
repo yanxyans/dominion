@@ -5,7 +5,7 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
-import { darkWhite } from 'material-ui/styles/colors';
+import { red700, blue700, green700, yellow700, grey700, darkWhite } from 'material-ui/styles/colors';
 
 import Paper from 'material-ui/Paper';
 import Snackbar from 'material-ui/Snackbar';
@@ -77,11 +77,11 @@ class Container extends React.Component {
     }
     _game = (message) => {
         console.log('%c ' + message,
-            ((message.indexOf('game start') > -1 || message.indexOf('game end') > -1) && 'color:grey;font-size:20px;font-weight:bold') ||
-            (message.indexOf('(1)') > -1 && 'color:red;font-size:14px') ||
-            (message.indexOf('(2)') > -1 && 'color:blue;font-size:14px') ||
-            (message.indexOf('(3)') > -1 && 'color:green;font-size:14px') ||
-            (message.indexOf('(4)') > -1 && 'color:yellow;font-size:14px'));
+            ((message.indexOf('game start') > -1 || message.indexOf('game end') > -1) && 'color:' + grey700 + ';font-size:20px;font-weight:bold') ||
+            (message.indexOf('(1)') > -1 && 'color:' + red700 + ';font-size:14px') ||
+            (message.indexOf('(2)') > -1 && 'color:' + blue700 + ';font-size:14px') ||
+            (message.indexOf('(3)') > -1 && 'color:' + green700 + ';font-size:14px') ||
+            (message.indexOf('(4)') > -1 && 'color:' + yellow700 + ';font-size:14px'));
     }
     _timeout = () => {
         this.setState({
