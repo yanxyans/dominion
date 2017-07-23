@@ -41,8 +41,8 @@ export default class Board extends React.Component {
                 <AppBar title='supply'
                         showMenuIconButton={false}
                         iconElementRight={this.state.sorted ?
-                            <IconButton><IconClear/></IconButton> :
-                            <IconButton><IconSort/></IconButton>}
+                            <IconButton tooltip='cost sorted'><IconSort/></IconButton> :
+                            <IconButton tooltip='unsorted'><IconClear/></IconButton>}
                         onRightIconButtonTouchTap={this._toggle}
                         style={{zIndex:998}}/>
                 <div className='content'>

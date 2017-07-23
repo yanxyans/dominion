@@ -33,8 +33,8 @@ export default class Menu extends React.Component {
                 <AppBar title='menu'
                         onLeftIconButtonTouchTap={this._drawer}
                         iconElementRight={props.tooltip ?
-                            <IconButton tooltip='disable tooltip'><IconOut/></IconButton> :
-                            <IconButton tooltip='enable tooltip'><IconIn/></IconButton>}
+                            <IconButton tooltip='tooltip on'><IconIn/></IconButton> :
+                            <IconButton tooltip='tooltip off'><IconOut/></IconButton>}
                         onRightIconButtonTouchTap={props._tooltip}
                         style={{zIndex:998}}/>
                 <Drawer docked={false}

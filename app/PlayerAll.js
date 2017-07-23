@@ -51,11 +51,11 @@ export default class PlayerAll extends React.Component {
                         showMenuIconButton={false}
                         iconElementRight={
                             (view === 0 &&
-                            <IconButton><IconEmpty/></IconButton>) ||
+                            <IconButton tooltip='min'><IconEmpty/></IconButton>) ||
                             (view === 1 &&
-                            <IconButton><IconHalf/></IconButton>) ||
+                            <IconButton tooltip='default'><IconHalf/></IconButton>) ||
                             (view === 2 &&
-                            <IconButton><IconFull/></IconButton>)}
+                            <IconButton tooltip='full'><IconFull/></IconButton>)}
                         onRightIconButtonTouchTap={this._toggle}
                         style={{zIndex:998}}/>
                 

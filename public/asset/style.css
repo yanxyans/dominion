@@ -70,3 +70,6 @@
 body {
     min-width: 640px;
 }
+#board, #game {
+    margin: 20px 0px 20px 0px;
+}
