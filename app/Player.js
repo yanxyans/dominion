@@ -12,6 +12,7 @@ export default class Player extends React.Component {
         var player = this.props.player;
         var source = ['players', player.slot];
         var tooltip = this.props.tooltip;
+        
         var _complete = this.props._complete;
         var _tap = this.props._tap;
         

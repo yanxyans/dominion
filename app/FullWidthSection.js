@@ -75,8 +75,7 @@ class FullWidthSection extends Component {
                     styles.root,
                     style,
                     width === SMALL && styles.rootWhenSmall,
-                    width === LARGE && styles.rootWhenLarge)}
-            >
+                    width === LARGE && styles.rootWhenLarge)}>
                 {content}
             </ClearFix>
         );

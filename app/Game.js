@@ -1,8 +1,8 @@
 import React from 'react';
 
+import FullWidthSection from './FullWidthSection';
 import Board from './Board';
 import PlayerAll from './PlayerAll';
-import FullWidthSection from './FullWidthSection';
 
 export default class GameComponent extends React.Component {
     
@@ -15,10 +15,10 @@ export default class GameComponent extends React.Component {
                        _tap={this.props._tap}/>
                 <PlayerAll isPlayer={this.props.isPlayer}
                            players={this.props.players.slice(0).reverse()}
+                           tooltip={this.props.tooltip}
                            _recon={this.props._recon}
                            _complete={this.props._complete}
-                           _tap={this.props._tap}
-                           tooltip={this.props.tooltip}/>
+                           _tap={this.props._tap}/>
             </FullWidthSection>
         );
     }

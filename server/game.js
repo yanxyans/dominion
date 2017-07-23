@@ -44,7 +44,7 @@ Game.prototype.giveResources = function(player) {
     this.coin = 0;
     
     player.phase = PHASE.ACTION;
-    this.callback('_game_event', (player.slot + 1) + '. ' + player.name + "'s turn");
+    this.callback('_game_event', ' *** ' + player.getName() + ' turn *** ');
 };
 
 Game.prototype.addPlayer = function(user) {

@@ -7,8 +7,8 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
 import { darkWhite } from 'material-ui/styles/colors';
 
-import Snackbar from 'material-ui/Snackbar';
 import Paper from 'material-ui/Paper';
+import Snackbar from 'material-ui/Snackbar';
 import IconButton from 'material-ui/IconButton';
 
 import Menu from './Menu';
@@ -68,6 +68,7 @@ class Container extends React.Component {
             trash: room.trash
         });
     }
+    
     _react = (message) => {
         this.setState({
             snack: true,
@@ -131,9 +132,8 @@ class Container extends React.Component {
                     <FullWidthSection style={styles.footer}>
                         <IconButton
                             iconStyle={styles.iconButton}
-                            iconClassName="muidocs-icon-custom-github"
-                            href="https://github.com/yanxyans/dominion"
-                        />
+                            iconClassName='muidocs-icon-custom-github'
+                            href='https://github.com/yanxyans/dominion'/>
                     </FullWidthSection>
                     <Snackbar open={this.state.snack}
                               message={this.state.bar}

@@ -64,12 +64,12 @@ export default class PlayerAll extends React.Component {
                         return <Player key={index}
                                        player={player}
                                        tooltip={this.tooltip}
-                                       _complete={this._complete}
-                                       _tap={this._tap}
-                                       _recon={this._recon.bind(null, player.slot)}
                                        color={colors[player.slot]}
                                        hideContent={view === 0 && !player.isPlayer}
-                                       allCards={view === 2}/>;
+                                       allCards={view === 2}
+                                       _recon={this._recon.bind(null, player.slot)}
+                                       _complete={this._complete}
+                                       _tap={this._tap}/>;
                     }, this.props)}
                 </div>
             </Paper>

@@ -8,7 +8,7 @@ function guidGenerator() {
     var S4 = function() {
        return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
     };
-    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+    return (S4()+S4()+'-'+S4()+'-'+S4()+'-'+S4()+'-'+S4()+S4()+S4());
 }
 
 export default class Stack extends React.Component {
@@ -18,8 +18,10 @@ export default class Stack extends React.Component {
         var cards = !stacked ?
             this.props.cards :
             this.props.cards.slice(0, 5);
+        
         var tooltip = this.props.tooltip;
         var came = this.props.came;
+        
         var _tap = this.props._tap;
         
         return (
