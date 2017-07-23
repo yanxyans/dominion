@@ -65,7 +65,7 @@ class FullWidthSection extends Component {
                     this.props.children
                 );
         } else {
-          content = this.props.children;
+            content = this.props.children;
         }
 
         return (

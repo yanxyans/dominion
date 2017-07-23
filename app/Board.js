@@ -9,7 +9,7 @@ import IconClear from 'material-ui/svg-icons/content/clear';
 
 import Stack from './Stack';
 
-export default class BoardComponent extends React.Component {
+export default class Board extends React.Component {
     state = {
         sorted: false
     }

@@ -3,7 +3,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 
 const audio = new Audio('/asset/notif.mp3');
 
-export default class ControlButtons extends React.Component {
+export default class Control extends React.Component {
     
     componentDidMount() {
         var player = this.props.player;
@@ -26,7 +26,7 @@ export default class ControlButtons extends React.Component {
                                          label={(comm === 'Action' && player.action + ' action') ||
                                                 (comm === 'Buy' && player.buy + ' buy ' + player.coin + ' coin') ||
                                                 comm}
-                                         primary={player.main && player.phase - 1 === index}
+                                         primary={player.main && index < player.phase}
                                          onTouchTap={_complete.bind(null, comm)}/>;
                 })}
             </div>

@@ -9,11 +9,11 @@ import IconEmpty from 'material-ui/svg-icons/toggle/star-border';
 import IconHalf from 'material-ui/svg-icons/toggle/star-half';
 import IconFull from 'material-ui/svg-icons/toggle/star';
 
-import PlayerComponent from './PlayerComponent';
+import Player from './Player';
 
 const colors = [redA700, indigoA700, tealA700, yellowA700];
 
-export default class PlayersComponent extends React.Component {
+export default class PlayerAll extends React.Component {
     state = {
         view: 1
     }
@@ -61,15 +61,15 @@ export default class PlayersComponent extends React.Component {
                 
                 <div className='content'>
                     {players.map(function(player, index) {
-                        return <PlayerComponent key={index}
-                                                player={player}
-                                                tooltip={this.tooltip}
-                                                _complete={this._complete}
-                                                _tap={this._tap}
-                                                _recon={this._recon.bind(null, player.slot)}
-                                                color={colors[player.slot]}
-                                                hideContent={view === 0 && !player.isPlayer}
-                                                allCards={view === 2}/>;
+                        return <Player key={index}
+                                       player={player}
+                                       tooltip={this.tooltip}
+                                       _complete={this._complete}
+                                       _tap={this._tap}
+                                       _recon={this._recon.bind(null, player.slot)}
+                                       color={colors[player.slot]}
+                                       hideContent={view === 0 && !player.isPlayer}
+                                       allCards={view === 2}/>;
                     }, this.props)}
                 </div>
             </Paper>

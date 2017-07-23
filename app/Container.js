@@ -7,9 +7,11 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
 import Snackbar from 'material-ui/Snackbar';
 import Paper from 'material-ui/Paper';
+import RaisedButton from 'material-ui/RaisedButton';
 
 import Menu from './Menu';
-import GameComponent from './GameComponent';
+import Game from './Game';
+import FullWidthSection from './FullWidthSection';
 
 injectTapEventPlugin();
 const socket = io();
@@ -103,14 +105,14 @@ class Container extends React.Component {
                           _add={this._add}
                           _join={this._join}
                           _tooltip={this._tooltip}/>
-                    <GameComponent isPlayer={this.state.rooms[this.state.current]}
-                                   players={this.state.players}
-                                   supply={this.state.supply}
-                                   trash={this.state.trash}
-                                   tooltip={this.state.tooltip}
-                                   _recon={this._recon}
-                                   _complete={this._complete}
-                                   _tap={this._tap}/>
+                    <Game isPlayer={this.state.rooms[this.state.current]}
+                          players={this.state.players}
+                          supply={this.state.supply}
+                          trash={this.state.trash}
+                          tooltip={this.state.tooltip}
+                          _recon={this._recon}
+                          _complete={this._complete}
+                          _tap={this._tap}/>
                     <Snackbar open={this.state.snack}
                               message={this.state.bar}
                               autoHideDuration={4000}

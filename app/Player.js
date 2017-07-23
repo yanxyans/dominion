@@ -4,9 +4,9 @@ import Paper from 'material-ui/Paper';
 import RaisedButton from 'material-ui/RaisedButton';
 
 import Stack from './Stack';
-import ControlButtons from './ControlButtons';
+import Control from './Control';
 
-export default class PlayerComponent extends React.Component {
+export default class Player extends React.Component {
 
     render() {
         var player = this.props.player;
@@ -29,8 +29,8 @@ export default class PlayerComponent extends React.Component {
                                   primary={true}/>}
                     
                     {player.control &&
-                    <ControlButtons player={player}
-                                    _complete={_complete}/>}
+                    <Control player={player}
+                             _complete={_complete}/>}
                 </Paper>
                 
                 {!this.props.hideContent &&
