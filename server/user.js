@@ -11,7 +11,7 @@ function User(socket) {
 
 User.prototype.setName = function(name) {
 	var cleanName = name.replace(/[^a-z0-9\s]/gi,'');
-	if (cleanName && cleanName.length <= 20) {
+	if (cleanName && cleanName.length <= 16) {
 		this.name = cleanName;
 		
 		this.updateUser();

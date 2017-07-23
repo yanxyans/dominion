@@ -43,11 +43,12 @@
 }
 .stack {
     display: flex;
-    flex-flow: row wrap;
+    flex-flow: row nowrap;
     direction: rtl;
     min-height: 110px;
     justify-content: center;
     align-items: center;
+    overflow: auto;
 }
 .wrap {
     display: flex;
@@ -64,4 +65,8 @@
 .selectable:hover, .selected:hover {
     -webkit-transform: scale(1.1);
     transform: scale(1.1);
+}
+
+body {
+    min-width: 640px;
 }
