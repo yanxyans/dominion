@@ -129,6 +129,7 @@ Player.prototype.playCard = function(card, playType, game) {
         this.play.unshift(card);
         
         card.types[playType](this, game);
+        game.callback('_game_event', this.getName() + ' plays ' + card.name);
         game.advanceTask(game.todo);
     }
 };
@@ -141,6 +142,10 @@ Player.prototype.gainCard = function(supply, card, dest) {
         work.splice(index, 1);
         this[dest].unshift(card);
     }
+};
+
+Player.prototype.getName = function() {
+    return this.name + ' (' + (this.slot + 1) + ')';
 };
 
 module.exports = Player;

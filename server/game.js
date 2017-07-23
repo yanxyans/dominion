@@ -44,6 +44,7 @@ Game.prototype.giveResources = function(player) {
     this.coin = 0;
     
     player.phase = PHASE.ACTION;
+    this.callback('_game_event', (player.slot + 1) + '. ' + player.name + "'s turn");
 };
 
 Game.prototype.addPlayer = function(user) {
@@ -238,6 +239,7 @@ Game.prototype.start = function(user) {
     
     // flag game as in progress
     this.state = 'MAIN';
+    this.callback('_game_event', 'game start');
     
     // get starting deck
     var startDeck = this.startDeck;
@@ -344,7 +346,10 @@ Game.prototype.setPhase = function(user, phase) {
 
 Game.prototype.endGame = function() {
     if (this.state === 'MAIN') {
+        var callback = this.callback;
+        
         this.state = 'END';
+        callback('_game_event', 'game end');
         
         var len = this.players.length;
         for (var i = 0; i < len; i++) {
@@ -355,6 +360,7 @@ Game.prototype.endGame = function() {
             return pTwo.points - pOne.points;
         }).forEach(function(player, index) {
             player.rank = index;
+            callback('_game_event', player.getName() + ' finishes with ' + player.points + ' victory points');
         });
         
         this.resetResources();
@@ -473,6 +479,7 @@ Game.prototype.handleBuy = function(player, cards, index) {
         if (player.phase === PHASE.BUY &&
             card.coin <= this.coin &&
             this.buy) {
+            var callback = this.callback;
             
             // pay for card
             this.coin -= card.coin;
@@ -481,12 +488,14 @@ Game.prototype.handleBuy = function(player, cards, index) {
             if (!player.bought) {
                 player.bought = true;
             }
+            callback('_game_event', player.getName() + ' buys ' + card.name);
             
             // gain card
             var supply = this.supply;
             this.todo.push(new Task(player.slot, 'gain', [new Item(
                 function(task) {
                     player.gainCard(supply, card, 'discard');
+                    callback('_game_event', player.getName() + ' gains ' + card.name);
                     return true;
                 })], []));
             
@@ -635,6 +644,11 @@ Game.prototype.getReactions = function(task) {
                                 ' reveals a ' +
                                 card.name +
                                 ' from hand!');
+                            
+                            callback('_game_event',
+                                player.getName() +
+                                ' reacts with ' +
+                                card.name);
                                 
                             return true;
                         }

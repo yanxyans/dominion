@@ -35,6 +35,7 @@ class Container extends React.Component {
         socket.on('_user_state', this._user);        
         socket.on('_room_state', this._room);
         socket.on('_reaction_event', this._react);
+        socket.on('_game_event', this._game);
     }
     state = {
         name: '',
@@ -72,6 +73,9 @@ class Container extends React.Component {
             snack: true,
             bar: message
         });
+    }
+    _game = (message) => {
+        console.log(message);
     }
     _timeout = () => {
         this.setState({

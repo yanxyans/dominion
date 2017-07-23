@@ -89,12 +89,13 @@ function selectTask(type, main, trigger, resolve, controls,
         }, controls), ...main], trigger);
 }
 
-function drawTask(player, amt) {
+function drawTask(player, amt, game) {
     var slot = player.slot;
     return new Task(slot, 'draw', [new Item(
         function(task) {
             // resolve
             player.draw(amt);
+            game.callback('_game_event', player.getName() + ' draws ' + amt + ' cards');
             return true;
         })], []);
 }
@@ -147,6 +148,13 @@ function cellarAction(player, game) {
                     {
                         Discard: function(player, game) {
                             moveSelected(player.hand, selected, player.discard);
+                            if (selected.length > 0) {
+                                game.callback('_game_event', player.getName() +
+                                    ' discards' +
+                                    selected.map(function(sel) {
+                                        return ' ' + sel.name;
+                                    }));
+                            }
                             
                             this.resolve = function(task) {
                                 return true;
@@ -165,7 +173,7 @@ function cellarAction(player, game) {
         }), new Item(
         function(task) {
             if (selected.length > 0) {
-                task.todo.push(drawTask(player, selected.length));
+                task.todo.push(drawTask(player, selected.length, game));
             }
             return true;
         })], []));
@@ -175,7 +183,7 @@ function marketAction(player, game) {
     var slot = player.slot;
     game.todo.push(new Task(slot, 'play', [new Item(
         function(task) {
-            task.todo.push(drawTask(player, 1));
+            task.todo.push(drawTask(player, 1, game));
             return true;
         })], []));
     game.action++;
@@ -211,6 +219,11 @@ function militiaAttack(slot, targets, game) {
                         Discard: function(player, game) {
                             if (target.hand.length - selected.length === 3) {
                                 moveSelected(target.hand, selected, target.discard);
+                                game.callback('_game_event', player.getName() +
+                                    ' discards' +
+                                    selected.map(function(sel) {
+                                        return ' ' + sel.name;
+                                    }));
                                 return true;
                             }
                             return false;
@@ -236,7 +249,7 @@ function moatAction(player, game) {
     var slot = player.slot;
     game.todo.push(new Task(slot, 'play', [new Item(
         function(task) {
-            task.todo.push(drawTask(player, 2));
+            task.todo.push(drawTask(player, 2, game));
             return true;
         })], []));
 }
@@ -278,6 +291,9 @@ function mineAction(player, game) {
                     {
                         Trash: function(player, game) {
                             moveSelected(player.hand, selected, game.trash);
+                            if (selected.length > 0) {
+                                game.callback('_game_event', player.getName() + ' trashes ' + selected[0].name);
+                            }
                             
                             this.resolve = function(task) {
                                 return true;
@@ -310,7 +326,12 @@ function mineAction(player, game) {
                         {
                             Gain: function(player, game) {
                                 if (gained.length === 1) {
-                                    player.gainCard(game.supply, gained[0], 'hand');
+                                    var gainedCard = gained[0];
+                                    player.gainCard(game.supply, gainedCard, 'hand');
+                                    game.callback('_game_event', player.getName() +
+                                        ' gains ' +
+                                        gainedCard.name +
+                                        ' (hand)');
                                     
                                     this.resolve = function(task) {
                                         return true;
@@ -347,6 +368,7 @@ function remodelAction(player, game) {
                         Trash: function(player, game) {
                             if (selected.length === 1) {
                                 moveSelected(player.hand, selected, game.trash);
+                                game.callback('_game_event', player.getName() + ' trashes ' + selected[0].name);
                                 
                                 this.resolve = function(task) {
                                     return true;
@@ -380,7 +402,9 @@ function remodelAction(player, game) {
                         {
                             Gain: function(player, game) {
                                 if (gained.length === 1) {
-                                    player.gainCard(game.supply, gained[0], 'discard');
+                                    var gainedCard = gained[0];
+                                    player.gainCard(game.supply, gainedCard, 'discard');
+                                    game.callback('_game_event', player.getName() + ' gains ' + gainedCard.name);
                                     
                                     this.resolve = function(task) {
                                         return true;
@@ -405,7 +429,7 @@ function smithyAction(player, game) {
     var slot = player.slot;
     game.todo.push(new Task(slot, 'play', [new Item(
         function(task) {
-            task.todo.push(drawTask(player, 3));
+            task.todo.push(drawTask(player, 3, game));
             return true;
         })], []));
 }
@@ -414,7 +438,7 @@ function villageAction(player, game) {
     var slot = player.slot;
     game.todo.push(new Task(slot, 'play', [new Item(
         function(task) {
-            task.todo.push(drawTask(player, 1));
+            task.todo.push(drawTask(player, 1, game));
             return true;
         })], []));
     game.action += 2;
@@ -442,7 +466,9 @@ function workshopAction(player, game) {
                     {
                         Gain: function(player, game) {
                             if (gained.length === 1) {
-                                player.gainCard(game.supply, gained[0], 'discard');
+                                var gainedCard = gained[0];
+                                player.gainCard(game.supply, gainedCard, 'discard');
+                                game.callback('_game_event', player.getName() + ' gains ' + gainedCard.name);
                                 
                                 this.resolve = function(task) {
                                     return true;
