@@ -5,6 +5,7 @@ import Drawer from 'material-ui/Drawer';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import Subheader from 'material-ui/Subheader';
+import { cyan700 } from 'material-ui/styles/colors';
 
 import IconButton from 'material-ui/IconButton';
 import IconIn from 'material-ui/svg-icons/action/zoom-in';
@@ -41,13 +42,13 @@ export default class Menu extends React.Component {
                         onRequestChange={(drawer) => this.setState({drawer})}>
                     <List>
                         <DialogItem primary={props.name}
-                                    icon={<IconEdit/>}
+                                    icon={<IconEdit color={cyan700}/>}
                                     title='enter new name'
                                     type='name'
                                     value=''
                                     _submit={props._rename}/>
                         <DialogItem primary='join room'
-                                    icon={<IconDice/>}
+                                    icon={<IconDice color={cyan700}/>}
                                     title='enter room name'
                                     type='room'
                                     value='first game'
@@ -69,7 +70,7 @@ export default class Menu extends React.Component {
                             return <ListItem key={index}
                                              primaryText={user.name}
                                              rightIcon={user.type === 'player' ?
-                                                <IconDice/> : <IconEye/>}
+                                                <IconDice color={cyan700}/> : <IconEye/>}
                                              disabled={true}/>;
                         })}
                     </List>
