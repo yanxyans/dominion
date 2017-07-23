@@ -5,9 +5,11 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
+import { darkWhite } from 'material-ui/styles/colors';
+
 import Snackbar from 'material-ui/Snackbar';
 import Paper from 'material-ui/Paper';
-import RaisedButton from 'material-ui/RaisedButton';
+import IconButton from 'material-ui/IconButton';
 
 import Menu from './Menu';
 import Game from './Game';
@@ -15,6 +17,15 @@ import FullWidthSection from './FullWidthSection';
 
 injectTapEventPlugin();
 const socket = io();
+
+const styles = {
+    footer: {
+        textAlign: 'center'
+    },
+    iconButton: {
+        color: darkWhite
+    }
+};
 
 class Container extends React.Component {
     constructor(props) {
@@ -113,6 +124,13 @@ class Container extends React.Component {
                           _recon={this._recon}
                           _complete={this._complete}
                           _tap={this._tap}/>
+                    <FullWidthSection style={styles.footer}>
+                        <IconButton
+                            iconStyle={styles.iconButton}
+                            iconClassName="muidocs-icon-custom-github"
+                            href="https://github.com/yanxyans/dominion"
+                        />
+                    </FullWidthSection>
                     <Snackbar open={this.state.snack}
                               message={this.state.bar}
                               autoHideDuration={4000}
