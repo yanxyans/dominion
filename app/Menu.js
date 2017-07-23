@@ -12,7 +12,6 @@ import IconIn from 'material-ui/svg-icons/action/zoom-in';
 import IconOut from 'material-ui/svg-icons/action/zoom-out';
 import IconEdit from 'material-ui/svg-icons/image/edit';
 import IconDice from 'material-ui/svg-icons/places/casino';
-import IconEye from 'material-ui/svg-icons/action/visibility';
 
 import DialogItem from './DialogItem';
 import RoomList from './RoomList';
@@ -70,7 +69,7 @@ export default class Menu extends React.Component {
                             return <ListItem key={index}
                                              primaryText={user.name}
                                              rightIcon={user.type === 'player' ?
-                                                <IconDice color={cyan700}/> : <IconEye/>}
+                                                <IconDice color={cyan700}/> : <IconDice/>}
                                              disabled={true}/>;
                         })}
                     </List>

@@ -19,6 +19,18 @@
     align-items: center;
     flex-flow: row wrap;
 }
+.desc {
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    text-align: center;
+    position: absolute;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 998;
+    letter-spacing: -1px;
+    top: 0;
+    right: 0;
+    padding: 3px;
+}
 .inactive {
     opacity: 0.4;
 }
@@ -36,7 +48,7 @@
     flex: 1 1 0;
 }
 #board .content .wrap > .stack, .player:not(:last-child) {
-    flex: 1 1 auto;
+    flex: 1 1 0;
 }
 #board .content > .stack, .player:last-child {
     flex: 1 1 100%;
@@ -48,8 +60,9 @@
     align-items: center;
     overflow: auto;
     min-width: 95px;
-    min-height: 110px;
+    min-height: 115px;
     direction: rtl;
+    position: relative;
 }
 .wrap {
     display: flex;

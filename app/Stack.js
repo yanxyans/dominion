@@ -24,6 +24,7 @@ export default class Stack extends React.Component {
         
         return (
             <Paper zDepth={1} className={'stack' + (came ? came : '')}>
+                <div className='desc'> {this.props.name} </div>
                 {cards.map(function(card, index) {
                     var name = card.name;
                     var source = '/asset/cards/' + (name ? name : 'back') + '.jpg';
