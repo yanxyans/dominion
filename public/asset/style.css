@@ -24,10 +24,10 @@
 }
 
 .player .stack.min:nth-child(odd) {
-    flex: 1 1 114.94px;
+    flex: 1 1 20%;
 }
 .player .stack.min:nth-child(even) {
-    flex: 1 1 498.06px;
+    flex: 1 1 80%;
 }
 .player .stack.full:nth-child(odd) {
     flex: 1 1 0;
@@ -44,11 +44,12 @@
 .stack {
     display: flex;
     flex-flow: row nowrap;
-    direction: rtl;
-    min-height: 110px;
     justify-content: center;
     align-items: center;
     overflow: auto;
+    min-width: 95px;
+    min-height: 110px;
+    direction: rtl;
 }
 .wrap {
     display: flex;
