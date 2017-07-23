@@ -2,7 +2,7 @@ import React from 'react';
 
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
-import { redA700, indigoA700, tealA700, yellowA700 } from 'material-ui/styles/colors';
+import { red700, blue700, green700, yellow700 } from 'material-ui/styles/colors';
 
 import IconButton from 'material-ui/IconButton';
 import IconEmpty from 'material-ui/svg-icons/toggle/star-border';
@@ -11,7 +11,7 @@ import IconFull from 'material-ui/svg-icons/toggle/star';
 
 import Player from './Player';
 
-const colors = [redA700, indigoA700, tealA700, yellowA700];
+const colors = [red700, blue700, green700, yellow700];
 
 export default class PlayerAll extends React.Component {
     state = {
