@@ -53,11 +53,10 @@
 .stack {
     display: flex;
     flex-flow: row nowrap;
-    align-items: center;
     overflow-x: auto;
     overflow-y: hidden;
     min-width: 113px;
-    min-height: 120px;
+    min-height: 133px;
     padding: 5px;
     direction: rtl;
     position: relative;

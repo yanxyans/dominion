@@ -25,12 +25,11 @@ export default class Player extends React.Component {
         
         return (
             <div className={player.isTurn ? 'player' : 'player inactive'}>
-                <Toolbar className='title'
-                         style={{backgroundColor:this.props.color}}>
-                    <ToolbarGroup>
+                <Toolbar className='title'>
+                    <ToolbarGroup firstChild={true}>
                         <ToolbarTitle text={name}
                                       onTouchTap={this.props._recon}
-                                      style={{color:player.disc ? '#e0e0e0' : '#303030'}}/>
+                                      style={{color:player.disc ? '#e0e0e0' : '#303030', backgroundColor:this.props.color, paddingLeft:'16px'}}/>
                     </ToolbarGroup>
                     <ToolbarGroup>
                         {player.control &&
