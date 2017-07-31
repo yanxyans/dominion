@@ -45,10 +45,10 @@
 .player .stack.full:nth-child(even) {
     flex: 1 1 0;
 }
-#board .content .wrap > .stack, .player:not(:last-child) {
+#board .content .wrap > .stack, .player:not(:first-child) {
     flex: 1 1 0;
 }
-#board .content > .stack, .player:last-child {
+#board .content > .stack, .player:first-child {
     flex: 1 1 100%;
 }
 .stack {

@@ -27,21 +27,20 @@ export default class PlayerAll extends React.Component {
         var len = players.length;
         for (var i = 0; i < len; i++) {
             if (players[i].slot === -1) {
-                players[i].slot = len - 1 - i;
+                players[i].slot = i;
             }
         }
         
         var index = players.findIndex(function(player) {
-            return player.isPlayer;
+            return player.isTurn;
         });
         if (index !== -1) {
-            players = this.props.players.slice(index + 1).concat(
-                this.props.players.slice(0, index)).concat(
-                this.props.players.slice(index, index + 1));
+            players = this.props.players.slice(index).concat(
+                this.props.players.slice(0, index));
         }
         
         players.sort(function(playerA, playerB) {
-            return playerB.rank - playerA.rank;
+            return playerA.rank - playerB.rank;
         });
         
         var view = this.state.view;
@@ -65,7 +64,7 @@ export default class PlayerAll extends React.Component {
                                        player={player}
                                        tooltip={this.tooltip}
                                        color={colors[player.slot]}
-                                       hideContent={view === 0 && !player.isPlayer}
+                                       hideContent={view === 0 && !player.isTurn}
                                        allCards={view === 2}
                                        _recon={this._recon.bind(null, player.slot)}
                                        _complete={this._complete}
