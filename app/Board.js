@@ -50,7 +50,7 @@ export default class Board extends React.Component {
                         {keys.map(function(name, index) {
                             var cards = supply[name];
                             return <Stack key={index}
-                                          name={name}
+                                          name={name + '/' + cards.length}
                                           cards={cards}
                                           stacked={true}
                                           tooltip={tooltip}
