@@ -20,7 +20,7 @@ export default class Player extends React.Component {
         return (
             <div className={player.isTurn ? 'player' : 'player inactive'}>
                 <Toolbar className='title'
-                         style={{backgroundColor:this.props.color}}>
+                         style={{backgroundColor:this.props.color, zIndex:1}}>
                     <ToolbarGroup>
                         <ToolbarTitle text={player.name}
                                       onTouchTap={this.props._recon}
