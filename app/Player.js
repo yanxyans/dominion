@@ -18,8 +18,8 @@ export default class Player extends React.Component {
         var _tap = this.props._tap;
         
         return (
-            <div className='player'>
-                <Toolbar className={player.isTurn ? 'title' : 'title inactive'}
+            <div className={player.isTurn ? 'player' : 'player inactive'}>
+                <Toolbar className='title'
                          style={{backgroundColor:this.props.color}}>
                     <ToolbarGroup>
                         <ToolbarTitle text={player.name}

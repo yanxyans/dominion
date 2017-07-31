@@ -56,7 +56,8 @@
     flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
     min-width: 113px;
     min-height: 120px;
     direction: rtl;

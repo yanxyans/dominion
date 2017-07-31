@@ -62,7 +62,7 @@ export default class PlayerAll extends React.Component {
                     {players.map(function(player, index) {
                         return <Player key={index}
                                        player={player}
-                                       tooltip={this.tooltip}
+                                       tooltip={player.isTurn && this.tooltip}
                                        color={colors[player.slot]}
                                        hideContent={view === 0 && !player.isTurn}
                                        allCards={view === 2}
