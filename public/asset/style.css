@@ -53,12 +53,12 @@
 .stack {
     display: flex;
     flex-flow: row nowrap;
-    justify-content: center;
     align-items: center;
     overflow-x: auto;
     overflow-y: hidden;
     min-width: 113px;
     min-height: 120px;
+    padding: 5px;
     direction: rtl;
     position: relative;
 }
@@ -69,11 +69,11 @@
 }
 
 .selectable {
-    box-shadow: 0 0 10px rgba(0, 151, 167, 0.8);
+    box-shadow: 0 0 5px rgba(0, 151, 167, 0.8);
     cursor: pointer;
 }
 .selected {
-    box-shadow: 0 0 10px rgba(255, 64, 129, 0.8);
+    box-shadow: 0 0 5px rgba(255, 64, 129, 0.8);
     cursor: pointer;
 }
 .selectable:hover, .selected:hover {
