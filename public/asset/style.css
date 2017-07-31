@@ -85,7 +85,7 @@
 }
 
 body {
-    min-width: 700px;
+    min-width: 1880px;
     background-color: #303030;
 }
 #board, #game {

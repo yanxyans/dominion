@@ -32,7 +32,7 @@ export default class PlayerAll extends React.Component {
         }
         
         var index = players.findIndex(function(player) {
-            return player.isTurn;
+            return player.isPlayer;
         });
         if (index !== -1) {
             players = this.props.players.slice(index).concat(
@@ -64,7 +64,7 @@ export default class PlayerAll extends React.Component {
                                        player={player}
                                        tooltip={player.isTurn && this.tooltip}
                                        color={colors[player.slot]}
-                                       hideContent={view === 0 && !player.isTurn}
+                                       hideContent={view === 0 && !player.isPlayer}
                                        allCards={view === 2}
                                        _recon={this._recon.bind(null, player.slot)}
                                        _complete={this._complete}
