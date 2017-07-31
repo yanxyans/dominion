@@ -30,7 +30,7 @@
     cursor: default;
 }
 .inactive {
-    opacity: 0.4;
+    opacity: 0.2;
 }
 
 .player .stack.min:nth-child(odd) {
