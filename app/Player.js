@@ -17,6 +17,7 @@ export default class Player extends React.Component {
             name += player.points;
             name += 'vp';
         }
+        var bg = player.disc ? '#e0e0e0' : this.props.color;
         var source = ['players', player.slot];
         var tooltip = this.props.tooltip;
         
@@ -29,7 +30,7 @@ export default class Player extends React.Component {
                     <ToolbarGroup firstChild={true}>
                         <ToolbarTitle text={name}
                                       onTouchTap={this.props._recon}
-                                      style={{color:player.disc ? '#e0e0e0' : '#303030', backgroundColor:this.props.color, paddingLeft:'16px'}}/>
+                                      style={{color:'#303030', background:bg, paddingLeft:'16px', borderRight:'2px solid #303030'}}/>
                     </ToolbarGroup>
                     <ToolbarGroup>
                         {player.control &&
