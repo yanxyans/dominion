@@ -2,6 +2,7 @@ import React from 'react';
 
 import Paper from 'material-ui/Paper';
 import RaisedButton from 'material-ui/RaisedButton';
+import {Toolbar, ToolbarGroup, ToolbarTitle} from 'material-ui/Toolbar';
 
 import Stack from './Stack';
 import Control from './Control';
@@ -18,21 +19,22 @@ export default class Player extends React.Component {
         
         return (
             <div className='player'>
-                <Paper className={player.isTurn ? 'title' : 'title inactive'}
-                       zDepth={1}
-                       style={{backgroundColor:this.props.color, padding:'5px'}}>
-                    <RaisedButton label={player.name}
-                                  primary={!player.disc}
-                                  onTouchTap={this.props._recon}/>
+                <Toolbar className={player.isTurn ? 'title' : 'title inactive'}
+                         style={{backgroundColor:this.props.color, zIndex:1}}>
+                    <ToolbarGroup>
+                        <ToolbarTitle text={player.name}
+                                      onTouchTap={this.props._recon}
+                                      style={{color:player.disc ? '#e0e0e0' : '#303030'}}/>
+                    </ToolbarGroup>
+                    <ToolbarGroup>
+                        {player.rank !== -1 &&
+                        <RaisedButton label={player.points + ' vp'}/>}
                         
-                    {player.rank !== -1 &&
-                    <RaisedButton label={player.points + ' vp'}
-                                  primary={true}/>}
-                    
-                    {player.control &&
-                    <Control player={player}
-                             _complete={_complete}/>}
-                </Paper>
+                        {player.control &&
+                        <Control player={player}
+                                 _complete={_complete}/>}
+                    </ToolbarGroup>
+                </Toolbar>
                 
                 {!this.props.hideContent &&
                 <div className='content'>

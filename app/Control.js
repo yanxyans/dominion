@@ -27,7 +27,7 @@ export default class Control extends React.Component {
                         label={(comm === 'Action' && player.action + ' action') ||
                                (comm === 'Buy' && player.buy + ' buy ' + player.coin + ' coin') ||
                                (comm)}
-                        primary={player.main && index < player.phase}
+                        primary={player.main && index === player.phase - 1}
                         onTouchTap={_complete.bind(null, comm)}/>;
                 })}
             </div>
