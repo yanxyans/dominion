@@ -18,7 +18,6 @@ export default class Player extends React.Component {
             name += 'vp';
         }
         var color = player.disc ? '#e0e0e0' : '#303030';
-        var bg = 'linear-gradient(to bottom, ' + this.props.color + ', #e80052)';
         var cursor = player.disc ? 'pointer' : '';
         var source = ['players', player.slot];
         var tooltip = this.props.tooltip;
@@ -32,7 +31,7 @@ export default class Player extends React.Component {
                     <ToolbarGroup firstChild={true}>
                         <ToolbarTitle text={name}
                                       onTouchTap={this.props._recon}
-                                      style={{color:color, background:bg, paddingLeft:'16px', cursor:cursor}}/>
+                                      style={{color:color, paddingLeft:'16px', cursor:cursor}}/>
                     </ToolbarGroup>
                     <ToolbarGroup>
                         {player.control &&
